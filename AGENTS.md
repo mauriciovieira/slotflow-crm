@@ -6,6 +6,32 @@ These instructions apply to all AI coding agents working in this repository (inc
 
 1. For all new Superpowers brainstorming sessions, always use Git worktrees located under `.worktrees/` in this repository.
 2. Always use semantic commit messages (Conventional Commits style), for example: `feat: ...`, `fix: ...`, `docs: ...`, `chore: ...`.
+3. Keep local Git state aligned with GitHub: fetch from `origin` with pruning, and delete local branches whose copies were merged and removed on the remote.
+
+### Sync and prune
+
+After a PR is merged and the remote branch is deleted on GitHub, drop stale remote-tracking refs and remove the corresponding local branch when it is safe.
+
+**Fetch (use whenever you need latest refs or before branching from `main`):**
+
+```bash
+git fetch origin --prune
+```
+
+`--prune` removes `origin/<branch>` entries when that branch no longer exists on GitHub. To make this the default for all remotes: `git config fetch.prune true` (repo or global).
+
+**Delete merged local branches whose upstream is gone** (typical after “delete branch” on merge):
+
+```bash
+git fetch origin --prune
+git branch -vv | awk '/: gone]/{print $1}' | while read -r b; do
+  git branch -d "$b" || echo "skip $b (not fully merged locally — inspect before git branch -D)"
+done
+```
+
+`git branch -d` refuses if the commit is not merged into the current HEAD; that protects against deleting work that still exists only on the local branch. If you removed a worktree for that branch already, delete the branch only after you are sure the work landed on `main` (or cherry-pick / recover commits first).
+
+**Optional:** remove a linked worktree before deleting its branch: `git worktree remove <path>` (see Git docs), then delete the branch as above.
 
 ## Pull requests from worktrees (`gh`)
 
@@ -62,7 +88,7 @@ done < <(git worktree list --porcelain) | while IFS=$'\t' read -r wt_path branch
   git rev-parse --git-dir >/dev/null 2>&1 || continue
 
   if ! git merge-base --is-ancestor "origin/$BASE" HEAD 2>/dev/null; then
-    echo "skip $branch ($wt_path): not based on origin/$BASE (git fetch origin \"$BASE\" or rebase first)"
+    echo "skip $branch ($wt_path): not based on origin/$BASE (git fetch origin --prune, then merge or rebase)"
     continue
   fi
 
@@ -87,6 +113,7 @@ done
 
 ### Notes
 
-- If `origin/$BASE` is missing locally, run `git fetch origin "$BASE"` first.
+- If `origin/$BASE` is missing locally, run `git fetch origin --prune` first (see **Sync and prune** above).
 - For draft PRs, add `--draft` to `gh pr create`.
 - To open the PR in the browser: add `--web` or run `gh pr view --web` after creation.
+

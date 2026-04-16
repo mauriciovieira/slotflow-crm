@@ -4,8 +4,12 @@ import os
 from pathlib import Path
 
 from config.env import env_bool, load_env
+from config.version import __version__
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Exposed for templates, health checks, and ops (matches pyproject project.version).
+APP_VERSION = __version__
 load_env(BASE_DIR)
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-secret-key-change-me")
