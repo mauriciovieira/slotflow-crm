@@ -12,10 +12,10 @@ Execution model: one track per isolated git worktree
   - Plan doc: `docs/superpowers/plans/track-01-ci-cd.md`
 2. `track-02-platform-foundation`
   - Scope: Django latest stable + Python latest stable baseline, project scaffold, tenancy/auth foundations
-  - Status: Drafted (awaiting approval)
+  - Status: Approved
 3. `track-03-domain-model-and-migrations`
   - Scope: DDD entities, repositories, migrations, constraints, audit primitives
-  - Status: Pending draft
+  - Status: Approved
 4. `track-04-mcp-and-authn-authz`
   - Scope: MCP server contract, token issuance after 2FA, role/workspace enforcement
   - Status: Pending draft
