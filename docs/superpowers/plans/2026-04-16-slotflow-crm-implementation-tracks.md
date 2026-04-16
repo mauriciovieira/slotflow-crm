@@ -26,7 +26,8 @@ Execution model: one track per isolated git worktree
   - Plan doc: `docs/superpowers/plans/track-05-resume-import-render-pipeline.md`
 6. `track-06-interview-learning-and-retrospective`
   - Scope: recording links, transcript ingestion, coaching insights, historical lost-process imports
-  - Status: Pending draft
+  - Status: Approved
+  - Plan doc: `docs/superpowers/plans/track-06-interview-learning-and-retrospective.md`
 7. `track-07-frontend-react-dashboard`
   - Scope: React app implementation from `DESIGN.md`, dashboard workflows, currency comparison UX
   - Status: Pending draft
