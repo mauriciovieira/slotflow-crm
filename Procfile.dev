@@ -1,0 +1,2 @@
+web: bash -c 'cd backend && exec .venv/bin/python manage.py runserver'
+worker: bash -c 'cd backend && exec .venv/bin/celery -A config worker -l info'

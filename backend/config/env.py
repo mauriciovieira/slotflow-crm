@@ -10,8 +10,14 @@ _TRUE_VALUES: Final[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
 
 
 def load_env(base_dir: Path) -> None:
-    """Load a local `.env` file if present (never required in production)."""
+    """Load local `.env` files if present (never required in production).
 
+    Precedence for duplicate keys (``override=False``): OS environment, then
+    repo-root ``.env``, then ``backend/.env``.
+    """
+
+    repo_root = base_dir.parent
+    load_dotenv(repo_root / ".env", override=False)
     load_dotenv(base_dir / ".env", override=False)
 
 
