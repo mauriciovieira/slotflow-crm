@@ -10,6 +10,7 @@ from django.views.generic import FormView, TemplateView
 from django_otp import login as otp_login
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
+from config.version import __version__
 from mcp.auth import McpAuthError, mark_otp_session_fresh, require_fresh_2fa_session
 
 from .forms import TokenForm
@@ -17,7 +18,7 @@ from .forms import TokenForm
 
 class HealthzView(View):
     def get(self, request: HttpRequest) -> HttpResponse:
-        return JsonResponse({"status": "ok"})
+        return JsonResponse({"status": "ok", "version": __version__})
 
 
 @method_decorator(login_required, name="dispatch")
