@@ -1,8 +1,10 @@
 # Local development: Honcho (`Procfile.dev`) and dotenv
 
-**Status:** Draft for review  
+**Status:** Implemented  
 **Date:** 2026-04-16  
 **Scope:** Developer experience only (local workflow, env loading, Makefile entrypoints, and how production commands stay aligned). No application feature changes.
+
+**Implementation:** Landed in `d27ef0a` (*feat: add Honcho, Procfiles, make install/dev, and repo-root dotenv*). Step-by-step plan and task checklist: [`docs/superpowers/plans/2026-04-16-honcho-dotenv-local-dev.md`](../plans/2026-04-16-honcho-dotenv-local-dev.md). Optional future work: `render.yaml` alignment when the team adds a Blueprint (see §7.5).
 
 ## 1. Problem
 
@@ -150,4 +152,4 @@ Standardize install and dev entrypoints so README stays short.
 
 ## 11. Implementation follow-up
 
-After this spec is approved, use the **writing-plans** workflow to break down: `.gitignore` / `.env.example`, `Procfile` files, Honcho in `requirements-dev.txt`, Makefiles (backend, frontend, root), `load_env` behavior, README and `docs/dev-setup.md`, and optional `render.yaml` alignment.
+**Done:** The **writing-plans** breakdown is in [`docs/superpowers/plans/2026-04-16-honcho-dotenv-local-dev.md`](../plans/2026-04-16-honcho-dotenv-local-dev.md); implementation matches that plan (root `.env` / `.env.example`, `Procfile` + `Procfile.dev`, Honcho + gunicorn deps, Make targets, `load_env` repo root, README and `docs/dev-setup.md`). **Not done here:** optional `render.yaml` alignment (still no checked-in Blueprint at land time).
