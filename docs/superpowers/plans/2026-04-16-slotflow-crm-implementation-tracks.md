@@ -18,7 +18,8 @@ Execution model: one track per isolated git worktree
   - Status: Approved
 4. `track-04-mcp-and-authn-authz`
   - Scope: MCP server contract, token issuance after 2FA, role/workspace enforcement
-  - Status: Pending draft
+  - Status: Approved
+  - Plan doc: `docs/superpowers/plans/track-04-mcp-and-authn-authz.md`
 5. `track-05-resume-import-render-pipeline`
   - Scope: JSON Resume editor/storage, import jobs, render jobs, state machines, Celery execution
   - Status: Pending draft
