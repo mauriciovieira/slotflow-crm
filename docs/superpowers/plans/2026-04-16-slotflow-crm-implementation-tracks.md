@@ -22,7 +22,8 @@ Execution model: one track per isolated git worktree
   - Plan doc: `docs/superpowers/plans/track-04-mcp-and-authn-authz.md`
 5. `track-05-resume-import-render-pipeline`
   - Scope: JSON Resume editor/storage, import jobs, render jobs, state machines, Celery execution
-  - Status: Pending draft
+  - Status: Approved
+  - Plan doc: `docs/superpowers/plans/track-05-resume-import-render-pipeline.md`
 6. `track-06-interview-learning-and-retrospective`
   - Scope: recording links, transcript ingestion, coaching insights, historical lost-process imports
   - Status: Pending draft
