@@ -24,7 +24,7 @@ git fetch origin --prune
 
 ```bash
 git fetch origin --prune
-git branch -vv | awk '/: gone]/{print $1}' | while read -r b; do
+git branch -vv | awk '/: gone]/{print ($1 == "*" ? $2 : $1)}' | while read -r b; do
   git branch -d "$b" || echo "skip $b (not fully merged locally — inspect before git branch -D)"
 done
 ```

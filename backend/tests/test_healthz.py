@@ -4,6 +4,7 @@ import json
 
 from django.test import RequestFactory
 
+from config.version import __version__ as canonical_version
 from core.views import HealthzView
 
 
@@ -13,5 +14,4 @@ def test_healthz_includes_version() -> None:
     assert response.status_code == 200
     data = json.loads(response.content.decode())
     assert data["status"] == "ok"
-    assert data["version"]
-    assert isinstance(data["version"], str)
+    assert data["version"] == canonical_version
