@@ -37,10 +37,12 @@ done
 
 When a branch in a worktree is **ready for review**, open a PR with the GitHub CLI using the shared body template. **Ready for review** means: tests pass for that worktree, the change is complete enough for feedback (not a draft unless explicitly a draft PR), and the branch is pushed to `origin`.
 
+**Always ship a real PR description—never boilerplate.** Before you run `gh pr create`, the body must be fully written for *this* change: every section filled with specifics, placeholders and instructional comments removed, lone `-` bullets replaced, and the test plan checked or explained. Using the template file as `--body-file` is not done until that file reads like a finished review note, not an outline. If a PR was opened with empty or generic text, fix it immediately with `gh pr edit <number> --body-file <path>` (or edit in the GitHub UI)—do not leave default template text on the PR.
+
 ### Template
 
-- PR body template (fill in before or after `gh pr create`): `.github/WORKFLOW_TEMPLATES/pull_request.md`
-- Prefer `--body-file` so the same structure is used every time; edit the file in the worktree copy of the repo before running `gh`.
+- Start from `.github/WORKFLOW_TEMPLATES/pull_request.md` and complete it in your worktree before invoking `gh`.
+- Use `--body-file` with that path (or a copy) so structure stays consistent; the file on disk must already contain the final prose for reviewers.
 
 ### One-shot: create a PR from the current worktree
 
@@ -64,7 +66,7 @@ gh pr create \
   --body-file "$BODY"
 ```
 
-Replace the title prefix (`feat`, `fix`, `docs`, …) and edit `$BODY` so sections are accurate before running the command.
+Replace the title prefix (`feat`, `fix`, `docs`, …). Do not run `gh pr create` until `$BODY` is fully filled (see **Always ship a real PR description** above).
 
 ### Automate: open PRs for each review-ready worktree
 
@@ -116,4 +118,5 @@ done
 - If `origin/$BASE` is missing locally, run `git fetch origin --prune` first (see **Sync and prune** above).
 - For draft PRs, add `--draft` to `gh pr create`.
 - To open the PR in the browser: add `--web` or run `gh pr view --web` after creation.
+- To replace an underfilled body after the fact: `gh pr edit <number> --body-file path/to/completed.md`.
 
