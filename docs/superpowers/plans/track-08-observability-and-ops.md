@@ -47,12 +47,14 @@ Execution mode: isolated worktree (`.worktrees/track-08-observability-and-ops`)
 ### C) Metrics (MVP Set)
 
 Minimum counters/gauges:
+
 - HTTP: request count, error rate, latency histogram (basic)
 - Celery: task success/failure/retry counts by queue and task name
 - Jobs: import/render/insight job terminal state counts
 - FX: quote freshness lag (time since last successful fetch)
 
 Implementation approach:
+
 - start with logs + simple metrics endpoint or statsd-compatible integration (choose in PR)
 
 ### D) Tracing (Optional in MVP, but planned)
@@ -78,6 +80,7 @@ Implementation approach:
 ### G) Runbooks
 
 Add `docs/runbooks/` entries:
+
 - deploy rollback strategy on Render
 - stuck async jobs recovery
 - FX provider outage behavior
@@ -92,6 +95,7 @@ Add `docs/runbooks/` entries:
 - Ensure DRF and MCP entrypoints attach the same correlation id.
 
 Exit criteria:
+
 - a single user action can be traced across web + worker logs via `request_id`.
 
 ### Phase B - Health Endpoints + CI Deploy Gates
@@ -99,6 +103,7 @@ Exit criteria:
 - Implement readiness checks used by GitHub Actions post-deploy steps.
 
 Exit criteria:
+
 - staging deploy workflow fails if readiness fails.
 
 ### Phase C - Audit + Security Events
@@ -106,6 +111,7 @@ Exit criteria:
 - Implement audit writer utility and enforce usage on sensitive endpoints/tools.
 
 Exit criteria:
+
 - security-sensitive actions produce audit rows with actor + workspace + entity ids.
 
 ### Phase D - Metrics/Alerts Baseline
@@ -116,6 +122,7 @@ Exit criteria:
   - job backlog growth
 
 Exit criteria:
+
 - at least one actionable alert exists for staging (even if manual check initially).
 
 ## 5) Render Operational Notes
@@ -146,6 +153,8 @@ Exit criteria:
 ## 9) Approval Gate
 
 Approval of this track authorizes:
+
 - creating dedicated worktree for observability/ops implementation,
 - implementing logging/health/audit/metrics baseline,
 - opening focused PRs without changing core domain behavior unless required for instrumentation.
+
