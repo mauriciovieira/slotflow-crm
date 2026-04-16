@@ -1,0 +1,70 @@
+name: Deploy (staging)
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      has_hook: ${{ steps.check.outputs.has_hook }}
+      has_health: ${{ steps.check.outputs.has_health }}
+    steps:
+      - id: check
+        env:
+          HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+          HEALTH: ${{ secrets.STAGING_HEALTHCHECK_URL }}
+        run: |
+          if [ -n "$HOOK" ]; then echo "has_hook=true" >> "$GITHUB_OUTPUT"; else echo "has_hook=false" >> "$GITHUB_OUTPUT"; fi
+          if [ -n "$HEALTH" ]; then echo "has_health=true" >> "$GITHUB_OUTPUT"; else echo "has_health=false" >> "$GITHUB_OUTPUT"; fi
+
+  deploy:
+    needs: [gate]
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        needs.gate.outputs.has_hook == 'true'
+      }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Trigger Render staging deploy
+        env:
+          RENDER_STAGING_DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+        run: |
+          curl -fsS -X POST "$RENDER_STAGING_DEPLOY_HOOK"
+
+  health:
+    needs: [gate, deploy]
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        needs.gate.outputs.has_health == 'true' &&
+        needs.gate.outputs.has_hook == 'true'
+      }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Wait for staging healthcheck
+        env:
+          STAGING_HEALTHCHECK_URL: ${{ secrets.STAGING_HEALTHCHECK_URL }}
+        run: |
+          for i in {1..30}; do
+            if curl -fsS "$STAGING_HEALTHCHECK_URL" >/dev/null; then
+              echo "healthy"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "healthcheck failed"
+          exit 1
