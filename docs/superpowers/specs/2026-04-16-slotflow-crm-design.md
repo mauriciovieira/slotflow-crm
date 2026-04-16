@@ -9,6 +9,7 @@ Scope: MVP (1.0)
 Build a SaaS-ready system to manage job opportunities ("slots"), interview pipelines, recruiter conversations, and opportunity-specific resume tailoring from a JSON Resume source.
 
 The MVP focuses on control and clarity:
+
 - track where each conversation is happening (email, LinkedIn)
 - define a custom interview cycle per opportunity
 - assign one or more people to each interview step
@@ -42,18 +43,14 @@ Product users can only access opportunity and related records from workspaces wh
 
 - `Workspace`
   - account/tenant boundary for data isolation
-
 - `User`
   - authenticated person using the product
-
 - `Membership`
   - joins user to workspace with role
-
 - `Person`
   - generic contact entity with role tags
   - examples: recruiter, interviewer, hiring manager
   - channels: email, LinkedIn URL, phone, notes
-
 - `Opportunity`
   - the job/submission unit being tracked
   - fields: title, source site, status, priority, deadlines, compensation notes, custom notes
@@ -68,75 +65,54 @@ Product users can only access opportunity and related records from workspaces wh
     - `compensation_min` / `compensation_max`
     - `pto_days`
     - `sick_days`
-
 - `UserCurrencyPreference`
   - per-user dashboard preference for which currencies should be displayed in comparisons
   - default preferred currencies: `USD` and `BRL`
-
 - `FxQuoteSnapshot`
   - cached FX quote data from public providers (official and parallel market rate sources when available)
   - used to convert opportunity compensation values for dashboard comparison
-
 - `Organization`
   - company/legal entity participating in hiring context
   - types: end client, agency, consultancy, staffing partner, other
   - fields: legal/trade name, location, website, notes
-
 - `OpportunityRequirement`
   - structured role requirements linked to one opportunity
   - categories: must-have, nice-to-have, years/seniority, tech stack, language, location/work model, domain requirements
-
 - `InterviewCycle`
   - one custom cycle per opportunity
-
 - `InterviewStep`
   - ordered customizable steps in the cycle
   - fields: type/name, status, assigned people, target dates, outcomes, notes
-
 - `InterviewSessionArtifact`
   - stores external recording references for an interview step (for example Loom URL)
-
 - `InterviewTranscript`
   - stores uploaded transcript content/metadata (SRT, VTT, TXT or equivalent normalized text)
-
 - `ConversationThread`
   - communication context, grouped by channel and relationship to opportunity/person
-
 - `Message`
   - manual log entry in MVP
   - direction (inbound/outbound), channel (email/LinkedIn), timestamp, raw text, normalized text
-
 - `BaseResume`
   - source JSON Resume profile
-
 - `ResumeVersion`
   - opportunity-tailored resume variant derived from base profile
-
 - `ResumeSection`
   - normalized section container stored in database (summary, work, education, projects, skills, etc.)
-
 - `ResumeItem`
   - normalized item entry linked to a section (for example one experience/project entry)
-
 - `ResumeEvidenceMap`
   - links requirement(s) to resume bullet(s)/section(s) to explain tailoring choices
-
 - `ResumeRender`
   - rendered output metadata for a selected JSON Resume theme (theme id, format, artifact URL, version hash)
-
 - `ResumeImportJob`
   - tracks resume ingestion from user-provided sources (full JSON Resume upload or LinkedIn PDF export)
-
 - `ReplySuggestion`
   - AI-generated response draft
   - includes metadata: tone/style, source context summary, accepted/edited status
-
 - `ProcessRetrospective`
   - captures post-interview/process reflection, lessons learned, and suggested improvements
-
 - `ProcessOutcome`
   - captures final outcome (won/lost/withdrawn), rejection reasons, and feedback evidence
-
 - `HistoricalProcessImportJob`
   - tracks imports of previously lost processes from pasted emails/LinkedIn messages
 
@@ -461,7 +437,7 @@ Product users can only access opportunity and related records from workspaces wh
 - Persist each resume version as canonical JSON Resume document output.
 - Allow users to upload a full JSON Resume file directly as source for an opportunity-specific version.
 - Accept LinkedIn PDF export uploads and generate a normalized resume version from extracted content.
-- Render JSON Resume using available themes from the JSON Resume ecosystem (https://jsonresume.org/themes).
+- Render JSON Resume using available themes from the JSON Resume ecosystem ([https://jsonresume.org/themes](https://jsonresume.org/themes)).
 - Keep track of selected theme and rendered artifacts per resume version.
 - Store base resume as JSON Resume.
 - Create opportunity-specific resume variants.
@@ -554,8 +530,8 @@ Product users can only access opportunity and related records from workspaces wh
 6. Normalization stage converts candidates to `ResumeSection`/`ResumeItem` and computes per-field confidence scores.
 7. System writes a draft `ResumeVersion` plus extraction metadata (confidence, parser notes, missing fields).
 8. `ResumeImportJob` moves to:
-   - `needs_review` when confidence is below threshold or critical fields are missing
-   - `completed` when extraction quality meets baseline
+  - `needs_review` when confidence is below threshold or critical fields are missing
+  - `completed` when extraction quality meets baseline
 9. User reviews/edits extracted content in editor and confirms the version for downstream use.
 
 #### C) Theme Rendering Flow (JSON Resume Themes)
@@ -598,13 +574,13 @@ Product users can only access opportunity and related records from workspaces wh
 
 1. User requests coaching for a current opportunity step.
 2. System gathers context from:
-   - current opportunity transcripts/messages
-   - prior outcomes and rejection feedback
-   - historical lost-process imports
+  - current opportunity transcripts/messages
+  - prior outcomes and rejection feedback
+  - historical lost-process imports
 3. Insight service generates:
-   - strengths to keep
-   - improvement opportunities
-   - suggested talking points for upcoming rounds
+  - strengths to keep
+  - improvement opportunities
+  - suggested talking points for upcoming rounds
 4. User reviews and optionally saves selected guidance into `ProcessRetrospective`.
 
 #### C) Historical Lost-Process Import via Pasted Content
@@ -632,7 +608,6 @@ Product users can only access opportunity and related records from workspaces wh
   - `needs_review`
   - `completed`
   - `failed`
-
 - Events:
   - `enqueue_processing`
   - `start_processing`
@@ -641,7 +616,6 @@ Product users can only access opportunity and related records from workspaces wh
   - `processing_failed`
   - `user_confirmed_review`
   - `user_requested_retry`
-
 - Allowed transitions:
   - `pending` -> `processing` on `start_processing`
   - `processing` -> `completed` on `processing_succeeded`
@@ -650,20 +624,17 @@ Product users can only access opportunity and related records from workspaces wh
   - `needs_review` -> `completed` on `user_confirmed_review`
   - `needs_review` -> `processing` on `user_requested_retry`
   - `failed` -> `processing` on `user_requested_retry`
-
 - Guard conditions:
   - `start_processing`: source artifact exists, workspace/opportunity scope is valid, and job not terminal.
   - `processing_succeeded`: canonical JSON Resume snapshot persisted and section/item normalization complete.
   - `processing_needs_review`: one or more critical fields missing OR confidence below threshold.
   - `user_confirmed_review`: user has `Owner` or `Member` role in workspace and unresolved critical warnings are addressed/acknowledged.
   - `user_requested_retry`: retry budget not exceeded and cause is retriable or source artifact replaced.
-
 - Side effects by transition:
   - entering `processing`: enqueue Celery task chain and set `started_at`.
   - entering `needs_review`: store confidence map, missing fields, parser diagnostics.
   - entering `completed`: persist `completed_at`, link finalized `resume_version_id`, emit audit event.
   - entering `failed`: persist machine-readable error code/message and increment retry count.
-
 - Terminality:
   - `completed` is terminal for current artifact version.
   - `failed` is terminal unless explicit `user_requested_retry` creates a new processing attempt.
@@ -675,25 +646,21 @@ Product users can only access opportunity and related records from workspaces wh
   - `processing`
   - `completed`
   - `failed`
-
 - Events:
   - `enqueue_render`
   - `start_render`
   - `render_succeeded`
   - `render_failed`
   - `retry_render`
-
 - Allowed transitions:
   - `pending` -> `processing` on `start_render`
   - `processing` -> `completed` on `render_succeeded`
   - `processing` -> `failed` on `render_failed`
   - `failed` -> `processing` on `retry_render`
-
 - Guard conditions:
   - `start_render`: `ResumeVersion` exists, active theme is supported, and idempotency key is unique or points to same render intent.
   - `render_succeeded`: artifact stored successfully, checksum/hash generated, and metadata persisted.
   - `retry_render`: failure reason is retriable OR user changed theme/format/input version.
-
 - Side effects by transition:
   - entering `processing`: enqueue Celery render task and set `started_at`.
   - entering `completed`: store artifact location, checksum/hash, `completed_at`, and mark active render pointer.
@@ -813,14 +780,12 @@ Product users can only access opportunity and related records from workspaces wh
   - import confidence threshold decisions (`completed` vs `needs_review`)
   - transcript parsing and normalization across supported subtitle/text formats
   - cross-process feedback clustering and recommendation ranking behavior
-
 - Integration tests:
   - create opportunity -> define cycle -> assign contacts -> log messages -> generate draft -> create resume version
   - upload JSON Resume -> normalize -> create/update `ResumeVersion` -> render theme artifact
   - upload LinkedIn PDF -> extract -> review required path -> finalize resume version
   - attach recording URL + upload transcript -> generate interview coaching insights
   - import pasted historical messages -> confirm extracted loss outcome -> reuse insights in new process
-
 - Smoke e2e:
   - core dashboard flow for one opportunity from creation to interview progression
 
@@ -1024,7 +989,7 @@ Product users can only access opportunity and related records from workspaces wh
 ### 14.10 React Design Specification Source
 
 - Frontend visual/design system baseline must follow `DESIGN.md`.
-- `DESIGN.md` is authored from the Design.md framework reference: https://getdesign.md/mintlify/design-md
+- `DESIGN.md` is authored from the Design.md framework reference: [https://getdesign.md/mintlify/design-md](https://getdesign.md/mintlify/design-md)
 - Implementation guidance:
   - convert `DESIGN.md` tokens into code-level design tokens (colors, radius, spacing, typography).
   - expose tokens in a shared frontend theme module (`tokens.ts` / CSS variables).
@@ -1077,3 +1042,4 @@ Product users can only access opportunity and related records from workspaces wh
   - each major implementation plan (for example CI, backend domain, MCP server, frontend UI) should run in a separate git worktree.
   - each worktree produces focused commits and an isolated PR stream.
   - merge sequencing should preserve dependency order across plans.
+
