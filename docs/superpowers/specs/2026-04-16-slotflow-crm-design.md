@@ -1042,4 +1042,3 @@ Product users can only access opportunity and related records from workspaces wh
   - each major implementation plan (for example CI, backend domain, MCP server, frontend UI) should run in a separate git worktree.
   - each worktree produces focused commits and an isolated PR stream.
   - merge sequencing should preserve dependency order across plans.
-
