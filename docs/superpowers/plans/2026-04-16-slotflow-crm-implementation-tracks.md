@@ -34,7 +34,8 @@ Execution model: one track per isolated git worktree
   - Plan doc: `docs/superpowers/plans/track-07-frontend-react-dashboard.md`
 8. `track-08-observability-and-ops`
   - Scope: audit events, metrics/logging/tracing, runbooks, health checks
-  - Status: Pending draft
+  - Status: Approved
+  - Plan doc: `docs/superpowers/plans/track-08-observability-and-ops.md`
 
 ## Approval Workflow
 
