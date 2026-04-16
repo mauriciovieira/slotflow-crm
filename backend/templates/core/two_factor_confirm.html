@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirm authenticator</title>
+  </head>
+  <body>
+    <main>
+      <h1>Confirm authenticator</h1>
+      <form method="post" action="">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Confirm</button>
+      </form>
+      <p><a href="/2fa/setup/">Back</a></p>
+    </main>
+  </body>
+</html>

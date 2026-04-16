@@ -1,16 +1,18 @@
 [project]
-name = "slotflow-backend-bootstrap"
+name = "slotflow-backend"
 version = "0.0.0"
 requires-python = ">=3.14"
-description = "Backend bootstrap package for CI (Track 01). Django app lands in later tracks."
+description = "Slotflow CRM Django backend."
 
 [tool.ruff]
 target-version = "py314"
 line-length = 100
-src = ["slotflow"]
+src = ["."]
+extend-exclude = ["**/migrations/**"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-q --ds=config.settings.local"

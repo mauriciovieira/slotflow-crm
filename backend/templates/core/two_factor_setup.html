@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Two-factor setup</title>
+  </head>
+  <body>
+    <main>
+      <h1>Two-factor authentication</h1>
+      {% if needs_confirmation %}
+        <p>Scan this QR code in your authenticator app, then confirm the code.</p>
+        <p><img alt="TOTP QR code" src="{{ qr_url }}" width="256" height="256" /></p>
+        <p><a href="/2fa/confirm/">Continue to confirmation</a></p>
+      {% else %}
+        <p>Your authenticator is already enrolled. Continue to verification.</p>
+        <p><a href="/2fa/verify/">Verify</a></p>
+      {% endif %}
+    </main>
+  </body>
+</html>

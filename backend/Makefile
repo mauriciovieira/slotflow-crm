@@ -1,11 +1,14 @@
 .PHONY: lint format test
 
+PYTHON ?= python3
+PY := $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo $(PYTHON); fi)
+
 lint:
-	python -m ruff check .
-	python -m ruff format --check .
+	$(PY) -m ruff check .
+	$(PY) -m ruff format --check .
 
 format:
-	python -m ruff format .
+	$(PY) -m ruff format .
 
 test:
-	python -m pytest -q
+	$(PY) -m pytest -q
