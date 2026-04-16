@@ -19,7 +19,7 @@ Execution mode: isolated worktree (`.worktrees/track-07-frontend-react-dashboard
 ## 2) Constraints and Decisions
 
 - Latest stable toolchain at implementation time:
-  - Node.js LTS (or latest stable if explicitly chosen in PR)
+  - Node.js **24** LTS (see repo root `.nvmrc` and CI)
   - React latest stable compatible with chosen bundler
 - Prefer TypeScript for the frontend.
 - The frontend must treat the Django API as the system of record (no local authoritative domain state).
