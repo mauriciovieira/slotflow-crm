@@ -30,7 +30,8 @@ Execution model: one track per isolated git worktree
   - Plan doc: `docs/superpowers/plans/track-06-interview-learning-and-retrospective.md`
 7. `track-07-frontend-react-dashboard`
   - Scope: React app implementation from `DESIGN.md`, dashboard workflows, currency comparison UX
-  - Status: Pending draft
+  - Status: Approved
+  - Plan doc: `docs/superpowers/plans/track-07-frontend-react-dashboard.md`
 8. `track-08-observability-and-ops`
   - Scope: audit events, metrics/logging/tracing, runbooks, health checks
   - Status: Pending draft
