@@ -72,7 +72,7 @@ done < <(git worktree list --porcelain) | while IFS=$'\t' read -r wt_path branch
     continue
   fi
 
-  if ! git push -u origin "$branch" 2>/dev/null; then
+  if ! git push -u origin "$branch"; then
     echo "skip $branch: push failed (resolve errors, then re-run)"
     continue
   fi

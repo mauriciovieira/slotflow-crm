@@ -20,8 +20,8 @@
 
 <!-- How you verified behavior. Replace with project-specific commands. -->
 
-- [ ] Unit / integration tests: `<!-- e.g. npm test -->`
-- [ ] Manual smoke: `<!-- steps -->`
+- [ ] Unit / integration tests: `pytest` / `npm test` (pick what applies)
+- [ ] Manual smoke: _describe steps_
 - [ ] No new warnings / lints in touched files
 
 ## Risk & rollback

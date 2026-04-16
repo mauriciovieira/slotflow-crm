@@ -16,6 +16,20 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: slotflow
+          POSTGRES_PASSWORD: slotflow
+          POSTGRES_DB: slotflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U slotflow -d slotflow"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
