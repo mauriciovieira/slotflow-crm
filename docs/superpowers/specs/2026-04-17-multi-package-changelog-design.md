@@ -108,4 +108,4 @@ Package-specific notes: [backend](backend/CHANGELOG.md) · [frontend](frontend/C
 ## 11. References
 
 - Backend automation: [`backend/pyproject.toml`](../../../backend/pyproject.toml) (`[tool.semantic_release]`).
-- Workflows: [`.github/workflows/release.yml`](../../../.github/workflows/release.yml) (to be split/extended during implementation).
+- Workflows: [`.github/workflows/release-backend.yml`](../../../.github/workflows/release-backend.yml), [`.github/workflows/release-frontend.yml`](../../../.github/workflows/release-frontend.yml).
