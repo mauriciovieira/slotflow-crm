@@ -6,11 +6,13 @@ Multi-tenant CRM for job opportunities, interview pipelines, and résumés (MVP)
 
 ### Tooling
 
-| Purpose | How |
-|--------|-----|
+
+| Purpose                         | How                                                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Python **3.14** and Node **24** | **[mise](https://mise.jdx.dev/)** — from the repo root: `mise install` (reads `.tool-versions` and `.nvmrc`) |
-| PostgreSQL **18** | **Homebrew** (`postgresql@18`), not via mise |
-| Redis | **Homebrew** (`redis`), not via mise |
+| PostgreSQL **18**               | **Homebrew** (`postgresql@18`), not via mise                                                                 |
+| Redis                           | **Homebrew** (`redis`), not via mise                                                                         |
+
 
 Enable mise in your shell (`mise activate` or your shell integration) so `python` and `node` resolve to the project versions.
 
@@ -46,37 +48,26 @@ make reset-local-db CONFIRM_RESET_LOCAL_DB=1
 ### One command: install and run the stack
 
 1. **Create the backend virtualenv once** (if you do not have `backend/.venv` yet):
-
-   ```bash
+  ```bash
    cd backend && python -m venv .venv && cd ..
-   ```
-
+  ```
 2. **Environment file:** copy the example and adjust if needed:
-
-   ```bash
+  ```bash
    cp .env.example .env
-   ```
-
+  ```
    Repo-root `.env` is loaded by [Honcho](https://github.com/nickstenning/honcho) for all processes in `Procfile.dev`. Django also loads repo-root `.env` and then `backend/.env` (see `backend/config/env.py`).
-
 3. **Install Python and Node dependencies** (backend dev stack + frontend):
-
-   ```bash
+  ```bash
    make install
-   ```
-
+  ```
 4. **Apply migrations** (first time or after model changes):
-
-   ```bash
+  ```bash
    cd backend && .venv/bin/python manage.py migrate && cd ..
-   ```
-
+  ```
 5. **Run API + Celery together:**
-
-   ```bash
+  ```bash
    make dev
-   ```
-
+  ```
    This runs `honcho start -f Procfile.dev` from the repo root using `backend/.venv/bin/honcho`.
 
 **Without Honcho** (separate terminals for debugging):
@@ -92,7 +83,7 @@ celery -A config worker -l info
 
 **Useful environment variables** (optional; see `.env.example`):
 
-- `POSTGRES_*` — only if you are not using the defaults (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`)
+- `POSTGRES_`* — only if you are not using the defaults (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`)
 - `REDIS_URL` — defaults to `redis://127.0.0.1:6379/0`
 - `DJANGO_DEBUG=1` — already implied by `local.py`
 
@@ -100,19 +91,21 @@ celery -A config worker -l info
 
 ### Makefile targets (summary)
 
-| Location | Target | Purpose |
-|----------|--------|---------|
-| Repo root | `make install` | `backend` `install-dev` + `frontend` `install` (requires `backend/.venv`) |
-| Repo root | `make setup-local-db` | create role/database from `.env` (`POSTGRES_*`) if missing |
-| Repo root | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values |
-| Repo root | `make migrate` | `manage.py migrate` with repo-root `.env` loaded |
-| Repo root | `make ensure-superuser` | idempotent local superuser from `DJANGO_SUPERUSER_*` (see `.env.example`) |
-| Repo root | `make bootstrap-local` | `setup-local-db` + `migrate` + `ensure-superuser` (Postgres path) |
-| Repo root | `make dev` | Honcho: Django + Celery per `Procfile.dev` |
-| Repo root | `make test` | run backend + frontend tests |
-| `backend/` | `make install` | `pip install -r requirements.txt` |
-| `backend/` | `make install-dev` | `pip install -r requirements-dev.txt` (includes base + dev tools such as Honcho) |
-| `frontend/` | `make install` | `npm ci` |
+
+| Location    | Target                                         | Purpose                                                                          |
+| ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| Repo root   | `make install`                                 | `backend` `install-dev` + `frontend` `install` (requires `backend/.venv`)        |
+| Repo root   | `make setup-local-db`                          | create role/database from `.env` (`POSTGRES_`*) if missing                       |
+| Repo root   | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values                              |
+| Repo root   | `make migrate`                                 | `manage.py migrate` with repo-root `.env` loaded                                 |
+| Repo root   | `make ensure-superuser`                        | idempotent local superuser from `DJANGO_SUPERUSER_*` (see `.env.example`)        |
+| Repo root   | `make bootstrap-local`                         | `setup-local-db` + `migrate` + `ensure-superuser` (Postgres path)                |
+| Repo root   | `make dev`                                     | Honcho: Django + Celery per `Procfile.dev`                                       |
+| Repo root   | `make test`                                    | run backend + frontend tests                                                     |
+| `backend/`  | `make install`                                 | `pip install -r requirements.txt`                                                |
+| `backend/`  | `make install-dev`                             | `pip install -r requirements-dev.txt` (includes base + dev tools such as Honcho) |
+| `frontend/` | `make install`                                 | `npm ci`                                                                         |
+
 
 ### Frontend and E2E
 
