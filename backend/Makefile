@@ -1,7 +1,13 @@
-.PHONY: lint format test
+.PHONY: lint format test install install-dev
 
 PYTHON ?= python3
 PY := $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo $(PYTHON); fi)
+
+install:
+	$(PY) -m pip install -r requirements.txt
+
+install-dev:
+	$(PY) -m pip install -r requirements-dev.txt
 
 lint:
 	$(PY) -m ruff check .

@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-import config.admin  # noqa: F401  # OTP admin site configuration (side effects)
+import identity.admin  # noqa: F401  # OTP admin site/User admin side effects
 from core.views import (
     HealthzView,
     HomeView,
