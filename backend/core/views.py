@@ -33,7 +33,13 @@ class TwoFactorSetupView(TemplateView):
 
     def get_context_data(self, **kwargs):  # type: ignore[override]
         context = super().get_context_data(**kwargs)
-        device, _created = TOTPDevice.objects.get_or_create(user=self.request.user, name="default")
+        # django_otp Device.confirmed defaults to True; we must create unconfirmed devices
+        # so the user scans the QR and completes /2fa/confirm/ before the device is trusted.
+        device, _created = TOTPDevice.objects.get_or_create(
+            user=self.request.user,
+            name="default",
+            defaults={"confirmed": False},
+        )
         needs_confirmation = not device.confirmed
         otpauth_uri = device.config_url
         context["needs_confirmation"] = needs_confirmation
