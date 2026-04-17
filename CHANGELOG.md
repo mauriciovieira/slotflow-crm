@@ -6,3 +6,7 @@ This file is a **chronological index** of package releases (newest first). Detai
 - [Frontend](frontend/CHANGELOG.md)
 
 <!-- release-index -->
+
+## 2026-04-17 — Frontend 1.0.0
+
+- [Release notes](frontend/CHANGELOG.md)
