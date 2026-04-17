@@ -10,7 +10,12 @@
       <h1>Two-factor authentication</h1>
       {% if needs_confirmation %}
         <p>Scan this QR code in your authenticator app, then confirm the code.</p>
-        <p><img alt="TOTP QR code" src="{{ qr_url }}" width="256" height="256" /></p>
+        <div class="totp-qr" style="max-width: 280px" aria-label="TOTP QR code">{{ qr_svg|safe }}</div>
+        <details>
+          <summary>Can’t scan? Use manual entry</summary>
+          <p>Copy the <code>otpauth://</code> URI into a compatible app, or add an account manually using the secret from this URI.</p>
+          <p><code style="word-break: break-all">{{ otpauth_uri }}</code></p>
+        </details>
         <p><a href="/2fa/confirm/">Continue to confirmation</a></p>
       {% else %}
         <p>Your authenticator is already enrolled. Continue to verification.</p>
