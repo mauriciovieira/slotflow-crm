@@ -17,12 +17,11 @@ case "$PKG" in
   *) echo "package must be backend or frontend" >&2; exit 1 ;;
 esac
 
-# Link to package changelog; fragment matches GitHub slug for ## x.y.z style headings.
-FRAG="$(echo "$VER" | tr '.' '-')"
+# Link to the package changelog (avoid guessing heading fragments; PSR/SR heading formats vary).
 BLOCK=$(cat <<EOF
 ## ${DATE} — ${SUB} ${VER}
 
-- [Release notes](${REL}/CHANGELOG.md#${FRAG})
+- [Release notes](${REL}/CHANGELOG.md)
 
 EOF
 )

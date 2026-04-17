@@ -34,7 +34,7 @@ jobs:
         working-directory: .
         run: |
           git fetch origin main
-          echo "ver=$(git show origin/main:frontend/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")" >> "$GITHUB_OUTPUT"
+          echo "ver=$(git show origin/main:frontend/package.json | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v6
         with:
