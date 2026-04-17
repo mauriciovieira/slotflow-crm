@@ -21,6 +21,10 @@
         <p>Your authenticator is already enrolled. Continue to verification.</p>
         <p><a href="/2fa/verify/">Verify</a></p>
       {% endif %}
+      <form method="post" action="{% url 'logout' %}" style="margin-top: 1.5rem">
+        {% csrf_token %}
+        <button type="submit">Sign out</button>
+      </form>
     </main>
   </body>
 </html>

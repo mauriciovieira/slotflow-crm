@@ -14,6 +14,10 @@
         <button type="submit">Confirm</button>
       </form>
       <p><a href="/2fa/setup/">Back</a></p>
+      <form method="post" action="{% url 'logout' %}" style="margin-top: 1.5rem">
+        {% csrf_token %}
+        <button type="submit">Sign out</button>
+      </form>
     </main>
   </body>
 </html>
