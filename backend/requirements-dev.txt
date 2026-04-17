@@ -1,4 +1,7 @@
 -r requirements.txt
+
+django-debug-toolbar==6.3.0
+django-extensions==4.1
 honcho==2.0.0
 ruff==0.14.13
 pytest==9.0.3
