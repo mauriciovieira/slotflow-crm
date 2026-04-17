@@ -1,3 +1,8 @@
 # Changelog
 
-Release notes are generated automatically when changes are merged to the default branch. Commit messages should follow [Conventional Commits](https://www.conventionalcommits.org/) (for example `feat:`, `fix:`, `chore:`).
+This file is a **chronological index** of package releases (newest first). Detailed notes live in:
+
+- [Backend](backend/CHANGELOG.md)
+- [Frontend](frontend/CHANGELOG.md)
+
+<!-- release-index -->
