@@ -1,4 +1,4 @@
-.PHONY: lint test test-unit test-e2e ci install dev setup-local-db reset-local-db
+.PHONY: lint test test-unit test-e2e ci install dev setup-local-db reset-local-db migrate ensure-superuser bootstrap-local
 
 install:
 	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
@@ -50,6 +50,18 @@ reset-local-db:
 	  psql postgres -c "DROP DATABASE \"$$DB_NAME\" WITH (FORCE);" || :; \
 	psql postgres -c "CREATE DATABASE \"$$DB_NAME\" OWNER \"$$DB_USER\";"; \
 	echo "Local database reset done."
+
+migrate:
+	@test -f .env || (echo >&2 "Missing .env. Run: cp .env.example .env"; exit 1)
+	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
+	@set -a; . ./.env; set +a; cd backend && .venv/bin/python manage.py migrate
+
+ensure-superuser:
+	@test -f .env || (echo >&2 "Missing .env. Run: cp .env.example .env"; exit 1)
+	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
+	@set -a; . ./.env; set +a; cd backend && .venv/bin/python manage.py ensure_superuser
+
+bootstrap-local: setup-local-db migrate ensure-superuser
 
 lint:
 	$(MAKE) -C backend lint

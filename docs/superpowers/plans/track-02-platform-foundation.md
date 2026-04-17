@@ -44,6 +44,7 @@ Execution mode: isolated worktree (`.worktrees/track-02-platform-foundation`)
 - Add core third-party packages required by architecture (DRF, Celery, Redis client, env config).
 
 Exit criteria:
+
 - `manage.py check` passes locally.
 - app starts with local settings and connects to Postgres/Redis.
 
@@ -57,6 +58,7 @@ Exit criteria:
 - Add audit/event logging scaffold interfaces (implementation depth later).
 
 Exit criteria:
+
 - All app modules import cleanly.
 - no circular import or settings boot errors.
 
@@ -70,6 +72,7 @@ Exit criteria:
 - Keep Django admin restricted to system administrators.
 
 Exit criteria:
+
 - can create workspace + membership in local environment.
 - role-aware permission utility functions exist and are test-covered at baseline level.
 
@@ -80,6 +83,7 @@ Exit criteria:
 - Add placeholder tasks and queue routing (`imports`, `render`, `insights`, `fx`).
 
 Exit criteria:
+
 - worker and beat start cleanly locally.
 - sample task executes end-to-end.
 
@@ -110,6 +114,7 @@ Exit criteria:
 - workspace/membership foundation exists with role checks.
 - 2FA enforcement points are implemented/documented.
 - Celery worker/beat run successfully.
+- Optional local superuser fixture: `manage.py ensure_superuser` + `DJANGO_SUPERUSER_*` / `SLOTFLOW_ENSURE_SUPERUSER` in `.env.example` (release 0.2.1).
 
 ## 8) Out of Scope for Track 02
 
@@ -121,6 +126,7 @@ Exit criteria:
 ## 9) Approval Gate
 
 Approval of this track authorizes:
+
 - creating dedicated worktree for platform foundation,
 - implementing project scaffold + identity/tenancy baseline,
 - opening focused PR limited to foundational platform concerns.

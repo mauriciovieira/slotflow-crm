@@ -105,6 +105,9 @@ celery -A config worker -l info
 | Repo root | `make install` | `backend` `install-dev` + `frontend` `install` (requires `backend/.venv`) |
 | Repo root | `make setup-local-db` | create role/database from `.env` (`POSTGRES_*`) if missing |
 | Repo root | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values |
+| Repo root | `make migrate` | `manage.py migrate` with repo-root `.env` loaded |
+| Repo root | `make ensure-superuser` | idempotent local superuser from `DJANGO_SUPERUSER_*` (see `.env.example`) |
+| Repo root | `make bootstrap-local` | `setup-local-db` + `migrate` + `ensure-superuser` (Postgres path) |
 | Repo root | `make dev` | Honcho: Django + Celery per `Procfile.dev` |
 | Repo root | `make test` | run backend + frontend tests |
 | `backend/` | `make install` | `pip install -r requirements.txt` |

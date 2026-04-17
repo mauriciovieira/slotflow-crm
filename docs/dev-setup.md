@@ -13,7 +13,7 @@ This repository is being bootstrapped in implementation tracks. Track 01 establi
 2. `cp .env.example .env` at the repo root and edit if needed.
 3. Create local Postgres role/database from repo-root `.env`: `make setup-local-db` (also ensures role has `CREATEDB` for Django tests).
 4. Create `backend/.venv` once: `cd backend && python -m venv .venv`.
-5. From the repo root: `make install` then `cd backend && .venv/bin/python manage.py migrate` then `make dev`.
+5. From the repo root: `make install` then `make migrate` (or `make bootstrap-local` once Postgres is up and `.env` includes superuser vars — see `.env.example`) then `make dev`.
 
 Honcho reads repo-root `.env` for processes defined in `Procfile.dev`. Django loads repo-root `.env` first, then `backend/.env` (see `backend/config/env.py`).
 
@@ -25,6 +25,9 @@ From repo root:
 make install    # backend install-dev + frontend npm ci (needs backend/.venv)
 make setup-local-db  # create role/database from .env POSTGRES_* values
 make reset-local-db CONFIRM_RESET_LOCAL_DB=1  # drop + recreate local DB from .env values
+make migrate    # Django migrations (loads repo-root .env)
+make ensure-superuser  # optional local superuser from DJANGO_SUPERUSER_* when SLOTFLOW_ENSURE_SUPERUSER=1
+make bootstrap-local   # setup-local-db + migrate + ensure-superuser (Postgres-oriented first run)
 make dev        # Honcho: API + Celery (Procfile.dev)
 make test       # backend + frontend tests
 make lint
