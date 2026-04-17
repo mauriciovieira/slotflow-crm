@@ -35,7 +35,7 @@ cp .env.example .env   # first time only
 make setup-local-db
 ```
 
-`make setup-local-db` validates `.env`, reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` (defaults to `slotflow` if not set), and creates role/database only when missing.
+`make setup-local-db` validates `.env`, reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` (defaults to `slotflow` if not set), creates role/database when missing, and ensures the role has `CREATEDB` so Django tests can create the test database.
 
 To reset the local DB (drop and recreate with the same owner/password from `.env`):
 
@@ -106,6 +106,7 @@ celery -A config worker -l info
 | Repo root | `make setup-local-db` | create role/database from `.env` (`POSTGRES_*`) if missing |
 | Repo root | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values |
 | Repo root | `make dev` | Honcho: Django + Celery per `Procfile.dev` |
+| Repo root | `make test` | run backend + frontend tests |
 | `backend/` | `make install` | `pip install -r requirements.txt` |
 | `backend/` | `make install-dev` | `pip install -r requirements-dev.txt` (includes base + dev tools such as Honcho) |
 | `frontend/` | `make install` | `npm ci` |
