@@ -48,7 +48,7 @@ make reset-local-db CONFIRM_RESET_LOCAL_DB=1
 1. **Create the backend virtualenv once** (if you do not have `backend/.venv` yet):
 
    ```bash
-   cd backend && python3 -m venv .venv && cd ..
+   cd backend && python -m venv .venv && cd ..
    ```
 
 2. **Environment file:** copy the example and adjust if needed:

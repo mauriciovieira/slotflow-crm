@@ -1,7 +1,7 @@
 .PHONY: lint test test-unit test-e2e ci install dev setup-local-db reset-local-db
 
 install:
-	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python3 -m venv .venv"; exit 1)
+	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
 	$(MAKE) -C backend install-dev
 	$(MAKE) -C frontend install
 

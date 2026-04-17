@@ -12,7 +12,7 @@ This repository is being bootstrapped in implementation tracks. Track 01 establi
 1. Install system services (Postgres, Redis) as in the root [README](../README.md).
 2. `cp .env.example .env` at the repo root and edit if needed.
 3. Create local Postgres role/database from repo-root `.env`: `make setup-local-db` (also ensures role has `CREATEDB` for Django tests).
-4. Create `backend/.venv` once: `cd backend && python3 -m venv .venv`.
+4. Create `backend/.venv` once: `cd backend && python -m venv .venv`.
 5. From the repo root: `make install` then `cd backend && .venv/bin/python manage.py migrate` then `make dev`.
 
 Honcho reads repo-root `.env` for processes defined in `Procfile.dev`. Django loads repo-root `.env` first, then `backend/.env` (see `backend/config/env.py`).
