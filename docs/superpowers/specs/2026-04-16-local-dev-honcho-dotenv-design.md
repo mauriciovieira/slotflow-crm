@@ -4,7 +4,7 @@
 **Date:** 2026-04-16  
 **Scope:** Developer experience only (local workflow, env loading, Makefile entrypoints, and how production commands stay aligned). No application feature changes.
 
-**Implementation:** Landed in `d27ef0a` (*feat: add Honcho, Procfiles, make install/dev, and repo-root dotenv*). Step-by-step plan and task checklist: [`docs/superpowers/plans/2026-04-16-honcho-dotenv-local-dev.md`](../plans/2026-04-16-honcho-dotenv-local-dev.md). Optional future work: `render.yaml` alignment when the team adds a Blueprint (see §7.5).
+**Implementation:** Implemented as part of the Honcho/dotenv local development work. Step-by-step plan and task checklist: [`docs/superpowers/plans/2026-04-16-honcho-dotenv-local-dev.md`](../plans/2026-04-16-honcho-dotenv-local-dev.md). Optional future work: `render.yaml` alignment when the team adds a Blueprint (see §7.5).
 
 ## 1. Problem
 

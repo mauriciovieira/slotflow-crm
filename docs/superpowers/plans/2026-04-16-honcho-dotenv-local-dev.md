@@ -311,12 +311,4 @@ git commit -m "docs: document make install, make dev, and env files"
 
 ---
 
-**Plan complete and saved to `docs/superpowers/plans/2026-04-16-honcho-dotenv-local-dev.md`. Two execution options:**
-
-**1. Subagent-Driven (recommended)** — Dispatch a fresh subagent per task, review between tasks.
-
-**2. Inline Execution** — Execute tasks in this session with checkpoints.
-
-**Which approach?**
-
-(In this session we execute inline: user confirmed with “sim”.)
+**Plan complete and saved to `docs/superpowers/plans/2026-04-16-honcho-dotenv-local-dev.md`.**

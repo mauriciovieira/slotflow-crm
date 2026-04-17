@@ -35,7 +35,7 @@ cp .env.example .env   # first time only
 make setup-local-db
 ```
 
-`make setup-local-db` validates `.env`, reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` (defaults to `slotflow` if not set), creates role/database when missing, and ensures the role has `CREATEDB` so Django tests can create the test database.
+`make setup-local-db` checks that `.env` exists, reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` (defaults to `slotflow` if not set), creates role/database when missing, and ensures the role has `CREATEDB` so Django tests can create the test database.
 
 To reset the local DB (drop and recreate with the same owner/password from `.env`):
 
