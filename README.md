@@ -37,6 +37,23 @@ psql postgres -c "CREATE DATABASE slotflow OWNER slotflow;"
 
 (If they already exist, ignore the error or run only `CREATE DATABASE` as needed.)
 
+Idempotent option (safe to re-run):
+
+```bash
+psql postgres <<'SQL'
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'slotflow') THEN
+      CREATE ROLE slotflow LOGIN PASSWORD 'slotflow';
+   END IF;
+END
+$$;
+SQL
+
+psql postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'slotflow'" | grep -q 1 || \
+  psql postgres -c "CREATE DATABASE slotflow OWNER slotflow;"
+```
+
 ### One command: install and run the stack
 
 1. **Create the backend virtualenv once** (if you do not have `backend/.venv` yet):

@@ -10,9 +10,27 @@ This repository is being bootstrapped in implementation tracks. Track 01 establi
 ## Quick start (full stack)
 
 1. Install system services (Postgres, Redis) as in the root [README](../README.md).
-2. Create `backend/.venv` once: `cd backend && python3 -m venv .venv`.
-3. `cp .env.example .env` at the repo root and edit if needed.
-4. From the repo root: `make install` then `cd backend && .venv/bin/python manage.py migrate` then `make dev`.
+2. Create local Postgres role/database (defaults used by Django):
+
+```bash
+psql postgres <<'SQL'
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'slotflow') THEN
+      CREATE ROLE slotflow LOGIN PASSWORD 'slotflow';
+   END IF;
+END
+$$;
+SQL
+
+psql postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'slotflow'" | grep -q 1 || \
+  psql postgres -c "CREATE DATABASE slotflow OWNER slotflow;"
+```
+
+You can re-run the block safely; it only creates what is missing.
+3. Create `backend/.venv` once: `cd backend && python3 -m venv .venv`.
+4. `cp .env.example .env` at the repo root and edit if needed.
+5. From the repo root: `make install` then `cd backend && .venv/bin/python manage.py migrate` then `make dev`.
 
 Honcho reads repo-root `.env` for processes defined in `Procfile.dev`. Django loads repo-root `.env` first, then `backend/.env` (see `backend/config/env.py`).
 
