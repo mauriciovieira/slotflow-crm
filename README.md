@@ -28,31 +28,14 @@ Add the PostgreSQL 18 `psql` client to your `PATH` (Apple Silicon often uses `/o
 export PATH="$(brew --prefix postgresql@18)/bin:$PATH"
 ```
 
-Create a role and database matching the defaults in Django `config.settings.base` (`slotflow` / `slotflow` on `127.0.0.1:5432`):
+Create local Postgres user/database from variables defined in repo-root `.env`:
 
 ```bash
-psql postgres -c "CREATE USER slotflow WITH PASSWORD 'slotflow';"
-psql postgres -c "CREATE DATABASE slotflow OWNER slotflow;"
+cp .env.example .env   # first time only
+make setup-local-db
 ```
 
-(If they already exist, ignore the error or run only `CREATE DATABASE` as needed.)
-
-Idempotent option (safe to re-run):
-
-```bash
-psql postgres <<'SQL'
-DO $$
-BEGIN
-   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'slotflow') THEN
-      CREATE ROLE slotflow LOGIN PASSWORD 'slotflow';
-   END IF;
-END
-$$;
-SQL
-
-psql postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'slotflow'" | grep -q 1 || \
-  psql postgres -c "CREATE DATABASE slotflow OWNER slotflow;"
-```
+`make setup-local-db` validates `.env`, reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` (defaults to `slotflow` if not set), and creates role/database only when missing.
 
 ### One command: install and run the stack
 
