@@ -16,9 +16,11 @@ setup-local-db:
 	DB_USER="$${POSTGRES_USER:-slotflow}"; \
 	DB_PASSWORD="$${POSTGRES_PASSWORD:-slotflow}"; \
 	DB_NAME="$${POSTGRES_DB:-slotflow}"; \
+	DB_USER_SQL="$$(printf "%s" "$$DB_USER" | sed "s/'/''/g")"; \
+	DB_PASSWORD_SQL="$$(printf "%s" "$$DB_PASSWORD" | sed "s/'/''/g")"; \
 	echo "Ensuring role '$$DB_USER' and database '$$DB_NAME' exist..."; \
-	psql postgres -v db_user="$$DB_USER" -v db_password="$$DB_PASSWORD" \
-	  -c "DO \$$do\$$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'db_user') THEN EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password'); END IF; END \$$do\$$;"; \
+	psql postgres -tAc "SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '$$DB_USER_SQL'" | grep -q 1 || \
+	  psql postgres -c "CREATE ROLE \"$$DB_USER\" LOGIN PASSWORD '$$DB_PASSWORD_SQL';"; \
 	psql postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$$DB_NAME'" | grep -q 1 || \
 	  psql postgres -c "CREATE DATABASE \"$$DB_NAME\" OWNER \"$$DB_USER\";"; \
 	echo "Local database setup done."
@@ -31,9 +33,11 @@ reset-local-db:
 	DB_USER="$${POSTGRES_USER:-slotflow}"; \
 	DB_PASSWORD="$${POSTGRES_PASSWORD:-slotflow}"; \
 	DB_NAME="$${POSTGRES_DB:-slotflow}"; \
+	DB_USER_SQL="$$(printf "%s" "$$DB_USER" | sed "s/'/''/g")"; \
+	DB_PASSWORD_SQL="$$(printf "%s" "$$DB_PASSWORD" | sed "s/'/''/g")"; \
 	echo "Resetting local database '$$DB_NAME' (owner '$$DB_USER')..."; \
-	psql postgres -v db_user="$$DB_USER" -v db_password="$$DB_PASSWORD" \
-	  -c "DO \$$do\$$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'db_user') THEN EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password'); END IF; END \$$do\$$;"; \
+	psql postgres -tAc "SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '$$DB_USER_SQL'" | grep -q 1 || \
+	  psql postgres -c "CREATE ROLE \"$$DB_USER\" LOGIN PASSWORD '$$DB_PASSWORD_SQL';"; \
 	psql postgres -c "DROP DATABASE IF EXISTS \"$$DB_NAME\" WITH (FORCE);"; \
 	psql postgres -c "CREATE DATABASE \"$$DB_NAME\" OWNER \"$$DB_USER\";"; \
 	echo "Local database reset done."
