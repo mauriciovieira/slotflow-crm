@@ -24,6 +24,7 @@ From repo root:
 ```bash
 make install    # backend install-dev + frontend npm ci (needs backend/.venv)
 make setup-local-db  # create role/database from .env POSTGRES_* values
+make reset-local-db CONFIRM_RESET_LOCAL_DB=1  # drop + recreate local DB from .env values
 make dev        # Honcho: API + Celery (Procfile.dev)
 make lint
 make test-unit

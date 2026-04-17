@@ -37,6 +37,12 @@ make setup-local-db
 
 `make setup-local-db` validates `.env`, reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` (defaults to `slotflow` if not set), and creates role/database only when missing.
 
+To reset the local DB (drop and recreate with the same owner/password from `.env`):
+
+```bash
+make reset-local-db CONFIRM_RESET_LOCAL_DB=1
+```
+
 ### One command: install and run the stack
 
 1. **Create the backend virtualenv once** (if you do not have `backend/.venv` yet):
@@ -97,6 +103,8 @@ celery -A config worker -l info
 | Location | Target | Purpose |
 |----------|--------|---------|
 | Repo root | `make install` | `backend` `install-dev` + `frontend` `install` (requires `backend/.venv`) |
+| Repo root | `make setup-local-db` | create role/database from `.env` (`POSTGRES_*`) if missing |
+| Repo root | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values |
 | Repo root | `make dev` | Honcho: Django + Celery per `Procfile.dev` |
 | `backend/` | `make install` | `pip install -r requirements.txt` |
 | `backend/` | `make install-dev` | `pip install -r requirements-dev.txt` (includes base + dev tools such as Honcho) |
