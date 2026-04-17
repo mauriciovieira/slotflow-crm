@@ -1,6 +1,6 @@
 # Multi-package changelog and release automation
 
-**Status:** Design (approved for implementation planning)  
+**Status:** Implemented  
 **Date:** 2026-04-17  
 **Scope:** Release automation, versioning, and changelog layout for the backend (Python) and frontend (Node) packages in this monorepo. No application feature behavior.
 
