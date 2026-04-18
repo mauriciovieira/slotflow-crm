@@ -2,11 +2,11 @@
 
 Chronological index of package releases (newest first). Detailed notes live in:
 
-- [Root](CHANGELOG.md)
 - [Backend](backend/CHANGELOG.md)
 - [Frontend](frontend/CHANGELOG.md)
 - [E2E](e2e/CHANGELOG.md)
 - [Docs](docs/CHANGELOG.md)
+- Root — `CHANGELOG.md` is created at the repository root on the first root-line release.
 
 <!-- release-index -->
 
