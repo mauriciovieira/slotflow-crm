@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/src/assets/brand/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slotflow</title>
+    <script>
+      (function(){
+        try {
+          var k = "slotflow.theme";
+          var m = localStorage.getItem(k);
+          var resolved;
+          if (m === "light" || m === "dark") {
+            resolved = m;
+          } else {
+            var mm = window.matchMedia;
+            if (mm && mm("(prefers-color-scheme: dark)").matches) resolved = "dark";
+            else if (mm && mm("(prefers-color-scheme: light)").matches) resolved = "light";
+            else {
+              var h = new Date().getHours();
+              resolved = (h >= 7 && h < 19) ? "light" : "dark";
+            }
+          }
+          document.documentElement.setAttribute("data-theme", resolved);
+        } catch (_) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -7,6 +7,9 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
     "release": "semantic-release"
