@@ -1,9 +1,12 @@
-# Changelog
+# Releases
 
-This file is a **chronological index** of package releases (newest first). Detailed notes live in:
+Chronological index of package releases (newest first). Detailed notes live in:
 
 - [Backend](backend/CHANGELOG.md)
 - [Frontend](frontend/CHANGELOG.md)
+- [E2E](e2e/CHANGELOG.md)
+- [Docs](docs/CHANGELOG.md)
+- Root — `CHANGELOG.md` is created at the repository root on the first root-line release.
 
 <!-- release-index -->
 

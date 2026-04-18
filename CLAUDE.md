@@ -85,15 +85,20 @@ Render runs **one process per service**, not the whole `Procfile`. The repo-root
 
 ## Release automation
 
+Five independent SemVer lines, all driven by Conventional Commits on `main` via a single consolidated workflow (`.github/workflows/release.yml`) that runs each line sequentially:
+
 - Backend: `python-semantic-release` driven by `backend/pyproject.toml`; tags `backend-v{version}`, scope `^backend`.
 - Frontend: `semantic-release` with `semantic-release-commit-filter`; tags `frontend-v{version}`.
+- E2E: same as frontend but under `e2e/`; tags `e2e-v{version}`.
+- Docs: same pattern under `docs/` (a minimal `docs/package.json` anchors the toolchain); tags `docs-v{version}`.
+- Root: `.release/root/` with a local filter plugin that excludes commits whose files all live under `backend/`, `frontend/`, `e2e/`, `docs/`, or equal `RELEASES.md`; tags `root-v{version}`; notes written to repo-root `CHANGELOG.md`.
 
-Both depend on Conventional Commits. Use scopes like `feat(backend):`, `fix(frontend):` to route a commit to the right release pipeline.
+`RELEASES.md` at the repo root is a chronological index across all five lines (not a changelog itself). After each package release, the workflow prepends a dated entry via `scripts/prepend-root-changelog.sh`. Design: `docs/superpowers/specs/2026-04-18-five-package-releases-design.md`.
 
 ## House rules (from AGENTS.md)
 
 - Superpowers brainstorming sessions use worktrees under `.worktrees/`.
-- Conventional Commits are required — they drive both semantic-release pipelines.
+- Conventional Commits are required — they drive all five semantic-release pipelines.
 - Keep local git in sync: `git fetch origin --prune`; after a PR merges, remove local branches whose upstream is gone.
 - PR bodies come from `.github/WORKFLOW_TEMPLATES/pull_request.md` — fill it in fully before `gh pr create`; never ship with placeholder text.
 

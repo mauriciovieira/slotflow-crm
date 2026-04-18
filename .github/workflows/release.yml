@@ -1,0 +1,203 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git identity
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+            docs/package-lock.json
+            .release/root/package-lock.json
+
+      # --- Backend ---
+      - name: Python Semantic Release (backend)
+        id: backend
+        uses: python-semantic-release/python-semantic-release@v10.5.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          directory: backend
+          git_committer_name: github-actions
+          git_committer_email: github-actions@users.noreply.github.com
+
+      - name: Prepend RELEASES.md for backend
+        if: success() && steps.backend.outputs.released == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+          VER="${{ steps.backend.outputs.version }}"
+          ./scripts/prepend-root-changelog.sh backend "$VER"
+          git add RELEASES.md
+          git diff --staged --quiet || git commit -m "docs: update root changelog index for backend ${VER} [skip ci]"
+          git push origin main
+
+      # --- Frontend ---
+      - name: Record frontend version on main
+        id: frontend_before
+        run: |
+          git fetch origin main
+          VER=$(git show origin/main:frontend/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run semantic-release (frontend)
+        working-directory: frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Prepend RELEASES.md for frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+          VER_AFTER=$(node -p "require('./frontend/package.json').version")
+          if [ "${{ steps.frontend_before.outputs.ver }}" = "$VER_AFTER" ]; then
+            echo "No frontend version bump; skipping root index update"
+            exit 0
+          fi
+          ./scripts/prepend-root-changelog.sh frontend "$VER_AFTER"
+          git add RELEASES.md
+          git diff --staged --quiet || git commit -m "docs: update root changelog index for frontend ${VER_AFTER} [skip ci]"
+          git push origin main
+
+      # --- E2E ---
+      - name: Record e2e version on main
+        id: e2e_before
+        run: |
+          git fetch origin main
+          VER=$(git show origin/main:e2e/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Install e2e deps
+        working-directory: e2e
+        run: npm ci
+
+      - name: Run semantic-release (e2e)
+        working-directory: e2e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Prepend RELEASES.md for e2e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+          VER_AFTER=$(node -p "require('./e2e/package.json').version")
+          if [ "${{ steps.e2e_before.outputs.ver }}" = "$VER_AFTER" ]; then
+            echo "No e2e version bump; skipping root index update"
+            exit 0
+          fi
+          ./scripts/prepend-root-changelog.sh e2e "$VER_AFTER"
+          git add RELEASES.md
+          git diff --staged --quiet || git commit -m "docs: update root changelog index for e2e ${VER_AFTER} [skip ci]"
+          git push origin main
+
+      # --- Docs ---
+      - name: Record docs version on main
+        id: docs_before
+        run: |
+          git fetch origin main
+          VER=$(git show origin/main:docs/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Install docs deps
+        working-directory: docs
+        run: npm ci
+
+      - name: Run semantic-release (docs)
+        working-directory: docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Prepend RELEASES.md for docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+          VER_AFTER=$(node -p "require('./docs/package.json').version")
+          if [ "${{ steps.docs_before.outputs.ver }}" = "$VER_AFTER" ]; then
+            echo "No docs version bump; skipping root index update"
+            exit 0
+          fi
+          ./scripts/prepend-root-changelog.sh docs "$VER_AFTER"
+          git add RELEASES.md
+          git diff --staged --quiet || git commit -m "docs: update root changelog index for docs ${VER_AFTER} [skip ci]"
+          git push origin main
+
+      # --- Root ---
+      - name: Record root version on main
+        id: root_before
+        run: |
+          git fetch origin main
+          VER=$(git show origin/main:.release/root/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Install root deps
+        working-directory: .release/root
+        run: npm ci
+
+      - name: Run semantic-release (root)
+        working-directory: .release/root
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Prepend RELEASES.md for root
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+          VER_AFTER=$(node -p "require('./.release/root/package.json').version")
+          if [ "${{ steps.root_before.outputs.ver }}" = "$VER_AFTER" ]; then
+            echo "No root version bump; skipping root index update"
+            exit 0
+          fi
+          ./scripts/prepend-root-changelog.sh root "$VER_AFTER"
+          git add RELEASES.md
+          git diff --staged --quiet || git commit -m "docs: update root changelog index for root ${VER_AFTER} [skip ci]"
+          git push origin main

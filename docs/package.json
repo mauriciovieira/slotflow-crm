@@ -1,17 +1,13 @@
 {
-  "name": "slotflow-e2e",
+  "name": "slotflow-docs",
   "private": true,
-  "type": "module",
   "version": "0.0.1",
-  "engines": {
-    "node": ">=24"
-  },
+  "description": "Documentation release tooling — not an npm package.",
+  "engines": { "node": ">=24" },
   "scripts": {
-    "test": "playwright test",
     "release": "semantic-release"
   },
   "devDependencies": {
-    "@playwright/test": "1.57.0",
     "@semantic-release/changelog": "^6.0.0",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.0",
