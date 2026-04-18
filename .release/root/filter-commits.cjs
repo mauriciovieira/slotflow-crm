@@ -22,6 +22,8 @@ function shouldIncludeCommit(files) {
 }
 
 async function filesForCommit(cwd, hash) {
+  // Merge commits return empty output without -m; shouldIncludeCommit([]) => false,
+  // so merge envelopes are excluded. The commits they wrap are processed individually.
   const { execa } = await import("execa");
   const { stdout } = await execa(
     "git",
