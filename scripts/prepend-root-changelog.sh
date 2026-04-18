@@ -42,7 +42,7 @@ with open(path, encoding="utf-8") as f:
 if marker in text:
     text = text.replace(marker, marker + "\n\n" + block, 1)
 else:
-    text = block + text
+    text = block + "\n" + text
 with open(path, "w", encoding="utf-8") as f:
     f.write(text)
 PY

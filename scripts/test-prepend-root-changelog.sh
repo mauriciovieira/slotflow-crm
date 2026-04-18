@@ -8,7 +8,8 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPT="${REPO_ROOT}/scripts/prepend-root-changelog.sh"
 
 TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+TMP2="$(mktemp -d)"
+trap 'rm -rf "$TMP" "$TMP2"' EXIT
 
 cd "$TMP"
 git init -q -b main
@@ -46,5 +47,20 @@ if "$SCRIPT" bogus 1.0.0 2>/dev/null; then
   echo "FAIL: bogus package should have been rejected" >&2
   exit 1
 fi
+
+# Test the no-marker fallback path.
+cd "$TMP2"
+git init -q -b main
+git config user.email test@example.com
+git config user.name test
+printf '# Releases\n\nPre-existing content.\n' > RELEASES.md
+git add RELEASES.md
+git commit -q -m "seed"
+"$SCRIPT" root 9.9.9
+grep -q "^## .* — Root 9.9.9$" RELEASES.md \
+  || { echo "FAIL: no-marker fallback heading missing" >&2; exit 1; }
+# Confirm pre-existing content still appears on its own line, not glued to the injected block.
+grep -q "^# Releases$" RELEASES.md \
+  || { echo "FAIL: pre-existing heading got corrupted by fallback" >&2; exit 1; }
 
 echo "OK"
