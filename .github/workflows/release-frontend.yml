@@ -68,6 +68,6 @@ jobs:
             exit 0
           fi
           ./scripts/prepend-root-changelog.sh frontend "$VER_AFTER"
-          git add CHANGELOG.md
+          git add RELEASES.md
           git diff --staged --quiet || git commit -m "docs: update root changelog index for frontend ${VER_AFTER} [skip ci]"
           git push origin main

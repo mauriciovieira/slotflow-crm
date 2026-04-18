@@ -45,6 +45,6 @@ jobs:
           git pull --rebase origin main
           VER="${{ steps.release.outputs.version }}"
           ./scripts/prepend-root-changelog.sh backend "$VER"
-          git add CHANGELOG.md
+          git add RELEASES.md
           git diff --staged --quiet || git commit -m "docs: update root changelog index for backend ${VER} [skip ci]"
           git push origin main
