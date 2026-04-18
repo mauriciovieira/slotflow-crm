@@ -24,7 +24,7 @@ Brand assets ship as hand-authored static SVGs mirroring the geometry in `docs/d
 
 - PR #7 (`feat/design-system-foundation`) has merged to `main`.
 - Local `main` updated: `git fetch origin --prune && git checkout main && git pull --ff-only`.
-- Node 24 active: `node --version` should print `v24.*`. If not: `nvm install 24 && nvm use 24`.
+- Node 24 active: `node --version` should print `v24.*`. If not, use the repo-standard toolchain setup first: `mise install` (reads `.tool-versions` / `.nvmrc`) and re-check `node --version`. If you do not use `mise`, fallback: `nvm install 24 && nvm use 24`.
 
 ## Worktree setup
 
