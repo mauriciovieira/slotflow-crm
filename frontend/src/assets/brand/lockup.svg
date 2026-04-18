@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 22" width="130" height="22" role="img" aria-label="Slotflow">
+  <g>
+    <rect x="0" y="0" width="22" height="22" rx="5.5" fill="#0d0d0d"/>
+    <rect x="4.125" y="11.917" width="2.75" height="5.958" rx="1.146" fill="#ededed" opacity="0.55"/>
+    <rect x="9.625" y="8.708" width="2.75" height="9.167" rx="1.146" fill="#ededed" opacity="0.55"/>
+    <rect x="15.125" y="5.5" width="2.75" height="12.375" rx="1.146" fill="#ededed" opacity="0.55"/>
+    <path d="M 5.5 11.917 C 7.792 10.542, 8.708 9.625, 11 8.708 C 13.292 7.792, 14.208 6.417, 16.5 5.5" stroke="#14C98B" stroke-width="2.063" stroke-linecap="round" fill="none"/>
+    <circle cx="16.5" cy="5.5" r="1.696" fill="#14C98B"/>
+  </g>
+  <text x="30" y="16" font-family="Inter, system-ui, sans-serif" font-weight="600" font-size="20" letter-spacing="-0.32" fill="#0d0d0d">Slotflow</text>
+</svg>
