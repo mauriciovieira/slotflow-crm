@@ -19,7 +19,7 @@ export function Landing() {
       </header>
       <section className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <h1 className="text-display-hero text-ink max-w-3xl">
-          A CRM for the job hunt that doesn't forget the follow-up.
+          A CRM for the job hunt that doesn&apos;t forget the follow-up.
         </h1>
         <p className="mt-4 text-body-lg text-ink-secondary max-w-xl">
           Track opportunities, pipelines, and recruiter conversations with a system built for

@@ -11,6 +11,7 @@
  * `bg-surface` automatically flips with `[data-theme="dark"]`.
  */
 
+import type { Config } from "tailwindcss";
 import { color, font, radius, spacing } from "./tokens";
 
 const tailwindPreset = {
@@ -91,6 +92,10 @@ const tailwindPreset = {
       spacing,
     },
   },
-} as const;
+};
 
-export default tailwindPreset;
+// The fontSize tuples widen to arrays without `as const`, which doesn't match
+// Tailwind's tuple-typed fontSize entries. Tailwind consumes the config at
+// runtime, not via the type — the cast bridges the structural mismatch
+// without forcing the whole preset to carry readonly/tuple generics.
+export default tailwindPreset as unknown as Partial<Config>;
