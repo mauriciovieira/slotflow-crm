@@ -164,11 +164,59 @@ describe("createThemeController", () => {
   });
 
   it("re-emits on prefers-color-scheme change while in auto mode", () => {
-    const env = stubEnvironment({ media: { "(prefers-color-scheme: dark)": false } });
+    let darkModeMatches = false;
+    const listeners = new Set<MediaListener>();
+    const storage = new Map<string, string>();
+
+    vi.stubGlobal("window", {
+      matchMedia: (query: string) => ({
+        media: query,
+        get matches() {
+          return query === "(prefers-color-scheme: dark)" ? darkModeMatches : false;
+        },
+        addEventListener: (type: string, listener: MediaListener) => {
+          if (type === "change" && query === "(prefers-color-scheme: dark)") listeners.add(listener);
+        },
+        removeEventListener: (type: string, listener: MediaListener) => {
+          if (type === "change" && query === "(prefers-color-scheme: dark)") listeners.delete(listener);
+        },
+        addListener: (listener: MediaListener) => {
+          if (query === "(prefers-color-scheme: dark)") listeners.add(listener);
+        },
+        removeListener: (listener: MediaListener) => {
+          if (query === "(prefers-color-scheme: dark)") listeners.delete(listener);
+        },
+      }),
+    });
+    vi.stubGlobal("document", {
+      documentElement: {
+        dataset: {},
+        style: {
+          setProperty: vi.fn(),
+        },
+      },
+    });
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        storage.set(key, value);
+      },
+      removeItem: (key: string) => {
+        storage.delete(key);
+      },
+    });
+
     const events: Array<[string, string]> = [];
     const ctrl = createThemeController((resolved, mode) => events.push([resolved, mode]));
-    env.dispatchMediaChange();
-    expect(events.length).toBeGreaterThan(0);
+
+    expect(ctrl.mode).toBe("auto");
+    expect(ctrl.resolved).toBe("light");
+
+    darkModeMatches = true;
+    for (const listener of listeners) listener({ matches: true });
+
+    expect(ctrl.resolved).toBe("dark");
+    expect(events.at(-1)).toEqual(["dark", "auto"]);
     ctrl.destroy();
   });
 
