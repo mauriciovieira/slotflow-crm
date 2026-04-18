@@ -1,9 +1,11 @@
 {
   "name": "slotflow-root-release",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Isolated toolchain for the root release line — not an npm package.",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "release": "semantic-release",
     "test": "node --test"
