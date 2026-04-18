@@ -7,7 +7,7 @@
  *   1. browser prefers-color-scheme, if the user has expressed one
  *   2. otherwise time-of-day fallback: light 07:00-19:00 local, else dark
  *
- * Apply via `applyThemeBeforePaint()` inline in <head> to avoid FOUC.
+ * Apply via `beforePaintScript` inline in <head> to avoid FOUC.
  */
 
 export type ThemeMode = "light" | "dark" | "auto";
