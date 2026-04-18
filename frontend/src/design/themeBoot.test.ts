@@ -3,6 +3,12 @@ import { resolve } from "node:path";
 import { describe, it, expect } from "vitest";
 import { beforePaintScript } from "./theme";
 
+// `npm test` launches vitest from the frontend/ directory, so cwd points
+// at the package root where index.html lives. This is ESM-safe (no
+// __dirname) and Vitest-compatible (import.meta.url isn't a file: URL
+// under Vitest's dev-server transform).
+const indexHtmlPath = resolve(process.cwd(), "index.html");
+
 function extractInlineBootScript(html: string): string {
   const start = html.indexOf("<script>");
   const end = html.indexOf("</script>", start);
@@ -21,7 +27,7 @@ function dedent(text: string): string {
 
 describe("theme boot sync", () => {
   it("index.html inline boot script matches beforePaintScript", () => {
-    const html = readFileSync(resolve(__dirname, "../../index.html"), "utf8");
+    const html = readFileSync(indexHtmlPath, "utf8");
     const inline = dedent(extractInlineBootScript(html));
     const expected = dedent(beforePaintScript);
     expect(inline).toBe(expected);
