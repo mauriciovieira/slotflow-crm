@@ -98,11 +98,23 @@
   color-scheme: dark;
 }
 
-/* Global baseline */
+/*
+ * Global baseline.
+ *
+ * The [data-theme] rule ensures any nested container that carries its own
+ * data-theme attribute re-applies background + color from the vars. Without
+ * it, descendants inherit the body's already-resolved values, breaking
+ * side-by-side light/dark previews (Storybook, the handoff canvas, etc.).
+ */
 html,
-body {
+body,
+[data-theme] {
   background: var(--color-bg);
   color: var(--color-text-primary);
+}
+
+html,
+body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
