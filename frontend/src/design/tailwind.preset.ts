@@ -11,7 +11,7 @@
  * `bg-surface` automatically flips with `[data-theme="dark"]`.
  */
 
-import { color, font, radius, shadow, spacing } from "./tokens";
+import { color, font, radius, spacing } from "./tokens";
 
 const tailwindPreset = {
   theme: {
