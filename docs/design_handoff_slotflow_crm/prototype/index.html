@@ -1,0 +1,2312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slotflow CRM — Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230d0d0d'/><rect x='4.5' y='13' width='3' height='6.5' rx='1.25' fill='%23ededed' opacity='.55'/><rect x='10.5' y='9.5' width='3' height='10' rx='1.25' fill='%23ededed' opacity='.55'/><rect x='16.5' y='6' width='3' height='13.5' rx='1.25' fill='%23ededed' opacity='.55'/><path d='M6 13C8.5 11.5 9.5 10.5 12 9.5C14.5 8.5 15.5 7 18 6' stroke='%2314C98B' stroke-width='2.25' stroke-linecap='round' fill='none'/><circle cx='18' cy='6' r='1.85' fill='%2314C98B'/></svg>">
+<style>
+html, body, #root { height: 100%; }
+body { background: #f3f3f3; margin: 0; }
+:root {
+  --color-brand: #14C98B;
+  --color-brand-light: #c9f3e1;
+  --color-brand-deep: #0a8f62;
+  --color-amber: #c37d0d;
+  --color-blue: #3772cf;
+  --color-red: #d45656;
+  --color-purple: #7a5af8;
+  --color-bg: #ffffff;
+  --color-panel: #fafafa;
+  --color-card: #ffffff;
+  --color-row-stripe: #fafafa;
+  --color-row-hover: #f5f5f5;
+  --color-text-primary: #0d0d0d;
+  --color-text-secondary: #333333;
+  --color-text-muted: #666666;
+  --color-text-placeholder: #888888;
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-medium: rgba(0, 0, 0, 0.10);
+  --color-border-strong: rgba(0, 0, 0, 0.12);
+  --focus-ring-color: #14C98B;
+  --focus-ring-tint: rgba(20, 201, 139, 0.25);
+  --shadow-card: rgba(0, 0, 0, 0.03) 0px 1px 2px;
+  --shadow-button: rgba(0, 0, 0, 0.06) 0px 1px 2px;
+  --shadow-popover: rgba(0, 0, 0, 0.10) 0px 8px 24px;
+  --shadow-modal: rgba(0, 0, 0, 0.18) 0px 16px 48px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 9999px;
+  --font-sans: Inter, "Inter Fallback", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, SFMono-Regular, monospace;
+  color-scheme: light;
+}
+
+/* Apply color + background on EVERY [data-theme] scope (not just :root),
+   so the dual-preview dark frame repaints text instead of inheriting the
+   body's light-mode var() resolution. */
+[data-theme] {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] {
+  --color-bg: #0d0d0d;
+  --color-panel: #171717;
+  --color-card: #141414;
+  --color-row-stripe: #141414;
+  --color-row-hover: #1a1a1a;
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #8a8a8a;
+  --color-text-placeholder: #6e6e6e;
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-medium: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-brand-light: rgba(20, 201, 139, 0.15);
+  --color-brand-deep: #4fe3b0;
+  --color-purple: #a590ff;
+  --color-red: #ff8a8a;
+  --focus-ring-tint: rgba(20, 201, 139, 0.35);
+  --shadow-card: none;
+  --shadow-popover: rgba(0, 0, 0, 0.50) 0px 8px 24px;
+  --shadow-modal: rgba(0, 0, 0, 0.60) 0px 16px 48px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--focus-ring-tint);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  color: inherit;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* Type */
+.t-display { font-size: 48px; font-weight: 600; line-height: 1.10; letter-spacing: -0.96px; }
+.t-page-title { font-size: 28px; font-weight: 600; line-height: 1.20; letter-spacing: -0.56px; }
+.t-section { font-size: 20px; font-weight: 600; line-height: 1.25; letter-spacing: -0.30px; }
+.t-sub { font-size: 16px; font-weight: 600; line-height: 1.30; letter-spacing: -0.16px; }
+.t-body-lg { font-size: 16px; font-weight: 400; line-height: 1.50; }
+.t-body { font-size: 14px; font-weight: 400; line-height: 1.45; }
+.t-body-med { font-size: 14px; font-weight: 500; line-height: 1.45; }
+.t-cell { font-size: 13px; font-weight: 400; line-height: 1.40; }
+.t-th { font-size: 12px; font-weight: 500; line-height: 1.30; letter-spacing: 0.40px; text-transform: uppercase; }
+.t-btn { font-size: 14px; font-weight: 500; line-height: 1.40; }
+.t-link { font-size: 13px; font-weight: 500; line-height: 1.40; }
+.t-caption { font-size: 12px; font-weight: 400; line-height: 1.45; color: var(--color-text-muted); }
+.t-label-up { font-size: 12px; font-weight: 500; line-height: 1.40; letter-spacing: 0.60px; text-transform: uppercase; }
+.t-mono { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.40px; }
+.t-mono-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.55px; text-transform: uppercase; }
+.t-mono-micro { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.50px; text-transform: uppercase; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; line-height: 1.40;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(0.5px); }
+.btn-primary { background: var(--color-text-primary); color: var(--color-bg); box-shadow: var(--shadow-button); }
+.btn-primary:hover { background: #1f1f1f; }
+[data-theme="dark"] .btn-primary:hover { background: #d4d4d4; }
+.btn-brand { background: var(--color-brand); color: #0d0d0d; box-shadow: var(--shadow-button); }
+.btn-brand:hover { background: #0fb57a; }
+.btn-ghost { background: var(--color-bg); color: var(--color-text-primary); border: 1px solid var(--color-border-medium); padding: 7px 13px; }
+.btn-ghost:hover { background: var(--color-row-hover); }
+.btn-icon { padding: 6px; border-radius: 6px; background: transparent; color: var(--color-text-muted); }
+.btn-icon:hover { background: rgba(0,0,0,0.05); color: var(--color-text-primary); }
+[data-theme="dark"] .btn-icon:hover { background: rgba(255,255,255,0.06); }
+.btn-sm { padding: 5px 10px; font-size: 13px; }
+.btn-destructive { background: var(--color-bg); color: var(--color-red); border: 1px solid rgba(212,86,86,0.25); padding: 7px 13px; }
+.btn-destructive:hover { background: rgba(212,86,86,0.08); }
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 7px 11px;
+  height: 34px;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border 120ms;
+}
+.input::placeholder { color: var(--color-text-placeholder); }
+.input:focus { outline: none; border-color: var(--color-brand); box-shadow: 0 0 0 3px var(--focus-ring-tint); }
+.input-search { padding-left: 32px; }
+
+/* Card / Panel */
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 14px;
+  padding: 20px;
+}
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+/* Chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+  background: var(--color-row-hover); color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.chip-mint { background: var(--color-brand-light); color: var(--color-brand-deep); }
+.chip-amber { background: rgba(195,125,13,0.12); color: var(--color-amber); }
+.chip-blue { background: rgba(55,114,207,0.12); color: var(--color-blue); }
+.chip-red { background: rgba(212,86,86,0.12); color: var(--color-red); }
+.chip-purple { background: rgba(122,90,248,0.12); color: var(--color-purple); }
+
+/* Status badge (pipeline) */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.55px; text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 9999px; display: inline-block; }
+
+/* Shell layout */
+.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100%; }
+.shell-nav {
+  background: var(--color-panel);
+  border-right: 1px solid var(--color-border-subtle);
+  padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 2px;
+  position: relative;
+}
+.shell-main { display: flex; flex-direction: column; min-width: 0; }
+
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  height: 52px; padding: 0 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg);
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+.nav-item:hover { background: var(--color-row-hover); color: var(--color-text-primary); }
+.nav-item.active {
+  background: var(--color-brand-light);
+  color: var(--color-brand-deep);
+}
+.nav-item.active::before {
+  content: ""; position: absolute; left: -12px; top: 4px; bottom: 4px;
+  width: 2px; background: var(--color-brand); border-radius: 0 2px 2px 0;
+}
+.nav-item .nav-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.4px;
+}
+.nav-item.active .nav-count { color: var(--color-brand-deep); }
+.nav-section {
+  padding: 14px 10px 6px;
+  font-family: var(--font-sans);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Table */
+.table-wrap {
+  background: var(--color-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl thead th {
+  background: var(--color-panel);
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.tbl tbody td {
+  padding: 11px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+.tbl tbody tr:nth-child(even) { background: var(--color-row-stripe); }
+.tbl tbody tr:hover { background: var(--color-row-hover); cursor: pointer; }
+.tbl tbody tr:last-child td { border-bottom: none; }
+
+/* Avatar */
+.avatar {
+  width: 28px; height: 28px; border-radius: 9999px;
+  background: var(--color-brand-light); color: var(--color-brand-deep);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.avatar-sm { width: 22px; height: 22px; font-size: 10px; }
+.avatar-lg { width: 40px; height: 40px; font-size: 14px; }
+.avatar-logo {
+  background: rgba(0,0,0,0.04);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+[data-theme="dark"] .avatar-logo { background: rgba(255,255,255,0.06); }
+
+/* Kanban */
+.kanban { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; }
+.kanban-col {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 280px;
+  width: 280px;
+  flex-shrink: 0;
+}
+.kanban-col.drop-target { border-color: var(--color-brand); background: var(--color-brand-light); }
+.kanban-col-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.kanban-col-title {
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.kanban-col-count {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+.kanban-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: border 120ms, box-shadow 120ms;
+}
+.kanban-card:hover { border-color: var(--color-border-medium); box-shadow: var(--shadow-card); }
+.kanban-card.dragging { opacity: 0.4; cursor: grabbing; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px;
+  animation: fadein 140ms ease;
+}
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 14px;
+  box-shadow: var(--shadow-modal);
+  max-width: 720px;
+  width: 100%;
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  animation: modalin 200ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes modalin { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* Segmented control */
+.seg {
+  display: inline-flex;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.seg-btn {
+  padding: 5px 10px; border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  color: var(--color-text-muted);
+}
+.seg-btn.active {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-button);
+}
+
+/* Progress */
+.progress {
+  height: 6px; width: 100%;
+  background: var(--color-row-hover);
+  border-radius: 9999px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: var(--color-brand);
+  border-radius: 9999px;
+  transition: width 240ms ease;
+}
+
+/* Pipeline step indicator */
+.pipeline-steps {
+  display: flex; align-items: center; gap: 0;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.pipeline-step {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  color: var(--color-text-muted);
+  position: relative;
+}
+.pipeline-step.done { color: var(--color-brand-deep); }
+.pipeline-step.active { color: var(--color-text-primary); }
+.pipeline-step + .pipeline-step::before {
+  content: ""; width: 12px; height: 1px; background: var(--color-border-medium);
+  margin-right: 4px;
+}
+
+/* Scrollbars */
+.kanban::-webkit-scrollbar { height: 10px; }
+.kanban::-webkit-scrollbar-thumb { background: var(--color-border-medium); border-radius: 9999px; }
+
+/* Atmospheric mint gradient for marketing surfaces */
+.marketing-bg {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(20,201,139,0.18), transparent 60%),
+    radial-gradient(800px 400px at 0% 10%, rgba(20,201,139,0.08), transparent 60%),
+    var(--color-bg);
+}
+
+/* Preview frame for the dual-theme canvas */
+.preview-frame {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-card);
+}
+.preview-chrome {
+  height: 28px; display: flex; align-items: center; gap: 6px;
+  padding: 0 12px;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.preview-dot { width: 9px; height: 9px; border-radius: 9999px; background: var(--color-border-strong); }
+
+/* misc */
+.row { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.gap-4 { gap: 4px; }
+.gap-6 { gap: 6px; }
+.gap-8 { gap: 8px; }
+.gap-10 { gap: 10px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+.gap-24 { gap: 24px; }
+.ml-auto { margin-left: auto; }
+.muted { color: var(--color-text-muted); }
+.secondary { color: var(--color-text-secondary); }
+.divider { height: 1px; background: var(--color-border-subtle); border: none; margin: 0; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Icons inherit stroke */
+.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.i-sm { width: 14px; height: 14px; }
+.i-lg { width: 20px; height: 20px; }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>/* Mock data — real senior opportunities at foreign companies. */
+
+const COMPANIES = {
+  stripe: { name: "Stripe", initial: "S", location: "Remote · US" },
+  figma: { name: "Figma", initial: "F", location: "San Francisco, CA" },
+  linear: { name: "Linear", initial: "L", location: "Remote · Global" },
+  vercel: { name: "Vercel", initial: "V", location: "Remote · Americas" },
+  notion: { name: "Notion", initial: "N", location: "New York, NY" },
+  datadog: { name: "Datadog", initial: "D", location: "Remote · US" },
+  shopify: { name: "Shopify", initial: "S", location: "Remote · Canada" },
+  ramp: { name: "Ramp", initial: "R", location: "New York, NY" },
+  airbnb: { name: "Airbnb", initial: "A", location: "Remote · US" },
+  openai: { name: "OpenAI", initial: "O", location: "San Francisco, CA" },
+  anthropic: { name: "Anthropic", initial: "A", location: "Remote · US" },
+  databricks: { name: "Databricks", initial: "D", location: "Remote · US" },
+  snowflake: { name: "Snowflake", initial: "S", location: "Remote · US" },
+  gitlab: { name: "GitLab", initial: "G", location: "Remote · Worldwide" },
+};
+
+const OPPORTUNITIES = [
+  {
+    id: "opp_01", slug: "STRIPE-SR-FE-042", company: "stripe",
+    role: "Senior Frontend Engineer, Payments UI",
+    stage: "interview", stageIndex: 3,
+    comp: "$210k–$260k + equity",
+    appliedAt: "2026-03-28", updatedAt: "3h ago",
+    recruiter: "Maya Chen", recruiterInitials: "MC",
+    priority: "high", source: "Referral — @ilyaK",
+    nextAction: "Tech screen — Thu 2pm PT", nextActionDate: "2026-04-23",
+    fit: 92,
+    notes: "Hiring manager mentioned they value a11y + perf chops. Prep the Radix → RSC migration story.",
+  },
+  {
+    id: "opp_02", slug: "FIGMA-STAFF-DS-011", company: "figma",
+    role: "Staff Engineer, Design Systems",
+    stage: "screening", stageIndex: 2,
+    comp: "$260k–$320k + equity",
+    appliedAt: "2026-04-02", updatedAt: "1d ago",
+    recruiter: "Jordan Reyes", recruiterInitials: "JR",
+    priority: "high", source: "Inbound",
+    nextAction: "Portfolio review", nextActionDate: "2026-04-24",
+    fit: 88,
+  },
+  {
+    id: "opp_03", slug: "LINEAR-SR-PE-007", company: "linear",
+    role: "Senior Product Engineer",
+    stage: "offer", stageIndex: 5,
+    comp: "$240k + 0.12% equity",
+    appliedAt: "2026-02-18", updatedAt: "5h ago",
+    recruiter: "Sasha Petrov", recruiterInitials: "SP",
+    priority: "high", source: "Warm intro",
+    nextAction: "Negotiation call — Fri", nextActionDate: "2026-04-24",
+    fit: 95,
+  },
+  {
+    id: "opp_04", slug: "VERCEL-SR-DX-019", company: "vercel",
+    role: "Senior Engineer, DX",
+    stage: "applied", stageIndex: 1,
+    comp: "$215k–$255k",
+    appliedAt: "2026-04-12", updatedAt: "4d ago",
+    recruiter: "—", recruiterInitials: "",
+    priority: "med", source: "Job board",
+    nextAction: "Waiting on recruiter reply", nextActionDate: null,
+    fit: 81,
+  },
+  {
+    id: "opp_05", slug: "NOTION-SR-IOS-003", company: "notion",
+    role: "Senior iOS Engineer",
+    stage: "interview", stageIndex: 3,
+    comp: "$220k–$270k",
+    appliedAt: "2026-03-15", updatedAt: "2d ago",
+    recruiter: "Priya Raman", recruiterInitials: "PR",
+    priority: "med", source: "LinkedIn",
+    nextAction: "System design round", nextActionDate: "2026-04-28",
+    fit: 74,
+  },
+  {
+    id: "opp_06", slug: "DATADOG-STAFF-BE-051", company: "datadog",
+    role: "Staff Backend Engineer, Observability Pipeline",
+    stage: "applied", stageIndex: 1,
+    comp: "$280k–$340k",
+    appliedAt: "2026-04-14", updatedAt: "2d ago",
+    recruiter: "—", recruiterInitials: "",
+    priority: "med", source: "AngelList",
+    nextAction: "Tailor resume → apply", nextActionDate: "2026-04-19",
+    fit: 79,
+  },
+  {
+    id: "opp_07", slug: "SHOPIFY-SR-FE-088", company: "shopify",
+    role: "Senior Frontend Engineer, Admin",
+    stage: "rejected", stageIndex: 0,
+    comp: "$200k CAD + equity",
+    appliedAt: "2026-03-02", updatedAt: "1w ago",
+    recruiter: "Alex Tran", recruiterInitials: "AT",
+    priority: "low", source: "LinkedIn",
+    nextAction: "Archive", nextActionDate: null,
+    fit: 68,
+  },
+  {
+    id: "opp_08", slug: "RAMP-SR-FS-024", company: "ramp",
+    role: "Senior Full Stack Engineer",
+    stage: "screening", stageIndex: 2,
+    comp: "$230k–$280k + equity",
+    appliedAt: "2026-04-05", updatedAt: "6h ago",
+    recruiter: "Emma Davis", recruiterInitials: "ED",
+    priority: "high", source: "Referral — @nathansun",
+    nextAction: "Recruiter call — Mon 11am", nextActionDate: "2026-04-21",
+    fit: 86,
+  },
+  {
+    id: "opp_09", slug: "AIRBNB-SR-WEB-033", company: "airbnb",
+    role: "Senior Engineer, Guest Web",
+    stage: "applied", stageIndex: 1,
+    comp: "$225k–$275k",
+    appliedAt: "2026-04-09", updatedAt: "5d ago",
+    recruiter: "—", recruiterInitials: "",
+    priority: "low", source: "Job board",
+    nextAction: "Follow-up email", nextActionDate: "2026-04-22",
+    fit: 72,
+  },
+  {
+    id: "opp_10", slug: "OPENAI-MTS-APP-002", company: "openai",
+    role: "Member of Technical Staff, Applications",
+    stage: "interview", stageIndex: 4,
+    comp: "$300k–$380k + equity",
+    appliedAt: "2026-02-28", updatedAt: "1h ago",
+    recruiter: "Dana Liu", recruiterInitials: "DL",
+    priority: "high", source: "Warm intro — @ava.eng",
+    nextAction: "Onsite — 4 rounds", nextActionDate: "2026-04-25",
+    fit: 91,
+  },
+  {
+    id: "opp_11", slug: "ANTHROPIC-SR-PROD-014", company: "anthropic",
+    role: "Senior Product Engineer, Claude.ai",
+    stage: "screening", stageIndex: 2,
+    comp: "$260k–$320k + equity",
+    appliedAt: "2026-04-01", updatedAt: "3d ago",
+    recruiter: "Ravi Shah", recruiterInitials: "RS",
+    priority: "high", source: "Inbound",
+    nextAction: "Take-home prompt due", nextActionDate: "2026-04-24",
+    fit: 93,
+  },
+  {
+    id: "opp_12", slug: "DATABRICKS-SR-ML-077", company: "databricks",
+    role: "Senior ML Infra Engineer",
+    stage: "interview", stageIndex: 3,
+    comp: "$270k–$330k",
+    appliedAt: "2026-03-22", updatedAt: "8h ago",
+    recruiter: "Haruto Mori", recruiterInitials: "HM",
+    priority: "med", source: "LinkedIn",
+    nextAction: "Cross-functional round", nextActionDate: "2026-04-26",
+    fit: 82,
+  },
+  {
+    id: "opp_13", slug: "SNOWFLAKE-STAFF-FE-009", company: "snowflake",
+    role: "Staff Frontend Engineer",
+    stage: "applied", stageIndex: 1,
+    comp: "$265k–$320k",
+    appliedAt: "2026-04-15", updatedAt: "2d ago",
+    recruiter: "—", recruiterInitials: "",
+    priority: "low", source: "Job board",
+    nextAction: "Customize cover letter", nextActionDate: "2026-04-20",
+    fit: 77,
+  },
+  {
+    id: "opp_14", slug: "GITLAB-SR-FE-061", company: "gitlab",
+    role: "Senior Frontend Engineer, CI/CD",
+    stage: "rejected", stageIndex: 0,
+    comp: "$190k–$230k",
+    appliedAt: "2026-02-10", updatedAt: "3w ago",
+    recruiter: "—", recruiterInitials: "",
+    priority: "low", source: "Job board",
+    nextAction: "Archived", nextActionDate: null,
+    fit: 64,
+  },
+];
+
+const STAGES = [
+  { key: "applied", label: "Applied", color: "var(--color-text-muted)" },
+  { key: "screening", label: "Screening", color: "var(--color-blue)" },
+  { key: "interview", label: "Interview", color: "var(--color-brand)" },
+  { key: "offer", label: "Offer", color: "var(--color-brand-deep)" },
+  { key: "rejected", label: "Closed", color: "var(--color-red)" },
+];
+
+const MESSAGES = [
+  {
+    id: "m1", oppId: "opp_01", from: "Maya Chen", initials: "MC", to: "me",
+    at: "Wed 3:24pm", preview: "Excited to schedule your technical screen this Thursday…",
+    body: "Hey! Really enjoyed our intro call yesterday — the team is excited to move forward. I've blocked Thu 2pm PT for a 60-min technical screen with two of our senior engineers. They'll focus on frontend fundamentals and a bit of system design around checkout UX. Let me know if that still works!",
+    unread: true,
+  },
+  {
+    id: "m2", oppId: "opp_10", from: "Dana Liu", initials: "DL", to: "me",
+    at: "Wed 11:02am", preview: "Your onsite is confirmed for next Friday. Here's what to expect…",
+    body: "Confirming your onsite — 4 rounds, starting 10am PT. Rounds: coding (60), system design (60), lunch + culture (45), hiring manager (45). I'll send calendar invites today.",
+    unread: true,
+  },
+  {
+    id: "m3", oppId: "opp_03", from: "Sasha Petrov", initials: "SP", to: "me",
+    at: "Tue 6:18pm", preview: "Offer details attached — let's find a time to discuss comp and start date.",
+    body: "Attached is the offer letter. Base $240k, 0.12% equity over 4yrs, signing $30k. Happy to talk through comp details + start date Friday if you're free.",
+    unread: false,
+  },
+  {
+    id: "m4", oppId: "opp_08", from: "Emma Davis", initials: "ED", to: "me",
+    at: "Mon 10:41am", preview: "Quick intro call on Monday at 11am — sending an invite now.",
+    body: "Looking forward to our chat Monday! We'll cover the role, team structure, and hear about what you're looking for.",
+    unread: false,
+  },
+  {
+    id: "m5", oppId: "opp_02", from: "Jordan Reyes", initials: "JR", to: "me",
+    at: "Mon 9:02am", preview: "Portfolio review next week — please share 2–3 case studies.",
+    body: "For your portfolio review, we'd love 2–3 case studies with emphasis on design-system governance, token pipelines, and component API decisions.",
+    unread: false,
+  },
+  {
+    id: "m6", oppId: "opp_11", from: "Ravi Shah", initials: "RS", to: "me",
+    at: "Fri 2:11pm", preview: "Take-home prompt attached. Due in 7 days, ~4hrs of work.",
+    body: "Here's the take-home — build a small streaming chat UI with abortable requests and optimistic send. We care about tradeoffs you surface, not feature completeness.",
+    unread: false,
+  },
+];
+
+window.COMPANIES = COMPANIES;
+window.OPPORTUNITIES = OPPORTUNITIES;
+window.STAGES = STAGES;
+window.MESSAGES = MESSAGES;
+</script>
+<script type="text/babel">/* global React */
+const { useState, useEffect } = React;
+
+// Logomark — três "slots" em altura crescente conectados por uma curva mint.
+// Evoca slot (barras) + flow (curva) + pipeline ascendente.
+// Square container 24x24 ensures parity with favicon/app icon contexts.
+function Logomark({ size = 24, rounded = true, bg, accent = "#14C98B", tone }) {
+  // tone: "dark" (default, preto) ou "light" (para uso em fundos mint/escuros)
+  const sq = tone === "light" ? "#ededed" : "#0d0d0d";
+  const barFill = tone === "light" ? "#0d0d0d" : "#ededed";
+  const sqFill = bg ?? sq;
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      role="img"
+      aria-label="Slotflow"
+      style={{ display: "block", flexShrink: 0 }}
+    >
+      <rect x="0" y="0" width="24" height="24" rx={rounded ? 6 : 0} fill={sqFill} />
+      {/* Três slots em altura crescente — representam "slots" preenchidos pelo pipeline */}
+      <rect x="4.5" y="13" width="3" height="6.5" rx="1.25" fill={barFill} opacity="0.55" />
+      <rect x="10.5" y="9.5" width="3" height="10" rx="1.25" fill={barFill} opacity="0.55" />
+      <rect x="16.5" y="6" width="3" height="13.5" rx="1.25" fill={barFill} opacity="0.55" />
+      {/* Curva de flow conectando os topos dos slots */}
+      <path
+        d="M 6 13 C 8.5 11.5, 9.5 10.5, 12 9.5 C 14.5 8.5, 15.5 7, 18 6"
+        stroke={accent}
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Ponta (dot) no último slot — "landed" */}
+      <circle cx="18" cy="6" r="1.85" fill={accent} />
+    </svg>
+  );
+}
+
+// Monochrome version
+function LogomarkMono({ size = 24, color = "currentColor" }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} style={{ display: "block", flexShrink: 0 }}>
+      <rect x="0" y="0" width="24" height="24" rx="6" fill={color} />
+      <rect x="4.5" y="13" width="3" height="6.5" rx="1.25" fill="rgba(255,255,255,0.35)" />
+      <rect x="10.5" y="9.5" width="3" height="10" rx="1.25" fill="rgba(255,255,255,0.35)" />
+      <rect x="16.5" y="6" width="3" height="13.5" rx="1.25" fill="rgba(255,255,255,0.35)" />
+      <path d="M 6 13 C 8.5 11.5, 9.5 10.5, 12 9.5 C 14.5 8.5, 15.5 7, 18 6" stroke="#fff" strokeWidth="2.25" strokeLinecap="round" fill="none" />
+      <circle cx="18" cy="6" r="1.85" fill="#fff" />
+    </svg>
+  );
+}
+
+function Wordmark({ size = 20, color }) {
+  // Letter-spacing follows DESIGN.md: -0.32px at 20px, scales proportionally
+  const tracking = -0.016 * size; // ~-0.32 at 20px
+  return (
+    <span
+      style={{
+        fontFamily: "Inter, system-ui, sans-serif",
+        fontSize: size,
+        fontWeight: 600,
+        letterSpacing: `${tracking}px`,
+        color: color ?? "var(--color-text-primary)",
+        lineHeight: 1,
+      }}
+    >
+      Slotflow
+    </span>
+  );
+}
+
+function Lockup({ size = 20, color, tone }) {
+  const markSize = Math.round(size * 1.1);
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+      <Logomark size={markSize} tone={tone} />
+      <Wordmark size={size} color={color} />
+    </span>
+  );
+}
+
+window.Logomark = Logomark;
+window.LogomarkMono = LogomarkMono;
+window.Wordmark = Wordmark;
+window.Lockup = Lockup;
+</script>
+<script type="text/babel">/* global React */
+const { useState } = React;
+
+// Stroke icons, 16px viewbox, currentColor. Keep count small & consistent.
+const Icon = ({ d, size, className = "", fill }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+    width={size ?? 16} height={size ?? 16}
+    fill={fill ?? "none"} stroke="currentColor" strokeWidth="1.75"
+    strokeLinecap="round" strokeLinejoin="round" className={className}
+    style={{ display: "block", flexShrink: 0 }}>
+    {d}
+  </svg>
+);
+
+const IconHome = (p) => <Icon {...p} d={<><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></>} />;
+const IconBriefcase = (p) => <Icon {...p} d={<><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></>} />;
+const IconKanban = (p) => <Icon {...p} d={<><rect x="3" y="4" width="5" height="14" rx="1"/><rect x="10" y="4" width="5" height="9" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></>} />;
+const IconInbox = (p) => <Icon {...p} d={<><path d="M3 13l3-8a2 2 0 0 1 2-1h8a2 2 0 0 1 2 1l3 8"/><path d="M3 13v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 13h5l1 2h6l1-2h5"/></>} />;
+const IconFile = (p) => <Icon {...p} d={<><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></>} />;
+const IconSettings = (p) => <Icon {...p} d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 5l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></>} />;
+const IconSearch = (p) => <Icon {...p} d={<><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></>} />;
+const IconPlus = (p) => <Icon {...p} d={<><path d="M12 5v14M5 12h14"/></>} />;
+const IconFilter = (p) => <Icon {...p} d={<><path d="M3 5h18l-7 9v6l-4-2v-4z"/></>} />;
+const IconChevron = (p) => <Icon {...p} d={<><path d="m6 9 6 6 6-6"/></>} />;
+const IconChevronR = (p) => <Icon {...p} d={<><path d="m9 6 6 6-6 6"/></>} />;
+const IconMore = (p) => <Icon {...p} d={<><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></>} />;
+const IconClose = (p) => <Icon {...p} d={<><path d="m6 6 12 12M6 18 18 6"/></>} />;
+const IconBell = (p) => <Icon {...p} d={<><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></>} />;
+const IconSun = (p) => <Icon {...p} d={<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></>} />;
+const IconMoon = (p) => <Icon {...p} d={<><path d="M21 13a8 8 0 1 1-10-10 6.5 6.5 0 0 0 10 10z"/></>} />;
+const IconCalendar = (p) => <Icon {...p} d={<><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></>} />;
+const IconMail = (p) => <Icon {...p} d={<><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></>} />;
+const IconArrowUp = (p) => <Icon {...p} d={<><path d="M7 17 17 7M9 7h8v8"/></>} />;
+const IconExternal = (p) => <Icon {...p} d={<><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/></>} />;
+const IconPin = (p) => <Icon {...p} d={<><path d="M12 2v6M5 9h14l-2 4H7z"/><path d="M12 13v9"/></>} />;
+const IconStar = (p) => <Icon {...p} d={<><path d="m12 3 2.6 5.6 6 .7-4.5 4.2 1.2 6-5.3-3-5.3 3 1.2-6-4.5-4.2 6-.7z"/></>} />;
+const IconCheck = (p) => <Icon {...p} d={<><path d="m5 12 5 5L20 7"/></>} />;
+const IconSparkle = (p) => <Icon {...p} d={<><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/></>} />;
+const IconDrag = (p) => <Icon {...p} d={<><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></>} />;
+const IconArchive = (p) => <Icon {...p} d={<><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></>} />;
+const IconLink = (p) => <Icon {...p} d={<><path d="M10 14a4 4 0 0 1 0-5.7l3-3a4 4 0 0 1 5.7 5.7l-1.5 1.5"/><path d="M14 10a4 4 0 0 1 0 5.7l-3 3A4 4 0 0 1 5.3 13l1.5-1.5"/></>} />;
+const IconBuilding = (p) => <Icon {...p} d={<><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-4h4v4"/></>} />;
+
+window.Icons = {
+  Home: IconHome, Briefcase: IconBriefcase, Kanban: IconKanban, Inbox: IconInbox,
+  File: IconFile, Settings: IconSettings, Search: IconSearch, Plus: IconPlus,
+  Filter: IconFilter, Chevron: IconChevron, ChevronR: IconChevronR, More: IconMore,
+  Close: IconClose, Bell: IconBell, Sun: IconSun, Moon: IconMoon,
+  Calendar: IconCalendar, Mail: IconMail, ArrowUp: IconArrowUp, External: IconExternal,
+  Pin: IconPin, Star: IconStar, Check: IconCheck, Sparkle: IconSparkle,
+  Drag: IconDrag, Archive: IconArchive, Link: IconLink, Building: IconBuilding,
+};
+</script>
+<script type="text/babel">/* global React, Icons, Lockup, Logomark, COMPANIES, STAGES */
+const { useState } = React;
+
+function Sidebar({ route, setRoute, counts }) {
+  const Icons = window.Icons;
+  const items = [
+    { key: "dashboard", label: "Dashboard", icon: Icons.Home },
+    { key: "opportunities", label: "Opportunities", icon: Icons.Briefcase, count: counts.opportunities },
+    { key: "pipeline", label: "Pipeline", icon: Icons.Kanban },
+    { key: "inbox", label: "Inbox", icon: Icons.Inbox, count: counts.inbox },
+    { key: "resume", label: "Resume Studio", icon: Icons.File },
+  ];
+  const pinned = [
+    { key: "opp_10", slug: "OPENAI · MTS", color: "var(--color-brand)" },
+    { key: "opp_03", slug: "LINEAR · SR PE", color: "var(--color-brand-deep)" },
+    { key: "opp_01", slug: "STRIPE · SR FE", color: "var(--color-blue)" },
+  ];
+  return (
+    <aside className="shell-nav">
+      <div style={{ padding: "4px 6px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+        <Lockup size={18} />
+      </div>
+      {items.map((it) => {
+        const I = it.icon;
+        return (
+          <button key={it.key} className={`nav-item ${route === it.key ? "active" : ""}`} onClick={() => setRoute(it.key)}>
+            <I />
+            <span>{it.label}</span>
+            {it.count != null && <span className="nav-count">{it.count}</span>}
+          </button>
+        );
+      })}
+
+      <div className="nav-section">Pinned</div>
+      {pinned.map((p) => (
+        <button key={p.key} className="nav-item" onClick={() => setRoute("opportunity:" + p.key)}>
+          <span style={{ width: 6, height: 6, borderRadius: 9999, background: p.color, flexShrink: 0 }} />
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: 0.4 }}>{p.slug}</span>
+        </button>
+      ))}
+
+      <div style={{ marginTop: "auto", padding: "10px 6px 2px" }}>
+        <button className={`nav-item ${route === "settings" ? "active" : ""}`} onClick={() => setRoute("settings")}>
+          <Icons.Settings />
+          <span>Settings</span>
+        </button>
+        <div style={{
+          marginTop: 8, padding: "10px 10px", display: "flex", alignItems: "center", gap: 10,
+          borderRadius: 10, background: "var(--color-bg)", border: "1px solid var(--color-border-subtle)"
+        }}>
+          <div className="avatar avatar-sm" style={{ width: 26, height: 26, fontSize: 11 }}>RT</div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.2 }}>Rafael Torres</div>
+            <div className="t-caption" style={{ fontSize: 11 }}>rafael@torres.dev</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function Topbar({ title, theme, toggleTheme, onNew }) {
+  const Icons = window.Icons;
+  return (
+    <div className="topbar">
+      <div className="t-page-title" style={{ fontSize: 16, letterSpacing: "-0.16px" }}>{title}</div>
+      <div style={{ position: "relative", marginLeft: 24, flex: 1, maxWidth: 480 }}>
+        <Icons.Search className="i" />
+        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--color-text-placeholder)" }}>
+          <Icons.Search />
+        </span>
+        <input className="input input-search" placeholder="Search opportunities, companies, messages…" />
+        <span style={{
+          position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+          fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--color-text-muted)",
+          letterSpacing: 0.5, border: "1px solid var(--color-border-subtle)",
+          padding: "2px 5px", borderRadius: 4
+        }}>⌘K</span>
+      </div>
+      <div className="ml-auto row gap-6">
+        <button className="btn-icon" title="Toggle theme" onClick={toggleTheme}>
+          {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+        </button>
+        <button className="btn-icon" title="Notifications"><Icons.Bell /></button>
+        {onNew && (
+          <button className="btn btn-brand btn-sm" onClick={onNew}>
+            <Icons.Plus /> New opportunity
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StageBadge({ stage }) {
+  const s = STAGES.find((x) => x.key === stage) ?? STAGES[0];
+  const cls = ({
+    applied: "", screening: "chip-blue", interview: "chip-mint", offer: "chip-mint", rejected: "chip-red",
+  })[s.key];
+  const dot = s.color;
+  return (
+    <span className={`badge ${cls}`} style={{
+      background: s.key === "offer" ? "var(--color-brand-light)" : undefined,
+    }}>
+      <span className="badge-dot" style={{ background: dot }} />
+      {s.label}
+    </span>
+  );
+}
+
+function CompanyAvatar({ company, size = 28 }) {
+  const c = COMPANIES[company];
+  return (
+    <span className="avatar avatar-logo" style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}>
+      {c?.initial ?? "?"}
+    </span>
+  );
+}
+
+window.Sidebar = Sidebar;
+window.Topbar = Topbar;
+window.StageBadge = StageBadge;
+window.CompanyAvatar = CompanyAvatar;
+</script>
+<script type="text/babel">/* global React, OPPORTUNITIES, STAGES, COMPANIES, MESSAGES */
+const { useState, useMemo } = React;
+
+// ============ DASHBOARD ============
+function Dashboard({ setRoute, openOpp }) {
+  const Icons = window.Icons;
+  const { StageBadge, CompanyAvatar } = window;
+  const active = OPPORTUNITIES.filter(o => o.stage !== "rejected");
+  const byStage = STAGES.filter(s => s.key !== "rejected").map(s => ({
+    ...s, count: OPPORTUNITIES.filter(o => o.stage === s.key).length
+  }));
+  const upcoming = OPPORTUNITIES
+    .filter(o => o.nextActionDate && o.stage !== "rejected")
+    .sort((a, b) => a.nextActionDate.localeCompare(b.nextActionDate))
+    .slice(0, 5);
+  const recentMsgs = MESSAGES.slice(0, 3);
+
+  return (
+    <div style={{ padding: "24px 32px", maxWidth: 1280, margin: "0 auto", width: "100%" }}>
+      <div className="row gap-12" style={{ marginBottom: 6 }}>
+        <h1 className="t-page-title" style={{ margin: 0 }}>Good morning, Rafael</h1>
+        <span className="chip chip-mint"><span className="badge-dot" style={{ background: "var(--color-brand)" }}/>3 new this week</span>
+      </div>
+      <p className="t-body" style={{ color: "var(--color-text-muted)", margin: "0 0 24px" }}>
+        You have <strong style={{ color: "var(--color-text-primary)" }}>2 interviews</strong> this week and an offer from Linear pending your reply.
+      </p>
+
+      {/* Stat strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "Active", value: active.length, delta: "+3", tone: "mint" },
+          { label: "In interview", value: OPPORTUNITIES.filter(o => o.stage === "interview").length, delta: "2 onsite", tone: "mint" },
+          { label: "Response rate", value: "41%", delta: "+6pp", tone: "mint" },
+          { label: "Avg. cycle time", value: "18d", delta: "−2d", tone: "mint" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: 16 }}>
+            <div className="t-label-up" style={{ color: "var(--color-text-muted)", fontSize: 11 }}>{s.label}</div>
+            <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.56px", lineHeight: 1.1, marginTop: 6 }}>{s.value}</div>
+            <div className="t-caption" style={{ marginTop: 4, color: "var(--color-brand-deep)", fontWeight: 500 }}>
+              <Icons.ArrowUp className="i" style={{ display: "inline", width: 12, height: 12, verticalAlign: -2 }}/> {s.delta} vs last week
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pipeline overview strip */}
+      <div className="card" style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px", display: "flex", alignItems: "center" }}>
+          <div className="t-sub">Pipeline overview</div>
+          <button className="btn btn-ghost btn-sm ml-auto" onClick={() => setRoute("pipeline")}>Open board <Icons.ChevronR /></button>
+        </div>
+        <hr className="divider" />
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${byStage.length}, 1fr)` }}>
+          {byStage.map((s, i) => (
+            <div key={s.key} style={{
+              padding: "16px 20px",
+              borderRight: i < byStage.length - 1 ? "1px solid var(--color-border-subtle)" : "none",
+            }}>
+              <div className="row gap-6" style={{ marginBottom: 6 }}>
+                <span className="badge-dot" style={{ background: s.color, width: 8, height: 8 }}/>
+                <span className="t-label-up" style={{ fontSize: 11 }}>{s.label}</span>
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-0.44px" }}>{s.count}</div>
+              <div className="progress" style={{ marginTop: 8 }}>
+                <div className="progress-bar" style={{
+                  width: `${(s.count / Math.max(...byStage.map(x => x.count))) * 100}%`,
+                  background: s.color,
+                }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Two-col: upcoming + inbox */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}>
+        <div className="card" style={{ padding: 0 }}>
+          <div style={{ padding: "14px 20px", display: "flex", alignItems: "center" }}>
+            <div className="t-sub">Upcoming actions</div>
+            <span className="chip" style={{ marginLeft: 8 }}>{upcoming.length}</span>
+            <button className="btn-icon ml-auto"><Icons.Calendar/></button>
+          </div>
+          <hr className="divider" />
+          {upcoming.map((o, i) => (
+            <div key={o.id} onClick={() => openOpp(o.id)} style={{
+              padding: "12px 20px",
+              borderBottom: i < upcoming.length - 1 ? "1px solid var(--color-border-subtle)" : "none",
+              display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+            }} className="row-hover">
+              <CompanyAvatar company={o.company} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="row gap-8">
+                  <span className="t-body-med" style={{ color: "var(--color-text-primary)" }}>{o.role}</span>
+                  <span className="t-mono-micro" style={{ color: "var(--color-text-muted)" }}>{o.slug}</span>
+                </div>
+                <div className="t-caption" style={{ marginTop: 2 }}>{o.nextAction}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div className="t-mono-label" style={{ color: "var(--color-text-primary)" }}>
+                  {new Date(o.nextActionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </div>
+                <div style={{ marginTop: 4 }}><StageBadge stage={o.stage}/></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="card" style={{ padding: 0 }}>
+          <div style={{ padding: "14px 20px", display: "flex", alignItems: "center" }}>
+            <div className="t-sub">Recent messages</div>
+            <button className="btn btn-ghost btn-sm ml-auto" onClick={() => setRoute("inbox")}>Open inbox <Icons.ChevronR/></button>
+          </div>
+          <hr className="divider" />
+          {recentMsgs.map((m, i) => {
+            const opp = OPPORTUNITIES.find(o => o.id === m.oppId);
+            return (
+              <div key={m.id} onClick={() => setRoute("inbox")} style={{
+                padding: "12px 20px",
+                borderBottom: i < recentMsgs.length - 1 ? "1px solid var(--color-border-subtle)" : "none",
+                display: "flex", gap: 12, cursor: "pointer",
+              }}>
+                <div className="avatar avatar-sm" style={{ marginTop: 2 }}>{m.initials}</div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="row gap-6">
+                    <span className="t-body-med">{m.from}</span>
+                    {m.unread && <span className="badge-dot" style={{ background: "var(--color-brand)" }}/>}
+                    <span className="t-caption ml-auto">{m.at}</span>
+                  </div>
+                  <div className="t-caption" style={{ color: "var(--color-text-secondary)", marginTop: 2,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.preview}</div>
+                  {opp && <div style={{ marginTop: 6 }}>
+                    <span className="t-mono-micro" style={{ color: "var(--color-text-muted)" }}>{opp.slug}</span>
+                  </div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.Dashboard = Dashboard;
+</script>
+<script type="text/babel">/* global React, OPPORTUNITIES, STAGES, COMPANIES */
+const { useState, useMemo } = React;
+
+function Opportunities({ openOpp }) {
+  const Icons = window.Icons;
+  const { StageBadge, CompanyAvatar } = window;
+  const [q, setQ] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [sort, setSort] = useState("updated");
+
+  const filtered = useMemo(() => {
+    let r = OPPORTUNITIES.filter((o) => {
+      const c = COMPANIES[o.company]?.name ?? "";
+      const hay = (o.role + " " + c + " " + o.slug + " " + o.recruiter).toLowerCase();
+      if (q && !hay.includes(q.toLowerCase())) return false;
+      if (stageFilter !== "all" && o.stage !== stageFilter) return false;
+      if (priorityFilter !== "all" && o.priority !== priorityFilter) return false;
+      return true;
+    });
+    if (sort === "fit") r = [...r].sort((a, b) => b.fit - a.fit);
+    if (sort === "stage") r = [...r].sort((a, b) => b.stageIndex - a.stageIndex);
+    return r;
+  }, [q, stageFilter, priorityFilter, sort]);
+
+  return (
+    <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="row gap-12">
+        <h1 className="t-page-title" style={{ margin: 0 }}>Opportunities</h1>
+        <span className="chip">{OPPORTUNITIES.length} total</span>
+        <span className="chip chip-mint">{OPPORTUNITIES.filter(o => o.stage !== "rejected").length} active</span>
+      </div>
+
+      {/* Toolbar */}
+      <div className="row gap-8" style={{ flexWrap: "wrap" }}>
+        <div style={{ position: "relative", width: 320 }}>
+          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--color-text-placeholder)" }}>
+            <Icons.Search />
+          </span>
+          <input className="input input-search" placeholder="Filter by role, company, slug…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+
+        <div className="seg">
+          {["all", ...STAGES.map((s) => s.key)].map((k) => (
+            <button key={k} className={`seg-btn ${stageFilter === k ? "active" : ""}`} onClick={() => setStageFilter(k)}>
+              {k === "all" ? "All" : STAGES.find((s) => s.key === k).label}
+            </button>
+          ))}
+        </div>
+
+        <div className="seg">
+          {[
+            { k: "all", l: "Any" }, { k: "high", l: "High" }, { k: "med", l: "Medium" }, { k: "low", l: "Low" }
+          ].map((x) => (
+            <button key={x.k} className={`seg-btn ${priorityFilter === x.k ? "active" : ""}`} onClick={() => setPriorityFilter(x.k)}>{x.l}</button>
+          ))}
+        </div>
+
+        <div className="row gap-6 ml-auto">
+          <select className="input" style={{ width: "auto", height: 34 }} value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="updated">Sort: Last updated</option>
+            <option value="fit">Sort: Fit score</option>
+            <option value="stage">Sort: Stage (furthest)</option>
+          </select>
+          <button className="btn btn-ghost btn-sm"><Icons.Filter /> Save view</button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="table-wrap">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 34 }}></th>
+              <th>Role</th>
+              <th>Stage</th>
+              <th>Next action</th>
+              <th>Recruiter</th>
+              <th>Comp</th>
+              <th style={{ textAlign: "right" }}>Fit</th>
+              <th>Updated</th>
+              <th style={{ width: 40 }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((o) => (
+              <tr key={o.id} onClick={() => openOpp(o.id)}>
+                <td>
+                  <CompanyAvatar company={o.company} size={24} />
+                </td>
+                <td>
+                  <div style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>{o.role}</div>
+                  <div className="row gap-6" style={{ marginTop: 2 }}>
+                    <span className="t-caption" style={{ color: "var(--color-text-secondary)" }}>{COMPANIES[o.company].name}</span>
+                    <span className="t-mono-micro" style={{ color: "var(--color-text-muted)" }}>{o.slug}</span>
+                  </div>
+                </td>
+                <td><StageBadge stage={o.stage} /></td>
+                <td>
+                  {o.nextActionDate ? (
+                    <div>
+                      <div style={{ fontSize: 13 }}>{o.nextAction}</div>
+                      <div className="t-mono-micro" style={{ color: "var(--color-text-muted)", marginTop: 2 }}>
+                        {new Date(o.nextActionDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="t-caption" style={{ color: "var(--color-text-placeholder)" }}>—</span>
+                  )}
+                </td>
+                <td>
+                  {o.recruiter !== "—" ? (
+                    <div className="row gap-8">
+                      <div className="avatar avatar-sm">{o.recruiterInitials}</div>
+                      <span className="t-cell">{o.recruiter}</span>
+                    </div>
+                  ) : (
+                    <span className="t-caption" style={{ color: "var(--color-text-placeholder)" }}>—</span>
+                  )}
+                </td>
+                <td className="t-cell" style={{ color: "var(--color-text-secondary)" }}>{o.comp}</td>
+                <td style={{ textAlign: "right" }}>
+                  <span style={{
+                    display: "inline-block", minWidth: 34,
+                    fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600,
+                    color: o.fit >= 85 ? "var(--color-brand-deep)" : o.fit >= 75 ? "var(--color-text-primary)" : "var(--color-text-muted)",
+                  }}>{o.fit}</span>
+                </td>
+                <td className="t-caption">{o.updatedAt}</td>
+                <td onClick={(e) => e.stopPropagation()}>
+                  <button className="btn-icon"><Icons.More /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filtered.length === 0 && (
+          <div style={{ padding: 48, textAlign: "center" }}>
+            <div className="t-sub" style={{ marginBottom: 6 }}>No results</div>
+            <div className="t-caption">Try removing a filter or clearing search.</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+window.Opportunities = Opportunities;
+</script>
+<script type="text/babel">/* global React, OPPORTUNITIES, STAGES, COMPANIES */
+const { useState } = React;
+
+function Pipeline({ openOpp }) {
+  const Icons = window.Icons;
+  const { CompanyAvatar } = window;
+  const [opps, setOpps] = useState(OPPORTUNITIES);
+  const [dragging, setDragging] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
+
+  const byStage = STAGES.map((s) => ({
+    ...s, items: opps.filter((o) => o.stage === s.key),
+  }));
+
+  const onDragStart = (id) => (e) => {
+    setDragging(id);
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", id); } catch (_) {}
+  };
+  const onDragEnd = () => { setDragging(null); setDropTarget(null); };
+  const onDragOver = (stage) => (e) => { e.preventDefault(); setDropTarget(stage); };
+  const onDrop = (stage) => (e) => {
+    e.preventDefault();
+    if (!dragging) return;
+    setOpps((prev) => prev.map((o) => o.id === dragging ? { ...o, stage } : o));
+    setDragging(null); setDropTarget(null);
+  };
+
+  return (
+    <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 16, minHeight: 0, flex: 1 }}>
+      <div className="row gap-12">
+        <h1 className="t-page-title" style={{ margin: 0 }}>Pipeline</h1>
+        <span className="t-caption">Drag cards between columns to update stage</span>
+        <div className="ml-auto row gap-6">
+          <button className="btn btn-ghost btn-sm"><Icons.Filter/> Filter</button>
+          <button className="btn btn-ghost btn-sm"><Icons.Calendar/> This week</button>
+        </div>
+      </div>
+
+      <div className="kanban" style={{ flex: 1, minHeight: 0 }}>
+        {byStage.map((col) => (
+          <div key={col.key}
+            className={`kanban-col ${dropTarget === col.key ? "drop-target" : ""}`}
+            onDragOver={onDragOver(col.key)}
+            onDrop={onDrop(col.key)}
+            onDragLeave={() => setDropTarget(null)}
+          >
+            <div className="kanban-col-head">
+              <span className="badge-dot" style={{ background: col.color, width: 8, height: 8 }}/>
+              <span className="kanban-col-title">{col.label}</span>
+              <span className="kanban-col-count">{col.items.length}</span>
+              <button className="btn-icon"><Icons.Plus/></button>
+            </div>
+            {col.items.map((o) => (
+              <div key={o.id}
+                className={`kanban-card ${dragging === o.id ? "dragging" : ""}`}
+                draggable
+                onDragStart={onDragStart(o.id)}
+                onDragEnd={onDragEnd}
+                onClick={() => openOpp(o.id)}
+              >
+                <div className="row gap-8" style={{ marginBottom: 8 }}>
+                  <CompanyAvatar company={o.company} size={22}/>
+                  <span className="t-body-med" style={{ fontSize: 13 }}>{COMPANIES[o.company].name}</span>
+                  <span className="t-mono-micro ml-auto" style={{ color: "var(--color-text-muted)" }}>
+                    {o.fit}
+                  </span>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 8,
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                }}>{o.role}</div>
+                <div className="t-mono-micro" style={{ color: "var(--color-text-muted)", marginBottom: 10 }}>{o.slug}</div>
+                {o.nextActionDate && (
+                  <div className="row gap-6" style={{
+                    padding: "6px 8px", borderRadius: 6,
+                    background: "var(--color-row-stripe)",
+                    fontSize: 12,
+                  }}>
+                    <Icons.Calendar className="i" style={{ width: 12, height: 12, color: "var(--color-text-muted)" }}/>
+                    <span style={{ color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.nextAction}</span>
+                  </div>
+                )}
+                <div className="row gap-6" style={{ marginTop: 8 }}>
+                  {o.priority === "high" && <span className="chip chip-amber" style={{ fontSize: 11 }}>High</span>}
+                  {o.recruiterInitials && (
+                    <span className="avatar avatar-sm ml-auto" title={o.recruiter}>{o.recruiterInitials}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {col.items.length === 0 && (
+              <div style={{
+                padding: "24px 12px", textAlign: "center",
+                fontSize: 12, color: "var(--color-text-placeholder)",
+                border: "1px dashed var(--color-border-medium)", borderRadius: 10,
+              }}>Drop here</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+window.Pipeline = Pipeline;
+</script>
+<script type="text/babel">/* global React, OPPORTUNITIES, COMPANIES, MESSAGES */
+const { useState } = React;
+
+function Inbox({ openOpp }) {
+  const Icons = window.Icons;
+  const { CompanyAvatar } = window;
+  const [selectedId, setSelectedId] = useState(MESSAGES[0].id);
+  const selected = MESSAGES.find((m) => m.id === selectedId);
+  const opp = selected && OPPORTUNITIES.find((o) => o.id === selected.oppId);
+
+  return (
+    <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 16, flex: 1, minHeight: 0 }}>
+      <div className="row gap-12">
+        <h1 className="t-page-title" style={{ margin: 0 }}>Inbox</h1>
+        <span className="chip chip-mint">{MESSAGES.filter(m => m.unread).length} unread</span>
+      </div>
+
+      <div style={{
+        display: "grid", gridTemplateColumns: "360px 1fr", gap: 0,
+        border: "1px solid var(--color-border-subtle)", borderRadius: 14,
+        overflow: "hidden", flex: 1, minHeight: 0, background: "var(--color-card)",
+      }}>
+        {/* List */}
+        <div style={{ borderRight: "1px solid var(--color-border-subtle)", display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--color-border-subtle)", background: "var(--color-panel)" }}>
+            <div className="seg" style={{ width: "100%" }}>
+              {["All", "Unread", "Interviews", "Offers"].map((t, i) => (
+                <button key={t} className={`seg-btn ${i === 0 ? "active" : ""}`} style={{ flex: 1 }}>{t}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ overflow: "auto", flex: 1 }}>
+            {MESSAGES.map((m) => {
+              const o = OPPORTUNITIES.find((o) => o.id === m.oppId);
+              const active = m.id === selectedId;
+              return (
+                <div key={m.id} onClick={() => setSelectedId(m.id)} style={{
+                  padding: "12px 14px", display: "flex", gap: 10,
+                  cursor: "pointer",
+                  borderBottom: "1px solid var(--color-border-subtle)",
+                  background: active ? "var(--color-brand-light)" : (m.unread ? "var(--color-bg)" : "var(--color-row-stripe)"),
+                  position: "relative",
+                }}>
+                  {active && <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 2, background: "var(--color-brand)" }}/>}
+                  <div className="avatar avatar-sm" style={{ marginTop: 2 }}>{m.initials}</div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="row gap-6">
+                      <span className="t-body-med" style={{ color: active ? "var(--color-brand-deep)" : undefined }}>{m.from}</span>
+                      {m.unread && <span className="badge-dot" style={{ background: "var(--color-brand)" }}/>}
+                      <span className="t-caption ml-auto" style={{ fontSize: 11 }}>{m.at}</span>
+                    </div>
+                    {o && <div className="t-mono-micro" style={{ color: active ? "var(--color-brand-deep)" : "var(--color-text-muted)", marginTop: 2 }}>{o.slug}</div>}
+                    <div className="t-caption" style={{ color: "var(--color-text-secondary)", marginTop: 4,
+                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                    }}>{m.preview}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detail */}
+        <div style={{ display: "flex", flexDirection: "column", minHeight: 0, background: "var(--color-bg)" }}>
+          {selected && (
+            <>
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--color-border-subtle)" }}>
+                <div className="row gap-12">
+                  <div>
+                    <div className="t-sub">{selected.from}</div>
+                    <div className="t-caption">to me · {selected.at}</div>
+                  </div>
+                  <div className="ml-auto row gap-6">
+                    <button className="btn btn-ghost btn-sm"><Icons.Archive/> Archive</button>
+                    <button className="btn btn-ghost btn-sm"><Icons.Pin/> Pin</button>
+                    <button className="btn-icon"><Icons.More/></button>
+                  </div>
+                </div>
+                {opp && (
+                  <div className="row gap-8" style={{ marginTop: 12, padding: "8px 12px",
+                    background: "var(--color-panel)", borderRadius: 10,
+                    border: "1px solid var(--color-border-subtle)", cursor: "pointer"
+                  }} onClick={() => openOpp(opp.id)}>
+                    <CompanyAvatar company={opp.company} size={24}/>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t-body-med" style={{ fontSize: 13 }}>{opp.role}</div>
+                      <div className="t-mono-micro" style={{ color: "var(--color-text-muted)", marginTop: 2 }}>{opp.slug}</div>
+                    </div>
+                    <Icons.ChevronR/>
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: "20px 24px", flex: 1, overflow: "auto" }}>
+                <p className="t-body-lg" style={{ marginTop: 0, color: "var(--color-text-secondary)" }}>{selected.body}</p>
+                <p className="t-body" style={{ color: "var(--color-text-muted)", marginTop: 24 }}>— {selected.from}</p>
+
+                {/* AI draft reply */}
+                <div style={{
+                  marginTop: 24, padding: 14,
+                  border: "1px solid var(--color-border-subtle)",
+                  borderLeft: "2px solid var(--color-purple)",
+                  borderRadius: 10, background: "var(--color-panel)",
+                }}>
+                  <div className="row gap-6" style={{ marginBottom: 8 }}>
+                    <Icons.Sparkle className="i" style={{ color: "var(--color-purple)", width: 14, height: 14 }}/>
+                    <span className="t-label-up" style={{ color: "var(--color-purple)", fontSize: 11 }}>AI Draft · needs review</span>
+                    <span className="t-caption ml-auto">Rafael's voice · professional</span>
+                  </div>
+                  <p className="t-body" style={{ margin: 0, color: "var(--color-text-secondary)" }}>
+                    Thanks, {selected.from.split(" ")[0]} — Thursday 2pm PT works great. I'll be ready.
+                    Could you share who I'll be meeting and any prep material you'd recommend?
+                    Appreciate the thoughtful context on what the team is optimizing for.
+                  </p>
+                  <div className="row gap-6" style={{ marginTop: 12 }}>
+                    <button className="btn btn-brand btn-sm">Use draft</button>
+                    <button className="btn btn-ghost btn-sm">Regenerate</button>
+                    <button className="btn btn-ghost btn-sm">Edit</button>
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--color-border-subtle)",
+                display: "flex", gap: 8, alignItems: "center"
+              }}>
+                <input className="input" placeholder={`Reply to ${selected.from.split(" ")[0]}…`} />
+                <button className="btn btn-primary btn-sm"><Icons.ArrowUp/> Send</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.Inbox = Inbox;
+</script>
+<script type="text/babel">/* global React, OPPORTUNITIES, STAGES, COMPANIES */
+const { useState } = React;
+
+function OpportunityDetail({ oppId, onClose }) {
+  const Icons = window.Icons;
+  const { StageBadge, CompanyAvatar } = window;
+  const o = OPPORTUNITIES.find((x) => x.id === oppId);
+  const [tab, setTab] = useState("overview");
+  if (!o) return null;
+  const c = COMPANIES[o.company];
+  const stageIdx = STAGES.findIndex((s) => s.key === o.stage);
+
+  const timeline = [
+    { at: "3h ago", label: "Recruiter confirmed tech screen", kind: "stage" },
+    { at: "1d ago", label: "Moved to Interview", kind: "move" },
+    { at: "2d ago", label: "Phone screen completed", kind: "stage" },
+    { at: "6d ago", label: `Applied via ${o.source}`, kind: "apply" },
+  ];
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 880 }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--color-border-subtle)" }}>
+          <div className="row gap-12">
+            <CompanyAvatar company={o.company} size={40}/>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="row gap-8">
+                <span className="t-body-med" style={{ color: "var(--color-text-secondary)" }}>{c.name}</span>
+                <span className="t-caption">·</span>
+                <span className="t-caption">{c.location}</span>
+              </div>
+              <h2 className="t-page-title" style={{ margin: "2px 0 0", fontSize: 24, letterSpacing: "-0.48px" }}>{o.role}</h2>
+            </div>
+            <button className="btn-icon" onClick={onClose}><Icons.Close/></button>
+          </div>
+          <div className="row gap-8" style={{ marginTop: 12, flexWrap: "wrap" }}>
+            <StageBadge stage={o.stage}/>
+            <span className="t-mono-micro" style={{ color: "var(--color-text-muted)" }}>{o.slug}</span>
+            <span className="chip">{o.comp}</span>
+            <span className="chip chip-mint"><Icons.Sparkle className="i-sm"/> Fit {o.fit}</span>
+            <div className="ml-auto row gap-6">
+              <button className="btn btn-ghost btn-sm"><Icons.External/> Job post</button>
+              <button className="btn btn-primary btn-sm">Log update</button>
+            </div>
+          </div>
+
+          <div className="pipeline-steps" style={{ marginTop: 16, flexWrap: "wrap" }}>
+            {STAGES.filter((s) => s.key !== "rejected").map((s, i) => {
+              const done = i < stageIdx;
+              const active = i === stageIdx;
+              return (
+                <div key={s.key} className={`pipeline-step ${done ? "done" : ""} ${active ? "active" : ""}`}>
+                  {done ? <Icons.Check className="i-sm"/> :
+                    <span className="badge-dot" style={{ background: active ? s.color : "var(--color-border-strong)", width: 8, height: 8 }}/>}
+                  {s.label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 4, padding: "0 24px", borderBottom: "1px solid var(--color-border-subtle)" }}>
+          {[{k:"overview",l:"Overview"},{k:"timeline",l:"Timeline"},{k:"messages",l:"Messages"},{k:"docs",l:"Documents"}].map((t) => (
+            <button key={t.k} onClick={() => setTab(t.k)} style={{
+              padding: "12px 14px", fontSize: 13, fontWeight: 500,
+              color: tab === t.k ? "var(--color-text-primary)" : "var(--color-text-muted)",
+              borderBottom: `2px solid ${tab === t.k ? "var(--color-brand)" : "transparent"}`,
+              marginBottom: -1,
+            }}>{t.l}</button>
+          ))}
+        </div>
+
+        <div style={{ padding: "20px 24px" }}>
+          {tab === "overview" && (
+            <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20 }}>
+              <div>
+                <div className="t-label-up muted" style={{ marginBottom: 8 }}>Next action</div>
+                <div className="panel" style={{ padding: 14, marginBottom: 20 }}>
+                  <div className="row gap-8">
+                    <Icons.Calendar style={{ color: "var(--color-brand-deep)" }}/>
+                    <span className="t-body-med">{o.nextAction ?? "—"}</span>
+                    {o.nextActionDate && <span className="t-mono-micro ml-auto" style={{ color: "var(--color-text-muted)" }}>
+                      {new Date(o.nextActionDate).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
+                    </span>}
+                  </div>
+                </div>
+                <div className="t-label-up muted" style={{ marginBottom: 8 }}>Notes</div>
+                <div className="t-body" style={{ color: "var(--color-text-secondary)", marginBottom: 20 }}>
+                  {o.notes ?? "Strong recruiter relationship. Team is growing the platform org; expect questions on cross-team coordination and incremental migration."}
+                </div>
+                <div className="t-label-up muted" style={{ marginBottom: 8 }}>Why this fits</div>
+                <ul style={{ margin: 0, paddingLeft: 18, color: "var(--color-text-secondary)" }} className="t-body">
+                  <li>Remote-first, senior IC track, comp aligned to target band.</li>
+                  <li>Prior {c.name} engineers rate eng culture 4.6 (31 reviews).</li>
+                  <li>Role overlaps 82% with your "Senior product eng" resume variant.</li>
+                </ul>
+              </div>
+              <div>
+                <div className="panel" style={{ padding: 16, marginBottom: 16 }}>
+                  <div className="t-label-up muted" style={{ marginBottom: 10 }}>Recruiter</div>
+                  {o.recruiter !== "—" ? (
+                    <div className="row gap-10">
+                      <div className="avatar">{o.recruiterInitials}</div>
+                      <div>
+                        <div className="t-body-med">{o.recruiter}</div>
+                        <div className="t-caption">{c.name} Talent</div>
+                      </div>
+                    </div>
+                  ) : <div className="t-caption">Not yet assigned</div>}
+                </div>
+                <div className="panel" style={{ padding: 16 }}>
+                  <div className="t-label-up muted" style={{ marginBottom: 10 }}>Details</div>
+                  <div className="col gap-10">
+                    {[
+                      ["Applied", new Date(o.appliedAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})],
+                      ["Source", o.source],
+                      ["Priority", o.priority.toUpperCase()],
+                      ["Slug", o.slug],
+                    ].map(([k,v]) => (
+                      <div key={k} className="row gap-8">
+                        <span className="t-caption" style={{ width: 74 }}>{k}</span>
+                        <span className="t-cell" style={{ color: "var(--color-text-primary)", fontFamily: k==="Slug"?"var(--font-mono)":undefined, fontSize: k==="Slug"?11:13 }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {tab === "timeline" && (
+            <div style={{ position: "relative", paddingLeft: 18 }}>
+              <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "var(--color-border-subtle)" }}/>
+              {timeline.map((t, i) => (
+                <div key={i} style={{ position: "relative", paddingBottom: 16 }}>
+                  <span className="badge-dot" style={{ position: "absolute", left: -18, top: 6, background: i===0?"var(--color-brand)":"var(--color-border-strong)", width: 10, height: 10, border: "2px solid var(--color-bg)" }}/>
+                  <div className="t-body-med" style={{ fontSize: 13 }}>{t.label}</div>
+                  <div className="t-caption">{t.at}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {tab === "messages" && (
+            <div className="t-caption">Thread view — see full inbox for details.</div>
+          )}
+          {tab === "docs" && (
+            <div className="col gap-8">
+              {["Resume — senior product eng v3.pdf","Cover letter — custom.pdf","Job description snapshot.md"].map((f) => (
+                <div key={f} className="row gap-10" style={{ padding: 12, border: "1px solid var(--color-border-subtle)", borderRadius: 10 }}>
+                  <Icons.File style={{ color: "var(--color-text-muted)" }}/>
+                  <span className="t-body-med" style={{ fontSize: 13 }}>{f}</span>
+                  <button className="btn btn-ghost btn-sm ml-auto">Open</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.OpportunityDetail = OpportunityDetail;
+</script>
+<script type="text/babel">/* global React, OPPORTUNITIES, COMPANIES */
+const { useState } = React;
+
+function Resume() {
+  const Icons = window.Icons;
+  const { CompanyAvatar } = window;
+  const [selectedOpp, setSelectedOpp] = useState("opp_01");
+  const opp = OPPORTUNITIES.find((o) => o.id === selectedOpp);
+  const c = COMPANIES[opp.company];
+
+  const variants = [
+    { id: "base", name: "Base — Senior product eng", edits: 0, selected: false },
+    { id: "tailored", name: `Tailored — ${c.name}`, edits: 7, selected: true },
+  ];
+
+  return (
+    <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="row gap-12">
+        <h1 className="t-page-title" style={{ margin: 0 }}>Resume Studio</h1>
+        <span className="chip chip-purple"><Icons.Sparkle className="i-sm"/> AI-assisted</span>
+      </div>
+      <p className="t-body" style={{ margin: 0, color: "var(--color-text-muted)" }}>
+        Start from a base resume and let Slotflow tailor bullets, keywords, and order for each opportunity.
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
+        <div className="col gap-12">
+          <div className="card" style={{ padding: 14 }}>
+            <div className="t-label-up muted" style={{ marginBottom: 10 }}>Tailor for</div>
+            <select className="input" value={selectedOpp} onChange={(e)=>setSelectedOpp(e.target.value)}>
+              {OPPORTUNITIES.filter(o=>o.stage!=="rejected").map((o) => (
+                <option key={o.id} value={o.id}>{COMPANIES[o.company].name} — {o.role}</option>
+              ))}
+            </select>
+            <div className="row gap-8" style={{ marginTop: 12 }}>
+              <CompanyAvatar company={opp.company} size={26}/>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="t-body-med" style={{ fontSize: 13 }}>{c.name}</div>
+                <div className="t-mono-micro muted">{opp.slug}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 14 }}>
+            <div className="t-label-up muted" style={{ marginBottom: 10 }}>Variants</div>
+            {variants.map((v) => (
+              <div key={v.id} style={{
+                padding: "10px 12px", borderRadius: 8, marginBottom: 6,
+                background: v.selected ? "var(--color-brand-light)" : "var(--color-panel)",
+                border: v.selected ? "1px solid var(--color-brand)" : "1px solid var(--color-border-subtle)",
+                cursor: "pointer",
+              }}>
+                <div className="row gap-6">
+                  <Icons.File className="i-sm"/>
+                  <span className="t-body-med" style={{ fontSize: 13 }}>{v.name}</span>
+                </div>
+                <div className="t-caption" style={{ marginTop: 4 }}>
+                  {v.edits === 0 ? "Original" : `${v.edits} AI edits`}
+                </div>
+              </div>
+            ))}
+            <button className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 6 }}>
+              <Icons.Plus/> New variant
+            </button>
+          </div>
+
+          <div className="panel" style={{ padding: 14 }}>
+            <div className="t-label-up" style={{ color: "var(--color-purple)", marginBottom: 10 }}>
+              <Icons.Sparkle className="i-sm" style={{ display: "inline", verticalAlign: -2 }}/> Keyword match
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.64px", lineHeight: 1 }}>
+              {opp.fit}<span style={{ fontSize: 16, color: "var(--color-text-muted)", marginLeft: 4 }}>/100</span>
+            </div>
+            <div className="progress" style={{ marginTop: 10 }}>
+              <div className="progress-bar" style={{ width: `${opp.fit}%` }}/>
+            </div>
+            <div className="col gap-6" style={{ marginTop: 14 }}>
+              {[
+                { k: "React 19 / RSC", hit: true },
+                { k: "Design tokens", hit: true },
+                { k: "Payments UX", hit: true },
+                { k: "a11y WCAG 2.2", hit: false },
+              ].map((k) => (
+                <div key={k.k} className="row gap-8">
+                  {k.hit
+                    ? <Icons.Check className="i-sm" style={{ color: "var(--color-brand-deep)" }}/>
+                    : <span style={{ width: 14, height: 14, borderRadius: 9999, border: "1.5px solid var(--color-border-strong)" }}/>}
+                  <span className="t-cell" style={{ color: k.hit ? "var(--color-text-primary)" : "var(--color-text-muted)" }}>{k.k}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="row gap-8" style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border-subtle)", background: "var(--color-panel)" }}>
+            <span className="t-label-up muted">Preview · tailored for {c.name}</span>
+            <div className="ml-auto row gap-6">
+              <button className="btn btn-ghost btn-sm">Diff base</button>
+              <button className="btn btn-ghost btn-sm">Export PDF</button>
+              <button className="btn btn-brand btn-sm">Apply to opportunity</button>
+            </div>
+          </div>
+          <div style={{ padding: "32px 40px", maxWidth: 720, margin: "0 auto", fontFamily: "Inter, system-ui" }}>
+            <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.52px" }}>Rafael Torres</div>
+            <div className="t-caption" style={{ marginTop: 4 }}>Senior Frontend Engineer · São Paulo (remote) · rafael@torres.dev · /in/rafaeltorres</div>
+
+            <div style={{ marginTop: 24 }}>
+              <div className="t-label-up muted" style={{ marginBottom: 6 }}>Summary</div>
+              <p className="t-body" style={{ margin: 0, color: "var(--color-text-secondary)" }}>
+                9 years shipping dense, high-traffic product UI.
+                Led <mark style={{ background: "var(--color-brand-light)", color: "var(--color-brand-deep)", padding: "0 3px", borderRadius: 3 }}>payments checkout rewrites</mark> handling $2.1B annualized,
+                and design-system platforms used by 80+ engineers.
+                Comfortable across <mark style={{ background: "var(--color-brand-light)", color: "var(--color-brand-deep)", padding: "0 3px", borderRadius: 3 }}>React 19 / RSC</mark>, performance budgets, and cross-team API design.
+              </p>
+            </div>
+
+            <div style={{ marginTop: 24 }}>
+              <div className="t-label-up muted" style={{ marginBottom: 10 }}>Experience</div>
+              {[
+                { r: "Staff Engineer", co: "Nubank", t: "2023 — Present",
+                  b: ["Shipped checkout refactor cutting p95 TTI 44% on mid-tier Androids.",
+                      "Owned payments UI platform: 40+ shared components, 99.99% SLA."] },
+                { r: "Senior Engineer", co: "iFood", t: "2020 — 2023",
+                  b: ["Built unified design tokens pipeline adopted by 3 product orgs.",
+                      "Led a11y audit, closed 86% of critical issues over 2 quarters."] },
+              ].map((e) => (
+                <div key={e.co} style={{ marginBottom: 18 }}>
+                  <div className="row gap-8">
+                    <span className="t-body-med">{e.r}, {e.co}</span>
+                    <span className="t-caption ml-auto">{e.t}</span>
+                  </div>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18 }} className="t-body">
+                    {e.b.map((line, i) => (
+                      <li key={i} style={{ color: "var(--color-text-secondary)", marginBottom: 3 }}>
+                        {i === 0 && (<span style={{ background: "rgba(122,90,248,0.12)", color: "var(--color-purple)", padding: "0 3px", borderRadius: 3, marginRight: 4 }} title="AI-tailored">
+                          AI
+                        </span>)}
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.Resume = Resume;
+</script>
+<script type="text/babel">/* global React */
+const { useState } = React;
+
+function Landing({ goLogin }) {
+  const Icons = window.Icons;
+  const { Lockup, Logomark } = window;
+  return (
+    <div className="marketing-bg" style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Nav */}
+      <header style={{ padding: "20px 48px", display: "flex", alignItems: "center" }}>
+        <Lockup size={20}/>
+        <nav className="row gap-24" style={{ marginLeft: 48 }}>
+          {["Product","Pricing","Changelog","Docs"].map(l => (
+            <a key={l} className="t-body-med muted" href="#" style={{ fontSize: 14 }}>{l}</a>
+          ))}
+        </nav>
+        <div className="ml-auto row gap-8">
+          <button className="btn btn-ghost btn-sm" onClick={goLogin}>Sign in</button>
+          <button className="btn btn-brand btn-sm" onClick={goLogin}>Get started</button>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section style={{ padding: "64px 48px 80px", maxWidth: 1120, margin: "0 auto", width: "100%" }}>
+        <span className="chip chip-mint" style={{ marginBottom: 20 }}>
+          <span className="badge-dot" style={{ background: "var(--color-brand)" }}/>
+          New · AI drafts for recruiter replies
+        </span>
+        <h1 className="t-display" style={{ margin: 0, maxWidth: 780 }}>
+          A CRM for the job hunt that doesn't{" "}
+          <span style={{ color: "var(--color-brand-deep)" }}>forget the follow-up.</span>
+        </h1>
+        <p className="t-body-lg" style={{ color: "var(--color-text-secondary)", maxWidth: 620, marginTop: 16 }}>
+          Track opportunities, run interviews, and tailor resumes — in one surface built for senior engineers applying to foreign companies.
+        </p>
+        <div className="row gap-8" style={{ marginTop: 24 }}>
+          <button className="btn btn-brand" onClick={goLogin}>Start free <Icons.ChevronR/></button>
+          <button className="btn btn-ghost">See the demo</button>
+        </div>
+
+        {/* Preview card */}
+        <div style={{ marginTop: 56, position: "relative" }}>
+          <div className="preview-frame">
+            <div className="preview-chrome">
+              <span className="preview-dot"/><span className="preview-dot"/><span className="preview-dot"/>
+              <span className="t-mono-micro muted" style={{ marginLeft: 10 }}>slotflow.app / pipeline</span>
+            </div>
+            <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+              {["Applied","Screening","Interview","Offer"].map((st, i) => (
+                <div key={st} style={{ background: "var(--color-panel)", borderRadius: 10, padding: 10, border: "1px solid var(--color-border-subtle)" }}>
+                  <div className="row gap-6" style={{ marginBottom: 10 }}>
+                    <span className="badge-dot" style={{ background: ["#888","#3772cf","#14C98B","#0a8f62"][i], width: 7, height: 7 }}/>
+                    <span className="t-label-up" style={{ fontSize: 10 }}>{st}</span>
+                    <span className="t-mono-micro ml-auto muted">{[4,3,4,1][i]}</span>
+                  </div>
+                  {[1,2].map((n) => (
+                    <div key={n} style={{ background: "var(--color-card)", border: "1px solid var(--color-border-subtle)", borderRadius: 8, padding: 10, marginBottom: 6 }}>
+                      <div style={{ fontSize: 11, fontWeight: 500 }}>{["Stripe","Figma","Linear","OpenAI"][i]}</div>
+                      <div className="t-mono-micro muted" style={{ marginTop: 4 }}>{["SR-FE","STAFF-DS","SR-PE","MTS-APP"][i]}-0{n}</div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section style={{ padding: "48px 48px 96px", maxWidth: 1120, margin: "0 auto", width: "100%" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          {[
+            { i: Icons.Kanban, t: "Pipeline that actually moves", d: "Drag cards across Applied → Offer. Every move logs itself. No forgotten applications." },
+            { i: Icons.Mail, t: "Inbox with context", d: "Every message is tied to its opportunity. AI drafts replies in your voice, flagged for review." },
+            { i: Icons.Sparkle, t: "Tailor without starting over", d: "Keep one base resume. Generate tailored variants per role with diff view and keyword match." },
+          ].map((f) => (
+            <div key={f.t} className="card">
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--color-brand-light)",
+                color: "var(--color-brand-deep)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                <f.i className="i-lg"/>
+              </div>
+              <div className="t-sub" style={{ marginBottom: 6 }}>{f.t}</div>
+              <div className="t-body" style={{ color: "var(--color-text-secondary)" }}>{f.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer style={{ padding: "24px 48px", borderTop: "1px solid var(--color-border-subtle)", display: "flex", alignItems: "center" }}>
+        <Lockup size={16}/>
+        <span className="t-caption ml-auto">© 2026 Slotflow · Built for senior engineers.</span>
+      </footer>
+    </div>
+  );
+}
+
+function Login({ goApp, goLanding }) {
+  const Icons = window.Icons;
+  const { Lockup, Logomark } = window;
+  return (
+    <div className="marketing-bg" style={{ minHeight: "100%", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+      <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column" }}>
+        <button onClick={goLanding} style={{ alignSelf: "flex-start" }}><Lockup size={20}/></button>
+        <div style={{ margin: "auto 0", maxWidth: 420 }}>
+          <h1 className="t-page-title" style={{ margin: 0, fontSize: 32, letterSpacing: "-0.64px" }}>Welcome back</h1>
+          <p className="t-body" style={{ color: "var(--color-text-muted)", marginTop: 8 }}>Sign in to your Slotflow workspace.</p>
+
+          <div className="col gap-10" style={{ marginTop: 24 }}>
+            <button className="btn btn-ghost" style={{ justifyContent: "center", height: 40 }}>
+              <span style={{ width: 16, height: 16, background: "#fff", borderRadius: 3, display: "inline-flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:11, color:"#4285F4" }}>G</span>
+              Continue with Google
+            </button>
+            <button className="btn btn-ghost" style={{ justifyContent: "center", height: 40 }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .2C3.6.2 0 3.8 0 8.2c0 3.5 2.3 6.5 5.5 7.6.4.1.5-.2.5-.4V14c-2.2.5-2.7-1-2.7-1-.4-1-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.4.7.1-.5.3-.9.5-1.1-1.8-.2-3.7-.9-3.7-4 0-.9.3-1.6.8-2.2-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8.6-.2 1.3-.3 2-.3.7 0 1.4.1 2 .3 1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3.1-1.9 3.8-3.7 4 .3.3.6.8.6 1.5v2.3c0 .2.1.5.6.4C13.7 14.7 16 11.7 16 8.2 16 3.8 12.4.2 8 .2z"/></svg>
+              Continue with GitHub
+            </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0" }}>
+            <hr className="divider" style={{ flex: 1 }}/>
+            <span className="t-caption">or</span>
+            <hr className="divider" style={{ flex: 1 }}/>
+          </div>
+
+          <div className="col gap-10">
+            <div>
+              <label className="t-label-up muted" style={{ display: "block", marginBottom: 6 }}>Email</label>
+              <input className="input" placeholder="you@company.com" defaultValue="rafael@torres.dev"/>
+            </div>
+            <div>
+              <div className="row" style={{ marginBottom: 6 }}>
+                <label className="t-label-up muted">Password</label>
+                <a href="#" className="t-link ml-auto" style={{ color: "var(--color-brand-deep)" }}>Forgot?</a>
+              </div>
+              <input className="input" type="password" placeholder="••••••••" defaultValue="•••••••••"/>
+            </div>
+            <button className="btn btn-brand" style={{ justifyContent: "center", height: 40, marginTop: 4 }} onClick={goApp}>
+              Sign in
+            </button>
+          </div>
+          <div className="t-caption" style={{ marginTop: 16, textAlign: "center" }}>
+            No account yet? <a href="#" style={{ color: "var(--color-brand-deep)", fontWeight: 500 }}>Start free</a>
+          </div>
+        </div>
+        <div className="t-caption" style={{ color: "var(--color-text-placeholder)" }}>© 2026 Slotflow</div>
+      </div>
+
+      {/* Right artwork */}
+      <div style={{ padding: 40, display: "flex", alignItems: "center", justifyContent: "center",
+        background: "linear-gradient(180deg, rgba(20,201,139,0.12), rgba(20,201,139,0.02))",
+        borderLeft: "1px solid var(--color-border-subtle)"
+      }}>
+        <div className="card" style={{ width: "100%", maxWidth: 460, padding: 0, overflow: "hidden" }}>
+          <div className="preview-chrome">
+            <span className="preview-dot"/><span className="preview-dot"/><span className="preview-dot"/>
+          </div>
+          <div style={{ padding: 20 }}>
+            <div className="t-label-up muted" style={{ marginBottom: 10 }}>Today · next action</div>
+            <div className="panel" style={{ padding: 14, marginBottom: 14 }}>
+              <div className="row gap-10">
+                <span className="avatar avatar-logo" style={{ width: 32, height: 32, fontSize: 13 }}>O</span>
+                <div>
+                  <div className="t-body-med">Onsite — OpenAI</div>
+                  <div className="t-mono-micro muted">OPENAI-MTS-APP-002 · Fri Apr 25</div>
+                </div>
+                <span className="badge chip-mint ml-auto">INTERVIEW</span>
+              </div>
+            </div>
+            <div className="pipeline-steps" style={{ flexWrap: "wrap" }}>
+              {["Applied","Screening","Interview","Offer"].map((s,i)=>(
+                <div key={s} className={`pipeline-step ${i<2?"done":""} ${i===2?"active":""}`}>
+                  {i<2 ? <Icons.Check className="i-sm"/> : <span className="badge-dot" style={{ background: i===2?"var(--color-brand)":"var(--color-border-strong)", width: 8, height: 8 }}/>}
+                  {s}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Settings() {
+  const Icons = window.Icons;
+  const sections = [
+    { key: "profile", label: "Profile" },
+    { key: "workspace", label: "Workspace" },
+    { key: "appearance", label: "Appearance" },
+    { key: "integrations", label: "Integrations" },
+    { key: "billing", label: "Billing" },
+    { key: "danger", label: "Danger zone" },
+  ];
+  const [active, setActive] = useState("appearance");
+  const [themePref, setThemePref] = useState("auto");
+
+  return (
+    <div style={{ padding: "24px 32px", maxWidth: 1080, width: "100%", margin: "0 auto" }}>
+      <h1 className="t-page-title" style={{ margin: "0 0 20px" }}>Settings</h1>
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24 }}>
+        <div className="col gap-4">
+          {sections.map(s => (
+            <button key={s.key} className={`nav-item ${active===s.key?"active":""}`} onClick={()=>setActive(s.key)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <div className="col gap-16">
+          {active === "appearance" && <>
+            <div className="card">
+              <div className="t-sub" style={{ marginBottom: 4 }}>Theme</div>
+              <div className="t-body muted" style={{ marginBottom: 16 }}>Auto follows your OS preference and time of day.</div>
+              <div className="seg">
+                {[{k:"light",l:"Light",i:Icons.Sun},{k:"auto",l:"Auto",i:Icons.Sparkle},{k:"dark",l:"Dark",i:Icons.Moon}].map(t => (
+                  <button key={t.k} className={`seg-btn ${themePref===t.k?"active":""}`} onClick={()=>setThemePref(t.k)}>
+                    <t.i className="i-sm" style={{ display:"inline", verticalAlign:-2, marginRight:6 }}/>{t.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div className="t-sub" style={{ marginBottom: 4 }}>Density</div>
+              <div className="t-body muted" style={{ marginBottom: 16 }}>Affects tables, cards, and list surfaces.</div>
+              <div className="seg">
+                {["Comfortable","Default","Compact"].map((d,i) => (
+                  <button key={d} className={`seg-btn ${i===1?"active":""}`}>{d}</button>
+                ))}
+              </div>
+            </div>
+          </>}
+          {active === "profile" && <div className="card">
+            <div className="row gap-12" style={{ marginBottom: 20 }}>
+              <div className="avatar avatar-lg">RT</div>
+              <div>
+                <div className="t-sub">Rafael Torres</div>
+                <div className="t-caption">rafael@torres.dev</div>
+              </div>
+              <button className="btn btn-ghost btn-sm ml-auto">Upload avatar</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div><label className="t-label-up muted" style={{ display: "block", marginBottom: 6 }}>Full name</label>
+                <input className="input" defaultValue="Rafael Torres"/></div>
+              <div><label className="t-label-up muted" style={{ display: "block", marginBottom: 6 }}>Headline</label>
+                <input className="input" defaultValue="Senior Frontend Engineer"/></div>
+              <div><label className="t-label-up muted" style={{ display: "block", marginBottom: 6 }}>Location</label>
+                <input className="input" defaultValue="São Paulo, BR (remote)"/></div>
+              <div><label className="t-label-up muted" style={{ display: "block", marginBottom: 6 }}>Timezone</label>
+                <input className="input" defaultValue="America/Sao_Paulo (GMT-3)"/></div>
+            </div>
+          </div>}
+          {active === "integrations" && <div className="card" style={{ padding: 0 }}>
+            {[
+              { n: "Gmail", d: "Sync recruiter threads", on: true },
+              { n: "Google Calendar", d: "Book interview slots", on: true },
+              { n: "LinkedIn", d: "Import jobs + recruiters", on: false },
+              { n: "Notion", d: "Mirror notes", on: false },
+            ].map((x,i,arr) => (
+              <div key={x.n} style={{ padding: "14px 18px", borderBottom: i<arr.length-1?"1px solid var(--color-border-subtle)":"none",
+                display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="avatar avatar-logo" style={{ width: 34, height: 34 }}>{x.n[0]}</div>
+                <div style={{ flex: 1 }}>
+                  <div className="t-body-med">{x.n}</div>
+                  <div className="t-caption">{x.d}</div>
+                </div>
+                <button className={`btn btn-sm ${x.on?"btn-ghost":"btn-brand"}`}>{x.on?"Connected":"Connect"}</button>
+              </div>
+            ))}
+          </div>}
+          {(active === "workspace" || active === "billing" || active === "danger") && <div className="card">
+            <div className="t-sub" style={{ marginBottom: 6 }}>{sections.find(s=>s.key===active).label}</div>
+            <div className="t-body muted">Section contents — left deliberately sparse in this mock.</div>
+          </div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.Landing = Landing;
+window.Login = Login;
+window.Settings = Settings;
+</script>
+<script type="text/babel">/* global React, ReactDOM */
+const { useState, useEffect, useMemo } = React;
+
+function App() {
+  const [route, setRoute] = useState("app"); // "landing" | "login" | "app"
+  const [screen, setScreen] = useState("dashboard");
+  const [openOppId, setOpenOppId] = useState(null);
+
+  const counts = useMemo(() => ({
+    opportunities: window.OPPORTUNITIES.filter(o => o.stage !== "rejected").length,
+    inbox: window.MESSAGES.filter(m => m.unread).length,
+  }), []);
+
+  const openOpp = (id) => setOpenOppId(id);
+  const closeOpp = () => setOpenOppId(null);
+
+  const { Sidebar, Topbar, Dashboard, Opportunities, Pipeline, Inbox, Resume, Settings,
+          Landing, Login, OpportunityDetail } = window;
+
+  if (route === "landing") return <Landing goLogin={() => setRoute("login")} />;
+  if (route === "login") return <Login goApp={() => setRoute("app")} goLanding={() => setRoute("landing")} />;
+
+  const titles = {
+    dashboard: "Dashboard", opportunities: "Opportunities", pipeline: "Pipeline",
+    inbox: "Inbox", resume: "Resume Studio", settings: "Settings",
+  };
+
+  return (
+    <div className="shell" style={{ minHeight: "100vh" }}>
+      <Sidebar route={screen} setRoute={(r) => {
+        if (r.startsWith("opportunity:")) { openOpp(r.split(":")[1]); return; }
+        setScreen(r);
+      }} counts={counts} />
+      <div className="shell-main">
+        <Topbar
+          title={titles[screen] ?? "Slotflow"}
+          theme={window.__theme}
+          toggleTheme={window.__toggleTheme}
+          onNew={screen === "opportunities" || screen === "pipeline" ? () => {} : null}
+        />
+        <main style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+          {screen === "dashboard" && <Dashboard setRoute={setScreen} openOpp={openOpp} />}
+          {screen === "opportunities" && <Opportunities openOpp={openOpp} />}
+          {screen === "pipeline" && <Pipeline openOpp={openOpp} />}
+          {screen === "inbox" && <Inbox openOpp={openOpp} />}
+          {screen === "resume" && <Resume />}
+          {screen === "settings" && <Settings />}
+        </main>
+      </div>
+      {openOppId && <OpportunityDetail oppId={openOppId} onClose={closeOpp} />}
+    </div>
+  );
+}
+
+// ===== Dual theme wrapper =====
+function DualPreview() {
+  const [route, setRoute] = useState(() => localStorage.getItem("sf_route") ?? "app");
+  const [screen, setScreen] = useState(() => localStorage.getItem("sf_screen") ?? "dashboard");
+  const [openOppId, setOpenOppId] = useState(null);
+
+  useEffect(() => { localStorage.setItem("sf_route", route); }, [route]);
+  useEffect(() => { localStorage.setItem("sf_screen", screen); }, [screen]);
+
+  const routes = [
+    { k: "landing", l: "Landing" },
+    { k: "login", l: "Login" },
+    { k: "app:dashboard", l: "Dashboard" },
+    { k: "app:opportunities", l: "Opportunities" },
+    { k: "app:pipeline", l: "Pipeline" },
+    { k: "app:inbox", l: "Inbox" },
+    { k: "app:resume", l: "Resume Studio" },
+    { k: "app:settings", l: "Settings" },
+  ];
+
+  const active = route === "landing" ? "landing" : route === "login" ? "login" : `app:${screen}`;
+  const go = (k) => {
+    if (k === "landing") { setRoute("landing"); return; }
+    if (k === "login") { setRoute("login"); return; }
+    const s = k.split(":")[1];
+    setRoute("app"); setScreen(s);
+  };
+
+  const openOpp = (id) => setOpenOppId(id);
+  const closeOpp = () => setOpenOppId(null);
+
+  const { Sidebar, Topbar, Dashboard, Opportunities, Pipeline, Inbox, Resume, Settings,
+          Landing, Login, OpportunityDetail, Lockup, Logomark } = window;
+
+  const titles = {
+    dashboard: "Dashboard", opportunities: "Opportunities", pipeline: "Pipeline",
+    inbox: "Inbox", resume: "Resume Studio", settings: "Settings",
+  };
+
+  const renderScreen = (themeKey) => {
+    const content = route === "landing" ? <Landing goLogin={() => setRoute("login")} />
+      : route === "login" ? <Login goApp={() => { setRoute("app"); setScreen("dashboard"); }} goLanding={() => setRoute("landing")} />
+      : (
+        <div className="shell" style={{ minHeight: "100%", height: "100%" }}>
+          <Sidebar route={screen} setRoute={(r) => {
+            if (r.startsWith("opportunity:")) { openOpp(r.split(":")[1]); return; }
+            setScreen(r);
+          }} counts={{
+            opportunities: window.OPPORTUNITIES.filter(o => o.stage !== "rejected").length,
+            inbox: window.MESSAGES.filter(m => m.unread).length,
+          }}/>
+          <div className="shell-main">
+            <Topbar
+              title={titles[screen] ?? "Slotflow"}
+              theme={themeKey}
+              toggleTheme={() => {}}
+              onNew={screen === "opportunities" || screen === "pipeline" ? () => {} : null}
+            />
+            <main style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+              {screen === "dashboard" && <Dashboard setRoute={setScreen} openOpp={openOpp} />}
+              {screen === "opportunities" && <Opportunities openOpp={openOpp} />}
+              {screen === "pipeline" && <Pipeline openOpp={openOpp} />}
+              {screen === "inbox" && <Inbox openOpp={openOpp} />}
+              {screen === "resume" && <Resume />}
+              {screen === "settings" && <Settings />}
+            </main>
+          </div>
+        </div>
+      );
+    return content;
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f3f3f3", color: "#0d0d0d" }}>
+      {/* Canvas nav */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(255,255,255,0.82)", backdropFilter: "blur(10px)",
+        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        padding: "12px 20px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap"
+      }}>
+        <Lockup size={18}/>
+        <span style={{ fontSize: 12, color: "#666", fontFamily: "var(--font-mono)", letterSpacing: 0.5, marginRight: 8 }}>
+          DESIGN REVIEW · v2
+        </span>
+        <div style={{ display: "flex", gap: 4, background: "#ededed", borderRadius: 8, padding: 2, flexWrap: "wrap" }}>
+          {routes.map(r => (
+            <button key={r.k} onClick={() => go(r.k)} style={{
+              padding: "5px 10px", borderRadius: 6,
+              fontSize: 12, fontWeight: 500,
+              color: active === r.k ? "#0d0d0d" : "#666",
+              background: active === r.k ? "#fff" : "transparent",
+              boxShadow: active === r.k ? "rgba(0,0,0,0.05) 0 1px 2px" : "none",
+            }}>{r.l}</button>
+          ))}
+        </div>
+        <span style={{ marginLeft: "auto", fontSize: 12, color: "#666" }}>
+          Light · Dark side-by-side
+        </span>
+      </div>
+
+      {/* Dual frames */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: 16 }}>
+        {["light", "dark"].map((t) => (
+          <div key={t} style={{
+            borderRadius: 18, overflow: "hidden",
+            border: "1px solid rgba(0,0,0,0.08)",
+            background: t === "light" ? "#fff" : "#0d0d0d",
+            boxShadow: "rgba(0,0,0,0.04) 0 2px 6px",
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 14px", background: t === "light" ? "#fafafa" : "#171717",
+              borderBottom: `1px solid ${t === "light" ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)"}`,
+              height: 32,
+            }}>
+              <span style={{ width: 9, height: 9, borderRadius: 9999, background: t === "light" ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.15)" }}/>
+              <span style={{ width: 9, height: 9, borderRadius: 9999, background: t === "light" ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.15)" }}/>
+              <span style={{ width: 9, height: 9, borderRadius: 9999, background: t === "light" ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.15)" }}/>
+              <span style={{
+                marginLeft: 10,
+                fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: 0.5,
+                color: t === "light" ? "#666" : "#8a8a8a", textTransform: "uppercase",
+              }}>
+                {t === "light" ? "Light" : "Dark"}
+              </span>
+            </div>
+            <div data-theme={t} style={{ height: 780, overflow: "auto" }}>
+              {renderScreen(t)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {openOppId && (
+        <div data-theme="light">
+          <OpportunityDetail oppId={openOppId} onClose={closeOpp}/>
+        </div>
+      )}
+
+      <div style={{ padding: "16px 20px 32px", textAlign: "center", fontSize: 12, color: "#888" }}>
+        Tip: drag cards in Pipeline · click any opportunity row to open detail · filters + search on Opportunities
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<DualPreview />);
+</script>
+</body>
+</html>

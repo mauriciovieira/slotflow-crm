@@ -283,14 +283,14 @@ What distinguishes Slotflow's surface is its **mixed-density layout**. Marketing
 - **Accent option**: The letter `o` in "Slot" may be rendered as the logomark glyph (see below) in `#14C98B` for the full lockup.
 
 ### Logomark
-A **three-slot flow curve with a terminal dot**, combining the idea of structured openings ("slots") with visible movement through a pipeline ("flow"). The mark should read as three vertical slot forms anchored by a continuous curve that passes through them and resolves in a distinct dot. Geometric, minimal, and still legible at 16px favicon size.
+A **24×24 square mark built from three vertical slots, a mint flow curve, and a terminal dot**, evoking movement through structured stages. The geometry is compact, distinctive, and remains legible down to 16px favicon size.
 
-- Structure: 24×24 viewbox built from **three evenly spaced vertical slots**, a **single flowing curve/path** moving across them, and a **small terminal dot**
-- Slot forms: simple rounded vertical shapes in the base mark color, sized and spaced to stay distinct at small sizes
-- Flow curve + dot: rendered in `#14C98B` in the full-color mark to emphasize motion and progression through the slots
-- Light-mode version: dark (`#0d0d0d`) slot forms with mint curve/dot
-- Dark-mode version: light (`#ededed`) slot forms with mint curve/dot — mint holds across both modes
-- Monochrome version: slots, curve, and dot all `#0d0d0d` (or `#ededed` in dark), for contexts where mint can't render
+- Frame: 24×24 viewbox
+- Base geometry: three evenly spaced vertical slot forms in `#0d0d0d`, with softened corners to match the system's rounded construction
+- Flow accent: a mint (`#14C98B`) curved path weaving through the slots, ending in a small mint dot to imply forward progress and handoff
+- Light-mode version: dark slots with mint curve and dot
+- Dark-mode version: light (`#ededed`) slots with mint curve and dot — mint holds across both modes
+- Monochrome version: slots, curve, and dot all render in `#0d0d0d` (or `#ededed` in dark), for contexts where mint can't render
 
 ### Lockup Rules
 - **Horizontal lockup** (default): logomark + wordmark side-by-side, 8px gap, vertically centered

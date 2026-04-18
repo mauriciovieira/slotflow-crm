@@ -1,0 +1,127 @@
+/*
+ * Slotflow CRM — CSS custom properties.
+ *
+ * Light-mode defaults live on :root. The `[data-theme="dark"]` selector
+ * overrides them. The resolver (theme.ts) sets the attribute on <html>
+ * before first paint.
+ */
+
+:root {
+  /* Brand */
+  --color-brand: #14C98B;
+  --color-brand-light: #c9f3e1;
+  --color-brand-deep: #0a8f62;
+
+  /* Accents */
+  --color-amber: #c37d0d;
+  --color-blue: #3772cf;
+  --color-red: #d45656;
+  --color-purple: #7a5af8;
+
+  /* Surfaces */
+  --color-bg: #ffffff;
+  --color-panel: #fafafa;
+  --color-card: #ffffff;
+  --color-row-stripe: #fafafa;
+  --color-row-hover: #f5f5f5;
+
+  /* Text */
+  --color-text-primary: #0d0d0d;
+  --color-text-secondary: #333333;
+  --color-text-muted: #666666;
+  --color-text-placeholder: #888888;
+
+  /* Borders */
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-medium: rgba(0, 0, 0, 0.10);
+  --color-border-strong: rgba(0, 0, 0, 0.12);
+
+  /* Focus ring */
+  --focus-ring-color: #14C98B;
+  --focus-ring-tint: rgba(20, 201, 139, 0.25);
+
+  /* Shadows */
+  --shadow-card: rgba(0, 0, 0, 0.03) 0px 1px 2px;
+  --shadow-button: rgba(0, 0, 0, 0.06) 0px 1px 2px;
+  --shadow-popover: rgba(0, 0, 0, 0.10) 0px 8px 24px;
+  --shadow-modal: rgba(0, 0, 0, 0.18) 0px 16px 48px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 9999px;
+
+  /* Type */
+  --font-sans: Inter, "Inter Fallback", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, SFMono-Regular, monospace;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  /* Surfaces */
+  --color-bg: #0d0d0d;
+  --color-panel: #171717;
+  --color-card: #141414;
+  --color-row-stripe: #141414;
+  --color-row-hover: #1a1a1a;
+
+  /* Text */
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #8a8a8a;
+  --color-text-placeholder: #6e6e6e;
+
+  /* Borders */
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-medium: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Brand tints shift slightly for legibility */
+  --color-brand-light: rgba(20, 201, 139, 0.15);
+  --color-brand-deep: #4fe3b0;
+
+  /* Accents get lighter variants on dark */
+  --color-purple: #a590ff;
+  --color-red: #ff8a8a;
+
+  /* Focus ring tint stronger on dark */
+  --focus-ring-tint: rgba(20, 201, 139, 0.35);
+
+  /* Shadows */
+  --shadow-card: none;
+  --shadow-popover: rgba(0, 0, 0, 0.50) 0px 8px 24px;
+  --shadow-modal: rgba(0, 0, 0, 0.60) 0px 16px 48px;
+
+  color-scheme: dark;
+}
+
+/*
+ * Global baseline.
+ *
+ * The [data-theme] rule ensures any nested container that carries its own
+ * data-theme attribute re-applies background + color from the vars. Without
+ * it, descendants inherit the body's already-resolved values, breaking
+ * side-by-side light/dark previews (Storybook, the handoff canvas, etc.).
+ */
+html,
+body,
+[data-theme] {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--focus-ring-tint);
+}
