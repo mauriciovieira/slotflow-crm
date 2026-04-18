@@ -29,3 +29,7 @@ blob-report/
 
 # OS / editor
 .DS_Store
+
+# Claude Code settings — personal, per-user; do not check in.
+.claude/settings.json
+.claude/settings.local.json
