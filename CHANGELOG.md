@@ -1,0 +1,22 @@
+# 1.0.0 (2026-04-18)
+
+
+### Bug Fixes
+
+* address Copilot review — healthz version assert, branch -vv parsing ([0a5b0a8](https://github.com/mauriciovieira/slotflow-crm/commit/0a5b0a893dd006a337b737b5bd6797d87fef080c))
+* address Copilot review comments ([519a89c](https://github.com/mauriciovieira/slotflow-crm/commit/519a89c3009bb4a9742b265f136f2238093b0563))
+* **ci:** address Copilot review — frontend GITHUB_OUTPUT quoting, changelog link ([752a69b](https://github.com/mauriciovieira/slotflow-crm/commit/752a69b24bff5198d82bfb15a1f946a7cb557358))
+* **dev:** add ensure_superuser command and local bootstrap targets ([962e501](https://github.com/mauriciovieira/slotflow-crm/commit/962e50165822cbcd957bab6e45857039daf56fe7))
+* make setup-local-db role creation SQL compatible with psql ([c0856d1](https://github.com/mauriciovieira/slotflow-crm/commit/c0856d191461813c12d300855d07d5779dce8663))
+
+
+### Features
+
+* add Honcho, Procfiles, make install/dev, and repo-root dotenv ([d27ef0a](https://github.com/mauriciovieira/slotflow-crm/commit/d27ef0a3276da2ac3ebb9fcf99e4d635442dea32))
+* add make reset-local-db target ([f764266](https://github.com/mauriciovieira/slotflow-crm/commit/f764266700443aa58734f95ac216991c8e88c8bc))
+* add make setup-local-db using .env Postgres vars ([df34e73](https://github.com/mauriciovieira/slotflow-crm/commit/df34e7343d47ebd2cbd929682020a4ed2d0aead5))
+* add make test and grant CREATEDB in local DB setup ([4616bf3](https://github.com/mauriciovieira/slotflow-crm/commit/4616bf3481958872aa0570f5e7a7a9eae155172c))
+* add version metadata, healthz endpoint, release workflow, and AGENTS sync ([5ff3fdc](https://github.com/mauriciovieira/slotflow-crm/commit/5ff3fdc5ba691765e5e2609435a089c18d7c09e0))
+* **backend:** bootstrap Django platform foundation ([8666061](https://github.com/mauriciovieira/slotflow-crm/commit/866606193e9981e3fa4298a69a4c7924187aa87c))
+* five-package release automation ([#9](https://github.com/mauriciovieira/slotflow-crm/issues/9)) ([1a97b11](https://github.com/mauriciovieira/slotflow-crm/commit/1a97b111d395638c83f559bd4d8704f5c94d69ac))
+* **frontend:** brand SVGs and React app scaffold ([#8](https://github.com/mauriciovieira/slotflow-crm/issues/8)) ([c10d4d4](https://github.com/mauriciovieira/slotflow-crm/commit/c10d4d471af44c02acb22183822001581c7b0dc0))
