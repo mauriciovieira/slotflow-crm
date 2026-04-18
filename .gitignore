@@ -12,6 +12,7 @@ backend/db.sqlite3
 
 # Node
 node_modules/
+frontend/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -29,3 +30,7 @@ blob-report/
 
 # OS / editor
 .DS_Store
+
+# Claude Code settings — personal, per-user; do not check in.
+.claude/settings.json
+.claude/settings.local.json
