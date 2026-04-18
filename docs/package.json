@@ -1,9 +1,11 @@
 {
   "name": "slotflow-docs",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Documentation release tooling — not an npm package.",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "release": "semantic-release"
   },
