@@ -19,13 +19,22 @@ const DAY_END_HOUR = 19;
 
 export function readStoredMode(): ThemeMode {
   if (typeof window === "undefined") return "auto";
-  const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return raw === "light" || raw === "dark" || raw === "auto" ? raw : "auto";
+  try {
+    const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return raw === "light" || raw === "dark" || raw === "auto" ? raw : "auto";
+  } catch {
+    return "auto";
+  }
 }
 
 export function writeStoredMode(mode: ThemeMode): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+  } catch {
+    // Storage can throw in sandboxed/disabled contexts; keep the in-memory
+    // apply path working and drop the persistence silently.
+  }
 }
 
 export function resolveFromTimeOfDay(now: Date = new Date()): ResolvedTheme {
@@ -112,14 +121,22 @@ export function createThemeController(
   const mql = typeof window !== "undefined" && window.matchMedia
     ? window.matchMedia("(prefers-color-scheme: dark)")
     : null;
-  const mqlHandler = () => {
-    if (mode === "auto") emit();
+
+  const hasExplicitColorScheme = (): boolean => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return (
+      window.matchMedia("(prefers-color-scheme: dark)").matches ||
+      window.matchMedia("(prefers-color-scheme: light)").matches
+    );
   };
-  mql?.addEventListener?.("change", mqlHandler);
 
   let boundaryTimer: ReturnType<typeof setTimeout> | null = null;
+  const clearBoundary = () => {
+    if (boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer = null; }
+  };
   const scheduleBoundary = () => {
     if (mode !== "auto") return;
+    if (hasExplicitColorScheme()) return;
     const now = new Date();
     const next = new Date(now);
     const h = now.getHours();
@@ -132,6 +149,15 @@ export function createThemeController(
       scheduleBoundary();
     }, delay);
   };
+
+  const mqlHandler = () => {
+    if (mode !== "auto") return;
+    clearBoundary();
+    scheduleBoundary();
+    emit();
+  };
+  mql?.addEventListener?.("change", mqlHandler);
+
   scheduleBoundary();
 
   return {
@@ -140,13 +166,13 @@ export function createThemeController(
     setMode(next: ThemeMode) {
       mode = next;
       writeStoredMode(next);
-      if (boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer = null; }
+      clearBoundary();
       scheduleBoundary();
       emit();
     },
     destroy() {
       mql?.removeEventListener?.("change", mqlHandler);
-      if (boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer = null; }
+      clearBoundary();
     },
   };
 }
