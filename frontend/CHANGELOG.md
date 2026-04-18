@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.1.0...frontend-v1.2.0) (2026-04-18)
+
+
+### Features
+
+* **frontend:** brand SVGs and React app scaffold ([#8](https://github.com/mauriciovieira/slotflow-crm/issues/8)) ([c10d4d4](https://github.com/mauriciovieira/slotflow-crm/commit/c10d4d471af44c02acb22183822001581c7b0dc0))
+
 # [1.1.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.0.0...frontend-v1.1.0) (2026-04-18)
 
 
