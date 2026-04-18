@@ -283,13 +283,14 @@ What distinguishes Slotflow's surface is its **mixed-density layout**. Marketing
 - **Accent option**: The letter `o` in "Slot" may be rendered as the logomark glyph (see below) in `#14C98B` for the full lockup.
 
 ### Logomark
-A **rounded square with a mint diagonal slash**, evoking a "slot" (the square) being filled or flowing forward (the slash). Geometric, minimal, works at 16px favicon size.
+A **three-slot flow curve with a terminal dot**, combining the idea of structured openings ("slots") with visible movement through a pipeline ("flow"). The mark should read as three vertical slot forms anchored by a continuous curve that passes through them and resolves in a distinct dot. Geometric, minimal, and still legible at 16px favicon size.
 
-- Square: 24×24 viewbox, 6px corner radius, `#0d0d0d` fill
-- Slash: 3px thick diagonal stroke from bottom-left to top-right, `#14C98B`, rounded caps
-- Light-mode version: dark square, mint slash
-- Dark-mode version: light (`#ededed`) square, mint slash — mint holds across both modes
-- Monochrome version: square and slash both `#0d0d0d` (or `#ededed` in dark), for contexts where mint can't render
+- Structure: 24×24 viewbox built from **three evenly spaced vertical slots**, a **single flowing curve/path** moving across them, and a **small terminal dot**
+- Slot forms: simple rounded vertical shapes in the base mark color, sized and spaced to stay distinct at small sizes
+- Flow curve + dot: rendered in `#14C98B` in the full-color mark to emphasize motion and progression through the slots
+- Light-mode version: dark (`#0d0d0d`) slot forms with mint curve/dot
+- Dark-mode version: light (`#ededed`) slot forms with mint curve/dot — mint holds across both modes
+- Monochrome version: slots, curve, and dot all `#0d0d0d` (or `#ededed` in dark), for contexts where mint can't render
 
 ### Lockup Rules
 - **Horizontal lockup** (default): logomark + wordmark side-by-side, 8px gap, vertically centered

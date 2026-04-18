@@ -283,13 +283,14 @@ What distinguishes Slotflow's surface is its **mixed-density layout**. Marketing
 - **Accent option**: The letter `o` in "Slot" may be rendered as the logomark glyph (see below) in `#14C98B` for the full lockup.
 
 ### Logomark
-A **rounded square with a mint diagonal slash**, evoking a "slot" (the square) being filled or flowing forward (the slash). Geometric, minimal, works at 16px favicon size.
+A **24×24 square mark built from three vertical slots, a mint flow curve, and a terminal dot**, evoking movement through structured stages. The geometry is compact, distinctive, and remains legible down to 16px favicon size.
 
-- Square: 24×24 viewbox, 6px corner radius, `#0d0d0d` fill
-- Slash: 3px thick diagonal stroke from bottom-left to top-right, `#14C98B`, rounded caps
-- Light-mode version: dark square, mint slash
-- Dark-mode version: light (`#ededed`) square, mint slash — mint holds across both modes
-- Monochrome version: square and slash both `#0d0d0d` (or `#ededed` in dark), for contexts where mint can't render
+- Frame: 24×24 viewbox
+- Base geometry: three evenly spaced vertical slot forms in `#0d0d0d`, with softened corners to match the system's rounded construction
+- Flow accent: a mint (`#14C98B`) curved path weaving through the slots, ending in a small mint dot to imply forward progress and handoff
+- Light-mode version: dark slots with mint curve and dot
+- Dark-mode version: light (`#ededed`) slots with mint curve and dot — mint holds across both modes
+- Monochrome version: slots, curve, and dot all render in `#0d0d0d` (or `#ededed` in dark), for contexts where mint can't render
 
 ### Lockup Rules
 - **Horizontal lockup** (default): logomark + wordmark side-by-side, 8px gap, vertically centered
