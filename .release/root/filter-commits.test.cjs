@@ -27,7 +27,7 @@ test("commits touching repo-root files are included", () => {
   assert.equal(shouldIncludeCommit(["Makefile"]), true);
   assert.equal(shouldIncludeCommit(["CLAUDE.md"]), true);
   assert.equal(shouldIncludeCommit([".github/workflows/release.yml"]), true);
-  assert.equal(shouldIncludeCommit([".claude/settings.local.json"]), true);
+  assert.equal(shouldIncludeCommit([".claude/settings.json"]), true);
 });
 
 test("mixed commits with at least one root-side file are included", () => {

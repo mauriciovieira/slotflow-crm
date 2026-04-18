@@ -104,3 +104,25 @@ jobs:
         with:
           name: playwright-report
           path: e2e/playwright-report
+
+  release-tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+          cache-dependency-path: .release/root/package-lock.json
+
+      - name: Install root-line release deps
+        working-directory: .release/root
+        run: npm ci
+
+      - name: Filter-plugin unit tests
+        working-directory: .release/root
+        run: npm test
+
+      - name: Prepend-script integration test
+        run: ./scripts/test-prepend-root-changelog.sh
