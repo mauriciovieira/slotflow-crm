@@ -30,7 +30,7 @@ run_case() {
   "$SCRIPT" "$pkg" "$ver"
   grep -q "## .* — ${expected_label} ${ver}" RELEASES.md \
     || { echo "FAIL: ${pkg} ${ver} label line not found" >&2; exit 1; }
-  grep -q "\[Release notes\](${expected_link})" RELEASES.md \
+  grep -F -q "[Release notes](${expected_link})" RELEASES.md \
     || { echo "FAIL: ${pkg} ${ver} link not found" >&2; exit 1; }
 }
 

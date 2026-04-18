@@ -67,7 +67,8 @@ jobs:
         id: frontend_before
         run: |
           git fetch origin main
-          echo "ver=$(git show origin/main:frontend/package.json | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')" >> "$GITHUB_OUTPUT"
+          VER=$(git show origin/main:frontend/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Install frontend deps
         working-directory: frontend
@@ -101,7 +102,8 @@ jobs:
         id: e2e_before
         run: |
           git fetch origin main
-          echo "ver=$(git show origin/main:e2e/package.json | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')" >> "$GITHUB_OUTPUT"
+          VER=$(git show origin/main:e2e/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Install e2e deps
         working-directory: e2e
@@ -135,7 +137,8 @@ jobs:
         id: docs_before
         run: |
           git fetch origin main
-          echo "ver=$(git show origin/main:docs/package.json | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')" >> "$GITHUB_OUTPUT"
+          VER=$(git show origin/main:docs/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Install docs deps
         working-directory: docs
@@ -169,7 +172,8 @@ jobs:
         id: root_before
         run: |
           git fetch origin main
-          echo "ver=$(git show origin/main:.release/root/package.json | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')" >> "$GITHUB_OUTPUT"
+          VER=$(git show origin/main:.release/root/package.json | jq -r .version)
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Install root deps
         working-directory: .release/root
