@@ -14,6 +14,7 @@ from config.version import __version__
 from mcp.auth import McpAuthError, mark_otp_session_fresh, require_fresh_2fa_session
 
 from .forms import TokenForm
+from .totp_qr import build_totp_qr_svg
 
 
 class HealthzView(View):
@@ -32,9 +33,18 @@ class TwoFactorSetupView(TemplateView):
 
     def get_context_data(self, **kwargs):  # type: ignore[override]
         context = super().get_context_data(**kwargs)
-        device, _created = TOTPDevice.objects.get_or_create(user=self.request.user, name="default")
-        context["qr_url"] = device.config_url
-        context["needs_confirmation"] = not device.confirmed
+        # django_otp Device.confirmed defaults to True; we must create unconfirmed devices
+        # so the user scans the QR and completes /2fa/confirm/ before the device is trusted.
+        device, _created = TOTPDevice.objects.get_or_create(
+            user=self.request.user,
+            name="default",
+            defaults={"confirmed": False},
+        )
+        needs_confirmation = not device.confirmed
+        otpauth_uri = device.config_url
+        context["needs_confirmation"] = needs_confirmation
+        context["otpauth_uri"] = otpauth_uri
+        context["qr_svg"] = build_totp_qr_svg(otpauth_uri) if needs_confirmation else ""
         return context
 
 

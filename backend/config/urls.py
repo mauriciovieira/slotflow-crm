@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import include, path
 
 import identity.admin  # noqa: F401  # OTP admin site/User admin side effects
 from core.views import (
@@ -25,3 +26,10 @@ urlpatterns = [
     path("mcp/ping", McpPingView.as_view(), name="mcp_ping"),
     path("", HomeView.as_view(), name="home"),
 ]
+
+if settings.DEBUG and "debug_toolbar" in settings.INSTALLED_APPS:
+    import debug_toolbar
+
+    urlpatterns = [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ] + urlpatterns
