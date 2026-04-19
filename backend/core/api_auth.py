@@ -3,8 +3,7 @@ from __future__ import annotations
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
-from django.http import HttpRequest
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django_otp import login as otp_login
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.decorators import api_view, permission_classes
@@ -57,17 +56,23 @@ def me_view(request: Request) -> Response:
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@csrf_protect
 def login_view(request: Request) -> Response:
+    """Anonymous login endpoint.
+
+    DRF's ``SessionAuthentication.enforce_csrf`` only runs AFTER authentication
+    succeeds, so without an explicit CSRF guard anonymous POSTs would bypass
+    CSRF entirely (classic login-CSRF). We apply ``@csrf_protect`` *inside*
+    ``@api_view`` so it runs on the Django-HttpRequest the view body receives:
+    the outer ``@api_view`` wrapper is marked ``csrf_exempt``, but the inner
+    wrapped function still executes ``csrf_protect``'s check before the body.
+    """
     username = (request.data.get("username") or "").strip()
     password = request.data.get("password") or ""
     if not username or not password:
         return Response({"detail": "Missing username or password."}, status=400)
 
-    user = authenticate(
-        request._request if isinstance(request._request, HttpRequest) else request,
-        username=username,
-        password=password,
-    )
+    user = authenticate(request=request._request, username=username, password=password)
     if user is None:
         return Response({"detail": "Invalid credentials."}, status=400)
 
@@ -107,15 +112,9 @@ def totp_confirm_view(request: Request) -> Response:
     if not token:
         return Response({"detail": "Missing token."}, status=400)
 
-    device = (
-        TOTPDevice.objects.filter(user=request.user, name="default")
-        .order_by("-id")
-        .first()
-    )
+    device = TOTPDevice.objects.filter(user=request.user, name="default").order_by("-id").first()
     if device is None:
-        return Response(
-            {"detail": "No TOTP device found; start setup first."}, status=400
-        )
+        return Response({"detail": "No TOTP device found; start setup first."}, status=400)
     if device.confirmed:
         return Response(_me_payload(request.user))
     if not device.verify_token(token):

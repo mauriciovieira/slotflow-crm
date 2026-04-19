@@ -21,6 +21,11 @@ def client() -> Client:
     return Client(enforce_csrf_checks=False)
 
 
+@pytest.fixture
+def csrf_client() -> Client:
+    return Client(enforce_csrf_checks=True)
+
+
 def test_me_anonymous(client: Client) -> None:
     response = client.get("/api/auth/me/")
     assert response.status_code == 200
@@ -72,15 +77,13 @@ def test_login_bad_password(client: Client, user) -> None:
 
 
 def test_login_missing_fields(client: Client) -> None:
-    response = client.post(
-        "/api/auth/login/", data={}, content_type="application/json"
-    )
+    response = client.post("/api/auth/login/", data={}, content_type="application/json")
     assert response.status_code == 400
 
 
 def test_logout_requires_auth(client: Client) -> None:
     response = client.post("/api/auth/logout/")
-    assert response.status_code in (401, 403)
+    assert response.status_code == 403
 
 
 def test_logout_success(client: Client, user) -> None:
@@ -97,4 +100,42 @@ def test_middleware_allows_api_auth_without_2fa(client: Client, user) -> None:
     client.force_login(user)
     response = client.get("/api/auth/me/")
     # Would return a 302 to /2fa/setup/ if middleware redirected.
+    assert response.status_code == 200
+
+
+def test_middleware_allows_api_auth_with_confirmed_device_unverified(client: Client, user) -> None:
+    """Middleware must not redirect /api/auth/* even when the user has a
+    confirmed TOTP device but no active OTP session."""
+    from django_otp.plugins.otp_totp.models import TOTPDevice
+
+    TOTPDevice.objects.create(
+        user=user,
+        name="default",
+        confirmed=True,
+        key="0123456789abcdef0123456789abcdef01234567",
+    )
+    client.force_login(user)
+    response = client.get("/api/auth/me/")
+    assert response.status_code == 200, response.content
+
+
+def test_login_rejects_without_csrf(csrf_client: Client, user) -> None:
+    response = csrf_client.post(
+        "/api/auth/login/",
+        data={"username": "admin", "password": "pw-test-123"},
+        content_type="application/json",
+    )
+    assert response.status_code == 403
+
+
+def test_login_accepts_with_csrf(csrf_client: Client, user) -> None:
+    # Prime the csrftoken cookie via a GET to me (has @ensure_csrf_cookie).
+    csrf_client.get("/api/auth/me/")
+    token = csrf_client.cookies["csrftoken"].value
+    response = csrf_client.post(
+        "/api/auth/login/",
+        data={"username": "admin", "password": "pw-test-123"},
+        content_type="application/json",
+        HTTP_X_CSRFTOKEN=token,
+    )
     assert response.status_code == 200
