@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver the first authenticated React UX — Login, 2FA Setup, 2FA Verify — by adding a thin REST surface under `/api/auth/` to Django (reusing existing OTP helpers), a CSRF-aware `fetch` client with TanStack Query hooks on the frontend, and route gating driven by `GET /api/auth/me/`. By the end of the PR, a user can `make bootstrap-local && make dev`, open the Vite dev server, sign in as the seeded admin, scan the QR (or go straight to verify if a seed is already enrolled), and land on the existing Landing placeholder with a verified session.
+**Goal:** Deliver the first authenticated React UX — Login, 2FA Setup, 2FA Verify — by adding a thin REST surface under `/api/auth/` to Django (reusing existing OTP helpers), a CSRF-aware `fetch` client with TanStack Query hooks on the frontend, and route gating driven by `GET /api/auth/me/`. By the end of the PR, a user can `make bootstrap-local && make dev`, open the Vite dev server, sign in as the seeded admin, scan the QR (or go straight to verify if a seed is already enrolled), and land on the existing Landing placeholder with a verified session. Also ships a dev-only `SLOTFLOW_BYPASS_2FA` flag (hard-gated on `DEBUG`) so the future Playwright e2e PR can drive authenticated flows without computing live TOTP codes.
 
 **Architecture:**
 Backend endpoints are function-based DRF views (`@api_view`) living in `backend/core/api_auth.py`; they depend on the same `django_otp` primitives and `mcp.auth.mark_otp_session_fresh` helper the server-rendered views already use, so behavior stays in lockstep with `/2fa/*` templates. `Require2FAMiddleware` gets `/api/auth/` added to its allowlist so the JSON endpoints never redirect to HTML. On the frontend, `src/lib/api.ts` is a minimal `fetch` wrapper that reads the `csrftoken` cookie into `X-CSRFToken` and normalizes non-2xx responses into an `ApiError`; `src/lib/authHooks.ts` layers TanStack Query hooks on top (`useMe`, `useLogin`, `useLogout`, `useTotpSetup`, `useConfirmTotp`, `useVerifyTotp`). A single `AuthGuard` component drives route redirects off `useMe()` so any screen can opt into "must be verified" with one wrapper. Vite dev server proxies `/api` to Django at 8000 so same-origin requests work without CORS.
@@ -32,10 +32,12 @@ If `backend/.venv` does not exist yet: `(cd backend && python3.14 -m venv .venv)
 
 **Create (backend):**
 - `backend/core/api_auth.py` — DRF function-based views for `login`, `logout`, `me`, `totp_setup`, `totp_confirm`, `totp_verify`; shared `_me_payload(user)` helper.
+- `backend/core/auth_bypass.py` — `is_2fa_bypass_active()` helper, hard-gated on `DEBUG`, reads `SLOTFLOW_BYPASS_2FA` env var; used by middleware + `_me_payload`.
 - `backend/tests/test_api_auth.py` — integration tests using Django test client; one test per happy path and the main failure path for each endpoint, plus middleware allowlist assertion.
+- `backend/tests/test_auth_bypass.py` — bypass helper truth table + middleware integration + `_me_payload` integration.
 
 **Modify (backend):**
-- `backend/core/middleware/require_2fa.py` — add `/api/auth/` to the path allowlist so unauth'd API callers get JSON errors instead of HTML redirects.
+- `backend/core/middleware/require_2fa.py` — add `/api/auth/` to the path allowlist; consult `is_2fa_bypass_active()` before redirecting.
 - `backend/config/urls.py` — mount the six new routes under `api/auth/` (inline `path(..., include([...]))`).
 
 **Create (frontend):**
@@ -58,7 +60,8 @@ If `backend/.venv` does not exist yet: `(cd backend && python3.14 -m venv .venv)
 - `frontend/src/screens/Landing.tsx` — point the "Get started" link at `/login?signup=1` (registration is not wired; the query flag is a TODO marker).
 
 **Docs:**
-- `.env.example` — mention `DJANGO_CSRF_TRUSTED_ORIGINS` hint in a comment (only needed once a non-localhost origin shows up; no value required for the local Vite proxy case).
+- `.env.example` — mention `SLOTFLOW_BYPASS_2FA` (local/e2e bypass; hard-gated on DEBUG) and a `DJANGO_CSRF_TRUSTED_ORIGINS` hint.
+- `CLAUDE.md` — short note under "2FA is mandatory" documenting the bypass flag's scope and guardrails.
 
 ## Parallel-track dependencies
 
@@ -587,6 +590,294 @@ Idempotent device creation, invalid-token rejection, auth requirement.
 Happy-path confirm uses django_otp.oath.TOTP to generate a candidate
 token and tolerates real-time skew (200 or 400 both acceptable; only
 the state assertion runs when 200)."
+```
+
+---
+
+## Phase 2.5 — Dev-only 2FA bypass for e2e
+
+Playwright e2e (deferred to a later PR) needs a way to drive authenticated flows without generating live TOTP codes. This phase lands the infrastructure now — a single environment flag, `SLOTFLOW_BYPASS_2FA`, that makes `Require2FAMiddleware` treat any authenticated user as already-verified. The flag is **hard-gated on `settings.DEBUG`** so it is inert in staging/production even if the env var leaks into a deployed `.env`.
+
+### Task 2.5.1: Create the bypass helper
+
+**Files:**
+- Create: `backend/core/auth_bypass.py`
+
+- [ ] **Step 1: Write the file**
+
+```python
+"""Dev-only opt-in helper to bypass 2FA verification.
+
+Exists so Playwright e2e tests (deferred to a later PR) can exercise
+authenticated flows without computing live TOTP codes. The bypass is
+**only active under ``settings.DEBUG``** — staging and production are
+inert even if the env var leaks into a deployed ``.env``.
+
+Every consumer (middleware, API payload) must call
+:func:`is_2fa_bypass_active` rather than reading the env var directly,
+so the DEBUG gate is centralised.
+"""
+
+from __future__ import annotations
+
+from django.conf import settings
+
+from config.env import env_bool
+
+BYPASS_ENV_VAR = "SLOTFLOW_BYPASS_2FA"
+
+
+def is_2fa_bypass_active() -> bool:
+    """True iff DEBUG is on AND ``SLOTFLOW_BYPASS_2FA`` is truthy.
+
+    Returns False in any other combination. In particular, setting the
+    env var when DEBUG is False is silently ignored — we never weaken
+    2FA outside local development.
+    """
+
+    if not settings.DEBUG:
+        return False
+    return env_bool(BYPASS_ENV_VAR, default=False)
+```
+
+### Task 2.5.2: Write the failing bypass tests
+
+**Files:**
+- Create: `backend/tests/test_auth_bypass.py`
+
+- [ ] **Step 1: Write the file**
+
+```python
+from __future__ import annotations
+
+import pytest
+from django.contrib.auth import get_user_model
+from django.test import Client  # typing only, for the Client parameter annotation
+
+from core.auth_bypass import BYPASS_ENV_VAR, is_2fa_bypass_active
+
+pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def user():
+    return get_user_model().objects.create_user(
+        username="bypassadmin",
+        email="bypassadmin@example.com",
+        password="pw-test-123",
+    )
+
+
+def test_bypass_inert_when_debug_false(
+    monkeypatch: pytest.MonkeyPatch, settings
+) -> None:
+    settings.DEBUG = False
+    monkeypatch.setenv(BYPASS_ENV_VAR, "1")
+    assert is_2fa_bypass_active() is False
+
+
+def test_bypass_inert_when_env_unset(
+    monkeypatch: pytest.MonkeyPatch, settings
+) -> None:
+    settings.DEBUG = True
+    monkeypatch.delenv(BYPASS_ENV_VAR, raising=False)
+    assert is_2fa_bypass_active() is False
+
+
+def test_bypass_active_when_debug_and_env_set(
+    monkeypatch: pytest.MonkeyPatch, settings
+) -> None:
+    settings.DEBUG = True
+    monkeypatch.setenv(BYPASS_ENV_VAR, "1")
+    assert is_2fa_bypass_active() is True
+
+
+def test_middleware_skips_redirect_when_bypass_active(
+    monkeypatch: pytest.MonkeyPatch, settings, user, client: Client
+) -> None:
+    settings.DEBUG = True
+    monkeypatch.setenv(BYPASS_ENV_VAR, "1")
+    client.force_login(user)
+    # Hitting "/" without 2FA would normally redirect to /2fa/setup/; with
+    # the bypass on, the HomeView renders (or returns 200 for whichever
+    # template it uses).
+    response = client.get("/")
+    assert response.status_code == 200, response.content
+
+
+def test_middleware_redirects_when_bypass_disabled(
+    monkeypatch: pytest.MonkeyPatch, settings, user, client: Client
+) -> None:
+    settings.DEBUG = True
+    monkeypatch.delenv(BYPASS_ENV_VAR, raising=False)
+    client.force_login(user)
+    response = client.get("/")
+    assert response.status_code == 302
+    assert response["Location"] == "/2fa/setup/"
+
+
+def test_me_payload_reports_verified_under_bypass(
+    monkeypatch: pytest.MonkeyPatch, settings, user, client: Client
+) -> None:
+    settings.DEBUG = True
+    monkeypatch.setenv(BYPASS_ENV_VAR, "1")
+    client.force_login(user)
+    body = client.get("/api/auth/me/").json()
+    assert body["authenticated"] is True
+    assert body["is_verified"] is True
+```
+
+(`client` comes from pytest-django's default fixture — `Client(enforce_csrf_checks=False)` — no need to redefine here.)
+
+- [ ] **Step 2: Run — expect fail**
+
+```bash
+make -C backend test
+```
+
+Tests 4-6 will fail because the middleware and `_me_payload` don't know about the helper yet. Tests 1-3 should pass because they only exercise `is_2fa_bypass_active` itself.
+
+### Task 2.5.3: Wire the helper into `Require2FAMiddleware`
+
+**Files:**
+- Modify: `backend/core/middleware/require_2fa.py`
+
+- [ ] **Step 1: Overwrite the file**
+
+```python
+from __future__ import annotations
+
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect
+from django_otp.plugins.otp_totp.models import TOTPDevice
+
+from core.auth_bypass import is_2fa_bypass_active
+
+
+class Require2FAMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        path = request.path
+
+        if (
+            path.startswith("/healthz")
+            or path.startswith("/static/")
+            or path.startswith("/admin/")
+            or path.startswith("/accounts/")
+            or path.startswith("/2fa/")
+            or path.startswith("/api/auth/")
+        ):
+            return self.get_response(request)
+
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return self.get_response(request)
+
+        if user.is_verified() or is_2fa_bypass_active():
+            return self.get_response(request)
+
+        has_confirmed_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
+        if not has_confirmed_device:
+            return redirect("/2fa/setup/")
+
+        return redirect("/2fa/verify/")
+```
+
+### Task 2.5.4: Wire the helper into `_me_payload`
+
+**Files:**
+- Modify: `backend/core/api_auth.py`
+
+- [ ] **Step 1: Locate the `_me_payload` helper**
+
+```bash
+grep -n "_me_payload" backend/core/api_auth.py
+```
+
+- [ ] **Step 2: Replace it with the bypass-aware version**
+
+Add the import (near the other backend imports):
+
+```python
+from .auth_bypass import is_2fa_bypass_active
+```
+
+Replace the body of `_me_payload`:
+
+```python
+def _me_payload(user) -> dict:
+    if not user.is_authenticated:
+        return {
+            "authenticated": False,
+            "username": None,
+            "has_totp_device": False,
+            "is_verified": False,
+        }
+    has_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
+    is_verified = bool(user.is_verified()) or is_2fa_bypass_active()
+    return {
+        "authenticated": True,
+        "username": user.username,
+        "has_totp_device": has_device,
+        "is_verified": is_verified,
+    }
+```
+
+### Task 2.5.5: Run tests — all green
+
+- [ ] **Step 1: Run**
+
+```bash
+make -C backend test
+```
+
+Expected: the six new tests in `test_auth_bypass.py` pass; baseline tests stay green (suite grows to ~39 tests).
+
+### Task 2.5.6: Document the flag in `.env.example` and CLAUDE.md
+
+**Files:**
+- Modify: `.env.example`
+- Modify: `CLAUDE.md`
+
+- [ ] **Step 1: Append to `.env.example`**
+
+```bash
+
+# Local dev / e2e only: skip Require2FAMiddleware's redirect to /2fa/*.
+# Hard-gated on DEBUG — ignored when DEBUG=False. Never enable outside
+# disposable local databases. Playwright e2e (future PR) will rely on
+# this flag to drive authenticated flows without live TOTP codes.
+# SLOTFLOW_BYPASS_2FA=1
+```
+
+- [ ] **Step 2: Add a short note in CLAUDE.md under "2FA is mandatory"**
+
+Find the section and append the following paragraph after the MCP note:
+
+```markdown
+For local development only, setting `SLOTFLOW_BYPASS_2FA=1` in `.env` tells `Require2FAMiddleware` to skip its redirect and treat any authenticated user as already-verified. The flag is hard-gated on `DEBUG` (see `core/auth_bypass.py`) so it is inert in staging and production. This exists for Playwright e2e; never enable it on a production-adjacent database.
+```
+
+### Task 2.5.7: Commit Phase 2.5
+
+- [ ] **Step 1: Commit**
+
+```bash
+git add backend/core/auth_bypass.py backend/core/middleware/require_2fa.py backend/core/api_auth.py backend/tests/test_auth_bypass.py .env.example CLAUDE.md
+git commit -m "feat(backend): dev-only SLOTFLOW_BYPASS_2FA for e2e
+
+New core/auth_bypass.py centralises the opt-in. Hard-gated on
+settings.DEBUG: if DEBUG is False the flag is inert, so staging /
+production cannot be weakened by a stray .env entry. Consumed by
+Require2FAMiddleware (skip redirect) and _me_payload (report
+is_verified=true) so route gating on the React side sees a verified
+session and does not bounce to /2fa/verify.
+
+Six new tests cover the helper's truth table and the middleware /
+payload integrations. .env.example and CLAUDE.md document the flag
+with a prominent warning about its scope."
 ```
 
 ---
@@ -1943,6 +2234,7 @@ The plan is one PR. There are no human-gated checkpoints inside it. Internal ver
 
 - End of Phase 1: `make -C backend test` green.
 - End of Phase 2: same test target, larger suite.
+- End of Phase 2.5: `make -C backend test` green; confirm `is_verified=true` under bypass in `test_me_payload_reports_verified_under_bypass`.
 - End of Phase 4: `npx vitest run src/lib/api.test.ts` green.
 - End of Phase 6: same plus `AuthGuard.test.tsx`.
 - End of Phase 7, 8, 9: each screen's test file green.
