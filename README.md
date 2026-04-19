@@ -83,7 +83,7 @@ celery -A config worker -l info
 
 **Useful environment variables** (optional; see `.env.example`):
 
-- `POSTGRES_`* — only if you are not using the defaults (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`)
+- `POSTGRES_*` — only if you are not using the defaults (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`)
 - `REDIS_URL` — defaults to `redis://127.0.0.1:6379/0`
 - `DJANGO_DEBUG=1` — already implied by `local.py`
 
@@ -95,7 +95,7 @@ celery -A config worker -l info
 | Location    | Target                                         | Purpose                                                                          |
 | ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
 | Repo root   | `make install`                                 | `backend` `install-dev` + `frontend` `install` (requires `backend/.venv`)        |
-| Repo root   | `make setup-local-db`                          | create role/database from `.env` (`POSTGRES_`*) if missing                       |
+| Repo root   | `make setup-local-db`                          | create role/database from `.env` (`POSTGRES_*`) if missing                       |
 | Repo root   | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values                              |
 | Repo root   | `make migrate`                                 | `manage.py migrate` with repo-root `.env` loaded                                 |
 | Repo root   | `make ensure-superuser`                        | idempotent local superuser from `DJANGO_SUPERUSER_*` (see `.env.example`)        |
