@@ -16,6 +16,8 @@ Three sibling packages orchestrated from the repo root:
 
 ## Common commands
 
+**Always prefer `make` targets over running `pytest`, `npm`, `ruff`, or `eslint` directly.** The Makefiles at repo root and in `backend/`, `frontend/`, `e2e/` encode the canonical invocation — including the correct virtualenv, settings module, environment variables, and cross-package ordering. Reach for a raw command only when a `make` target doesn't exist for what you need (single-test runs, one-off debugging).
+
 All from the repo root. Requires `backend/.venv` to exist first (`cd backend && python -m venv .venv`).
 
 ```bash
@@ -28,20 +30,15 @@ make test-e2e           # Playwright
 make ci                 # lint + test-unit + test-e2e
 ```
 
-Backend (from `backend/`, `.venv/bin/python` is preferred when present):
+From a subdirectory, `make -C backend test`, `make -C frontend lint`, etc., keep you on the `make` path.
+
+Raw commands are only appropriate for things `make` doesn't cover — typically single-test runs:
 
 ```bash
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py runserver
-.venv/bin/celery -A config worker -l info
-.venv/bin/python -m pytest tests/test_healthz.py         # single test file
-.venv/bin/python -m pytest tests/test_healthz.py::test_healthz_returns_ok   # single test
-.venv/bin/python -m ruff format .                        # autoformat
+backend/.venv/bin/python -m pytest backend/tests/test_healthz.py::test_healthz_returns_ok
+(cd frontend && npx vitest run src/screens/Landing.test.tsx)
+(cd e2e && npx playwright test tests/name.spec.ts)
 ```
-
-Frontend (from `frontend/`): `npm test` (Vitest, `node` environment), `npm run lint`. Run a single test with `npx vitest run path/to/file.test.ts`.
-
-E2E (from `e2e/`): `npx playwright install chromium` once, then `npm test`. Run a single test with `npx playwright test tests/name.spec.ts`.
 
 ## Database bootstrap
 
