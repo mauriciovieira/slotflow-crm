@@ -15,12 +15,18 @@ if os.environ.get("SLOTFLOW_USE_SQLITE", "").strip().lower() in {"1", "true", "y
         }
     }
 
-INSTALLED_APPS += [  # noqa: F405
-    "django_extensions",
-    "debug_toolbar",
-]
+try:
+    import debug_toolbar  # noqa: F401
+    import django_extensions  # noqa: F401
 
-# https://django-debug-toolbar.readthedocs.io/en/latest/installation.html
-MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
+    INSTALLED_APPS += [  # noqa: F405
+        "django_extensions",
+        "debug_toolbar",
+    ]
 
-INTERNAL_IPS = ["127.0.0.1", "::1"]
+    # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html
+    MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
+
+    INTERNAL_IPS = ["127.0.0.1", "::1"]
+except ImportError:
+    pass
