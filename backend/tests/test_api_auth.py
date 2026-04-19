@@ -226,3 +226,28 @@ def test_totp_endpoints_require_auth(client: Client) -> None:
     ]:
         resp = getattr(client, method)(path, data={}, content_type="application/json")
         assert resp.status_code in (401, 403), f"{path} should require auth, got {resp.status_code}"
+
+
+def test_totp_confirm_accepts_int_token(client, user) -> None:
+    _seeded_device(user, confirmed=False)
+    client.force_login(user)
+    # JSON numbers — some poorly-typed clients send this.
+    response = client.post(
+        "/api/auth/2fa/confirm/",
+        data={"token": 123456},
+        content_type="application/json",
+    )
+    # Either 400 (invalid token, since 123456 is unlikely to be valid)
+    # or 200 (vanishingly unlikely). Never 500.
+    assert response.status_code in (200, 400), response.content
+
+
+def test_totp_verify_accepts_int_token(client, user) -> None:
+    _seeded_device(user, confirmed=True)
+    client.force_login(user)
+    response = client.post(
+        "/api/auth/2fa/verify/",
+        data={"token": 123456},
+        content_type="application/json",
+    )
+    assert response.status_code in (200, 400), response.content
