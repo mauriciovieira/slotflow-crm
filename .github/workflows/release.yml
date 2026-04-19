@@ -185,19 +185,25 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      - name: Prepend RELEASES.md for root
+      - name: Prepend RELEASES.md and capture root CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # @semantic-release/changelog writes to repo-root CHANGELOG.md, but
+        # @semantic-release/git runs from .release/root/ and its asset matcher
+        # does not reliably pick up files above that cwd — so CHANGELOG.md is
+        # left unstaged after the release commit. --autostash preserves that
+        # modification across the rebase, and we include it in the index-update
+        # commit so the root changelog and RELEASES.md land together.
         run: |
           git fetch origin main
           git checkout main
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
           VER_AFTER=$(node -p "require('./.release/root/package.json').version")
           if [ "${{ steps.root_before.outputs.ver }}" = "$VER_AFTER" ]; then
             echo "No root version bump; skipping root index update"
             exit 0
           fi
           ./scripts/prepend-root-changelog.sh root "$VER_AFTER"
-          git add RELEASES.md
-          git diff --staged --quiet || git commit -m "docs: update root changelog index for root ${VER_AFTER} [skip ci]"
+          git add CHANGELOG.md RELEASES.md
+          git diff --staged --quiet || git commit -m "docs: update root changelog and index for root ${VER_AFTER} [skip ci]"
           git push origin main
