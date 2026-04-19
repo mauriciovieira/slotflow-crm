@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.0.1...root-v1.1.0) (2026-04-19)
+
+
+### Bug Fixes
+
+* replace comment for migrate task ([01e0624](https://github.com/mauriciovieira/slotflow-crm/commit/01e06243f687928033a48a8598d4335b5608a54f))
+
+
+### Features
+
+* **dev:** Makefile help, per-app migrate, shell_plus and show_urls ([5ae5588](https://github.com/mauriciovieira/slotflow-crm/commit/5ae55884f5d6c38fa4247df172aa4899a7296a6a))
+* **dev:** seed admin TOTP device from SLOTFLOW_ADMIN_TOTP_KEY in .env ([77f6f27](https://github.com/mauriciovieira/slotflow-crm/commit/77f6f275027dfc9b6f856a716245817b32f1446b))
+
 ## [1.0.1](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.0.0...root-v1.0.1) (2026-04-18)
 
 
