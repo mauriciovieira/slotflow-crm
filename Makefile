@@ -77,12 +77,12 @@ reset-local-db:
 	psql postgres -c "CREATE DATABASE \"$$DB_NAME\" OWNER \"$$DB_USER\";"; \
 	echo "Local database reset done."
 
-# Optional: migrate one app, e.g. make migrate app=core
 migrations:
 	@test -f .env || (echo >&2 "Missing .env. Run: cp .env.example .env"; exit 1)
 	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
 	@set -a; . ./.env; set +a; cd backend && .venv/bin/python manage.py makemigrations
 
+# Optional: migrate one app, e.g. make migrate app=core
 migrate:
 	@test -f .env || (echo >&2 "Missing .env. Run: cp .env.example .env"; exit 1)
 	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
