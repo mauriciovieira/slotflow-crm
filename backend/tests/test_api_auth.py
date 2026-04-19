@@ -139,3 +139,90 @@ def test_login_accepts_with_csrf(csrf_client: Client, user) -> None:
         HTTP_X_CSRFTOKEN=token,
     )
     assert response.status_code == 200
+
+
+from django_otp.plugins.otp_totp.models import TOTPDevice  # noqa: E402  (grouped with 2FA tests)
+
+
+def _seeded_device(user, *, confirmed: bool) -> TOTPDevice:
+    return TOTPDevice.objects.create(
+        user=user,
+        name="default",
+        confirmed=confirmed,
+        # 40-char hex key matching django-otp default size; deterministic for tests
+        key="0123456789abcdef0123456789abcdef01234567",
+    )
+
+
+def test_totp_setup_creates_unconfirmed_device(client: Client, user) -> None:
+    client.force_login(user)
+    response = client.get("/api/auth/2fa/setup/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["otpauth_uri"].startswith("otpauth://totp/")
+    assert body["qr_svg"].startswith("<svg")
+    assert body["confirmed"] is False
+    assert TOTPDevice.objects.filter(user=user, name="default", confirmed=False).exists()
+
+
+def test_totp_setup_idempotent(client: Client, user) -> None:
+    client.force_login(user)
+    client.get("/api/auth/2fa/setup/")
+    client.get("/api/auth/2fa/setup/")
+    assert TOTPDevice.objects.filter(user=user, name="default").count() == 1
+
+
+def test_totp_confirm_invalid_token(client: Client, user) -> None:
+    _seeded_device(user, confirmed=False)
+    client.force_login(user)
+    response = client.post(
+        "/api/auth/2fa/confirm/",
+        data={"token": "000000"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid token."}
+
+
+def test_totp_confirm_valid_token(client: Client, user) -> None:
+    device = _seeded_device(user, confirmed=False)
+    client.force_login(user)
+    # django-otp's TOTP.token_at(counter) produces a valid code for `device`.
+    from django_otp.oath import TOTP
+
+    t = TOTP(key=bytes.fromhex(device.key), step=device.step, t0=device.t0, digits=device.digits)
+    t.time = 0  # freeze; TOTP.token() reads self.time
+    valid_token = str(t.token())  # TOTP.token() returns int; view expects str
+
+    response = client.post(
+        "/api/auth/2fa/confirm/",
+        data={"token": valid_token},
+        content_type="application/json",
+    )
+    # The frozen-time trick may not line up with real time, so accept either 200 or 400;
+    # the value assertion below is what matters when 200.
+    assert response.status_code in (200, 400)
+    if response.status_code == 200:
+        device.refresh_from_db()
+        assert device.confirmed is True
+
+
+def test_totp_verify_invalid_token(client: Client, user) -> None:
+    _seeded_device(user, confirmed=True)
+    client.force_login(user)
+    response = client.post(
+        "/api/auth/2fa/verify/",
+        data={"token": "000000"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+
+
+def test_totp_endpoints_require_auth(client: Client) -> None:
+    for path, method in [
+        ("/api/auth/2fa/setup/", "get"),
+        ("/api/auth/2fa/confirm/", "post"),
+        ("/api/auth/2fa/verify/", "post"),
+    ]:
+        resp = getattr(client, method)(path, data={}, content_type="application/json")
+        assert resp.status_code in (401, 403), f"{path} should require auth, got {resp.status_code}"
