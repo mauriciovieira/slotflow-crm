@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.0.0...root-v1.0.1) (2026-04-18)
+
+
+### Bug Fixes
+
+* **root:** use absolute paths for root CHANGELOG.md in release config ([#10](https://github.com/mauriciovieira/slotflow-crm/issues/10)) ([402854c](https://github.com/mauriciovieira/slotflow-crm/commit/402854c429927c03febee80ab35f7f8a8c17f1e1))
+
 # 1.0.0 (2026-04-18)
 
 
