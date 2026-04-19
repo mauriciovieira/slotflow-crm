@@ -18,6 +18,7 @@ class Require2FAMiddleware:
             or path.startswith("/admin/")
             or path.startswith("/accounts/")
             or path.startswith("/2fa/")
+            or path.startswith("/api/auth/")
         ):
             return self.get_response(request)
 
