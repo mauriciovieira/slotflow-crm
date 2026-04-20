@@ -39,13 +39,30 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
 
   const text = await response.text();
-  const body = text ? (JSON.parse(text) as unknown) : null;
+  const contentType = response.headers.get("Content-Type")?.toLowerCase() ?? "";
+  const isJsonResponse =
+    contentType.includes("application/json") || contentType.includes("+json");
+  let body: unknown = null;
+
+  if (text) {
+    if (isJsonResponse) {
+      try {
+        body = JSON.parse(text) as unknown;
+      } catch {
+        body = text;
+      }
+    } else {
+      body = text;
+    }
+  }
 
   if (!response.ok) {
     const detail =
       body && typeof body === "object" && "detail" in body && typeof (body as { detail?: unknown }).detail === "string"
         ? (body as { detail: string }).detail
-        : response.statusText;
+        : typeof body === "string" && body
+          ? body
+          : response.statusText;
     throw new ApiError(response.status, detail);
   }
 

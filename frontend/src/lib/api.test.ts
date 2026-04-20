@@ -77,4 +77,33 @@ describe("apiFetch", () => {
     const result = await apiFetch<null>("/api/auth/logout/", { method: "POST" });
     expect(result).toBeNull();
   });
+
+  it("does not JSON.parse HTML error pages — surfaces ApiError with statusText", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response("<html><body>Internal Server Error</body></html>", {
+        status: 500,
+        statusText: "Internal Server Error",
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      }),
+    );
+    await expect(apiFetch("/api/auth/me/")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 500,
+    });
+  });
+
+  it("falls back to text when Content-Type claims JSON but body is not JSON", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response("not { json", {
+        status: 502,
+        statusText: "Bad Gateway",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(apiFetch("/api/auth/me/")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 502,
+      message: "not { json",
+    });
+  });
 });
