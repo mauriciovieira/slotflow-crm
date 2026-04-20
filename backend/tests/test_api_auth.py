@@ -185,26 +185,27 @@ def test_totp_confirm_invalid_token(client: Client, user) -> None:
 
 
 def test_totp_confirm_valid_token(client: Client, user) -> None:
-    device = _seeded_device(user, confirmed=False)
-    client.force_login(user)
-    # django-otp's TOTP.token_at(counter) produces a valid code for `device`.
+    import time
+
     from django_otp.oath import TOTP
 
+    device = _seeded_device(user, confirmed=False)
+    client.force_login(user)
+    # Generate the token for the current TOTP window so it matches whatever
+    # `device.verify_token` computes server-side. zfill guards the rare case
+    # where the generated token has a leading zero.
     t = TOTP(key=bytes.fromhex(device.key), step=device.step, t0=device.t0, digits=device.digits)
-    t.time = 0  # freeze; TOTP.token() reads self.time
-    valid_token = str(t.token())  # TOTP.token() returns int; view expects str
+    t.time = time.time()
+    valid_token = str(t.token()).zfill(device.digits)
 
     response = client.post(
         "/api/auth/2fa/confirm/",
         data={"token": valid_token},
         content_type="application/json",
     )
-    # The frozen-time trick may not line up with real time, so accept either 200 or 400;
-    # the value assertion below is what matters when 200.
-    assert response.status_code in (200, 400)
-    if response.status_code == 200:
-        device.refresh_from_db()
-        assert device.confirmed is True
+    assert response.status_code == 200
+    device.refresh_from_db()
+    assert device.confirmed is True
 
 
 def test_totp_verify_invalid_token(client: Client, user) -> None:
