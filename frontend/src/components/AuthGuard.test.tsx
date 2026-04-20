@@ -14,17 +14,20 @@ import { useMe } from "../lib/authHooks";
 
 const useMeMock = vi.mocked(useMe);
 
-function setMe(me: Me | undefined, { isLoading = false } = {}) {
+function setMe(
+  me: Me | undefined,
+  { isLoading = false, error = null as Error | null } = {},
+) {
   useMeMock.mockReturnValue({
     data: me,
     isLoading,
-    error: null,
+    error,
     refetch: vi.fn(),
     isFetching: false,
-    isError: false,
+    isError: !!error,
     isSuccess: !!me,
     isPending: !me && !isLoading ? false : isLoading,
-    status: me ? "success" : "pending",
+    status: error ? "error" : me ? "success" : "pending",
   } as unknown as ReturnType<typeof useMe>);
 }
 
@@ -93,6 +96,18 @@ describe("AuthGuard", () => {
       { extraRoutes },
     );
     await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+  });
+
+  it("redirects to /login when useMe errors instead of hanging on loading", async () => {
+    setMe(undefined, { error: new Error("network down") });
+    renderWithProviders(
+      <AuthGuard>
+        <Protected />
+      </AuthGuard>,
+      { extraRoutes },
+    );
+    await waitFor(() => expect(screen.getByText("login page")).toBeInTheDocument());
+    expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
   });
 
   it("renders children without verification when requireVerified=false", async () => {
