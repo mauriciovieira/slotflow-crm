@@ -4,6 +4,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
+from core.auth_bypass import is_2fa_bypass_active
+
 
 class Require2FAMiddleware:
     def __init__(self, get_response):
@@ -26,7 +28,7 @@ class Require2FAMiddleware:
         if not user or not user.is_authenticated:
             return self.get_response(request)
 
-        if user.is_verified():
+        if user.is_verified() or is_2fa_bypass_active():
             return self.get_response(request)
 
         has_confirmed_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()

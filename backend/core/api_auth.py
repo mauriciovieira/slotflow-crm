@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from mcp.auth import mark_otp_session_fresh
 
+from .auth_bypass import is_2fa_bypass_active
 from .totp_qr import build_totp_qr_svg
 
 
@@ -42,7 +43,7 @@ def _me_payload(user) -> dict:
         "authenticated": True,
         "username": user.username,
         "has_totp_device": has_device,
-        "is_verified": _user_is_verified(user),
+        "is_verified": _user_is_verified(user) or is_2fa_bypass_active(),
     }
 
 
