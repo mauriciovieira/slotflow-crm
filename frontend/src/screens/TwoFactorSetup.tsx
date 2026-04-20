@@ -13,8 +13,17 @@ export function TwoFactorSetup() {
     event.preventDefault();
     setSubmitError(null);
     try {
-      await confirm.mutateAsync(token.replace(/\s+/g, ""));
-      navigate("/", { replace: true });
+      const me = await confirm.mutateAsync(token.replace(/\s+/g, ""));
+      // Confirm's success payload is the same `Me` that AuthGuard reads. The
+      // backend currently marks the session OTP-verified as part of confirm,
+      // so `is_verified` should be true — but if it ever isn't (e.g. stale
+      // session, already-confirmed device on a non-OTP session), route to
+      // /2fa/verify so AuthGuard doesn't bounce the user from `/` anyway.
+      if (me?.is_verified) {
+        navigate("/", { replace: true });
+      } else {
+        navigate("/2fa/verify", { replace: true });
+      }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Confirmation failed.");
     }
