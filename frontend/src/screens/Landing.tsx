@@ -10,7 +10,8 @@ export function Landing() {
             Sign in
           </a>
           <a
-            href="/signup"
+            href="/login?signup=1"
+            title="Signup flow not wired yet — lands on /login"
             className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep"
           >
             Get started
