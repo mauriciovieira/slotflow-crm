@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.1.0...root-v1.2.0) (2026-04-22)
+
+
+### Features
+
+* **backend:** dev-only SLOTFLOW_BYPASS_2FA flag for e2e ([aac93d0](https://github.com/mauriciovieira/slotflow-crm/commit/aac93d05d2e3f8ef787b6a0ba3de370759d85835))
+
 # [1.1.0](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.0.1...root-v1.1.0) (2026-04-19)
 
 

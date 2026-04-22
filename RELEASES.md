@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-22 — Root 1.2.0
+
+- [Release notes](CHANGELOG.md)
+
 ## 2026-04-22 — Frontend 1.3.0
 
 - [Release notes](frontend/CHANGELOG.md)
