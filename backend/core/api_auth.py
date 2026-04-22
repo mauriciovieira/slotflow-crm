@@ -96,12 +96,25 @@ def totp_setup_view(request: Request) -> Response:
         name="default",
         defaults={"confirmed": False},
     )
+    # Never re-issue the TOTP seed (otpauth_uri / qr_svg) for an already-
+    # confirmed device — that would let anyone with the current session
+    # silently clone the authenticator, persisting access beyond session
+    # revocation. The client is expected to route to /2fa/verify in that case.
+    if device.confirmed:
+        return Response(
+            {
+                "otpauth_uri": "",
+                "qr_svg": "",
+                "confirmed": True,
+            }
+        )
+
     otpauth_uri = device.config_url
     return Response(
         {
             "otpauth_uri": otpauth_uri,
             "qr_svg": build_totp_qr_svg(otpauth_uri),
-            "confirmed": device.confirmed,
+            "confirmed": False,
         }
     )
 

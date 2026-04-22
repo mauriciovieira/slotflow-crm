@@ -172,6 +172,23 @@ def test_totp_setup_idempotent(client: Client, user) -> None:
     assert TOTPDevice.objects.filter(user=user, name="default").count() == 1
 
 
+def test_totp_setup_does_not_leak_seed_when_device_confirmed(client: Client, user) -> None:
+    """Already-confirmed device must not re-issue the TOTP seed.
+
+    Re-serving the otpauth_uri or QR for a confirmed device would let anyone
+    with the current session silently clone the authenticator, persisting
+    access beyond session revocation.
+    """
+    _seeded_device(user, confirmed=True)
+    client.force_login(user)
+    response = client.get("/api/auth/2fa/setup/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["confirmed"] is True
+    assert body["otpauth_uri"] == ""
+    assert body["qr_svg"] == ""
+
+
 def test_totp_confirm_invalid_token(client: Client, user) -> None:
     _seeded_device(user, confirmed=False)
     client.force_login(user)
