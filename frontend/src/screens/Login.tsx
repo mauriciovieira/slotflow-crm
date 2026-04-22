@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import lockup from "../assets/brand/lockup.svg";
 import { useLogin, useMe } from "../lib/authHooks";
+import { TestIds } from "../testIds";
 
 export function Login() {
   const [username, setUsername] = useState("");
@@ -73,6 +74,7 @@ export function Login() {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              data-testid={TestIds.LOGIN_USERNAME}
               className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
             />
           </label>
@@ -84,6 +86,7 @@ export function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              data-testid={TestIds.LOGIN_PASSWORD}
               className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
             />
           </label>
@@ -95,6 +98,7 @@ export function Login() {
           <button
             type="submit"
             disabled={login.isPending}
+            data-testid={TestIds.LOGIN_SUBMIT}
             className="w-full rounded-md bg-brand text-white py-2 font-medium hover:bg-brand-deep disabled:opacity-60"
           >
             {login.isPending ? "Signing in…" : "Sign in"}

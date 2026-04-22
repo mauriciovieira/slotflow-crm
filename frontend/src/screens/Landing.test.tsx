@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../test-utils/renderWithProviders";
 import { Landing } from "./Landing";
 import type { Me } from "../lib/authHooks";
+import { TestIds } from "../testIds";
 
 const logoutMutate = vi.fn();
 
@@ -49,7 +50,7 @@ describe("Landing (anonymous)", () => {
   it("has a 'Get started' call to action", () => {
     setMe(undefined);
     renderWithProviders(<Landing />);
-    expect(screen.getByRole("link", { name: /get started/i })).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.LANDING_CTA_PRIMARY)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /sign in/i })).toBeInTheDocument();
   });
 });
@@ -63,10 +64,10 @@ describe("Landing (signed in)", () => {
       is_verified: true,
     });
     renderWithProviders(<Landing />);
-    expect(screen.getByText(/signed in as/i)).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.SIGNED_IN_HEADER)).toBeInTheDocument();
     expect(screen.getByText("admin")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /get started/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.SIGN_OUT_BUTTON)).toBeInTheDocument();
+    expect(screen.queryByTestId(TestIds.LANDING_CTA_PRIMARY)).not.toBeInTheDocument();
   });
 
   it("calls useLogout when Sign out is clicked", async () => {
@@ -78,7 +79,7 @@ describe("Landing (signed in)", () => {
     });
     const user = userEvent.setup();
     renderWithProviders(<Landing />);
-    await user.click(screen.getByRole("button", { name: /sign out/i }));
+    await user.click(screen.getByTestId(TestIds.SIGN_OUT_BUTTON));
     await waitFor(() => expect(logoutMutate).toHaveBeenCalled());
   });
 
@@ -90,7 +91,7 @@ describe("Landing (signed in)", () => {
       is_verified: false,
     });
     renderWithProviders(<Landing />);
-    expect(screen.getByRole("link", { name: /get started/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /sign out/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.LANDING_CTA_PRIMARY)).toBeInTheDocument();
+    expect(screen.queryByTestId(TestIds.SIGN_OUT_BUTTON)).not.toBeInTheDocument();
   });
 });

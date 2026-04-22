@@ -1,5 +1,6 @@
 import lockup from "../assets/brand/lockup.svg";
 import { useLogout, useMe } from "../lib/authHooks";
+import { TestIds } from "../testIds";
 
 export function Landing() {
   const me = useMe();
@@ -13,13 +14,17 @@ export function Landing() {
         <nav className="flex items-center gap-4 text-ink-secondary">
           {signedIn ? (
             <>
-              <span className="text-sm text-ink-secondary">
+              <span
+                className="text-sm text-ink-secondary"
+                data-testid={TestIds.SIGNED_IN_HEADER}
+              >
                 Signed in as <span className="text-ink font-medium">{me.data?.username}</span>
               </span>
               <button
                 type="button"
                 onClick={() => logout.mutate()}
                 disabled={logout.isPending}
+                data-testid={TestIds.SIGN_OUT_BUTTON}
                 className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card disabled:opacity-60"
               >
                 {logout.isPending ? "Signing out…" : "Sign out"}
@@ -33,6 +38,7 @@ export function Landing() {
               <a
                 href="/login?signup=1"
                 title="Signup flow not wired yet — lands on /login"
+                data-testid={TestIds.LANDING_CTA_PRIMARY}
                 className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep"
               >
                 Get started
