@@ -7,6 +7,7 @@ export function TwoFactorVerify() {
   const navigate = useNavigate();
   const [token, setToken] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const normalizedLength = token.replace(/\s+/g, "").length;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -51,7 +52,7 @@ export function TwoFactorVerify() {
           )}
           <button
             type="submit"
-            disabled={verify.isPending || token.length < 6}
+            disabled={verify.isPending || normalizedLength < 6}
             className="w-full rounded-md bg-brand text-white py-2 font-medium hover:bg-brand-deep disabled:opacity-60"
           >
             {verify.isPending ? "Verifying…" : "Verify"}

@@ -45,4 +45,19 @@ describe("TwoFactorVerify", () => {
     expect(verifyMutateAsync).toHaveBeenCalledWith("123456");
     await waitFor(() => expect(screen.getByText("home placeholder")).toBeInTheDocument());
   });
+
+  it("keeps the Verify button disabled when spaced input has fewer than 6 digits", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<TwoFactorVerify />);
+    const input = screen.getByLabelText(/6-digit code/i);
+    const button = screen.getByRole("button", { name: /^verify$/i });
+    expect(button).toBeDisabled();
+
+    await user.type(input, "1 2 3 4");
+    expect(button).toBeDisabled();
+
+    await user.clear(input);
+    await user.type(input, "123 456");
+    expect(button).toBeEnabled();
+  });
 });
