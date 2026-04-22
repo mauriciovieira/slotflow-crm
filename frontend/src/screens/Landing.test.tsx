@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../test-utils/renderWithProviders";
@@ -22,6 +22,11 @@ vi.mock("../lib/authHooks", async () => {
 import { useMe } from "../lib/authHooks";
 
 const useMeMock = vi.mocked(useMe);
+
+beforeEach(() => {
+  logoutMutate.mockReset();
+  useMeMock.mockReset();
+});
 
 function setMe(me: Me | undefined) {
   useMeMock.mockReturnValue({

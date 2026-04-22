@@ -122,7 +122,7 @@ def totp_setup_view(request: Request) -> Response:
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def totp_confirm_view(request: Request) -> Response:
-    token = str(request.data.get("token") or "").replace(" ", "")
+    token = "".join(str(request.data.get("token") or "").split())
     if not token:
         return Response({"detail": "Missing token."}, status=400)
 
@@ -144,7 +144,7 @@ def totp_confirm_view(request: Request) -> Response:
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def totp_verify_view(request: Request) -> Response:
-    token = str(request.data.get("token") or "").replace(" ", "")
+    token = "".join(str(request.data.get("token") or "").split())
     if not token:
         return Response({"detail": "Missing token."}, status=400)
 

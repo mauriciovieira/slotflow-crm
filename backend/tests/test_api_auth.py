@@ -201,18 +201,19 @@ def test_totp_confirm_invalid_token(client: Client, user) -> None:
     assert response.json() == {"detail": "Invalid token."}
 
 
-def test_totp_confirm_valid_token(client: Client, user) -> None:
-    import time
-
+def test_totp_confirm_valid_token(client: Client, user, monkeypatch) -> None:
     from django_otp.oath import TOTP
+
+    fixed_time = 1_700_000_000
+    monkeypatch.setattr("time.time", lambda: fixed_time)
 
     device = _seeded_device(user, confirmed=False)
     client.force_login(user)
-    # Generate the token for the current TOTP window so it matches whatever
-    # `device.verify_token` computes server-side. zfill guards the rare case
-    # where the generated token has a leading zero.
+    # Freeze time so token generation and server-side verification use the
+    # same TOTP window. zfill guards the rare case where the generated token
+    # has a leading zero.
     t = TOTP(key=bytes.fromhex(device.key), step=device.step, t0=device.t0, digits=device.digits)
-    t.time = time.time()
+    t.time = fixed_time
     valid_token = str(t.token()).zfill(device.digits)
 
     response = client.post(
