@@ -6,6 +6,14 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 import identity.admin  # noqa: F401  # OTP admin site/User admin side effects
+from core.api_auth import (
+    login_view,
+    logout_view,
+    me_view,
+    totp_confirm_view,
+    totp_setup_view,
+    totp_verify_view,
+)
 from core.views import (
     HealthzView,
     HomeView,
@@ -15,6 +23,15 @@ from core.views import (
     TwoFactorVerifyView,
 )
 
+api_auth_patterns = [
+    path("login/", login_view, name="api_auth_login"),
+    path("logout/", logout_view, name="api_auth_logout"),
+    path("me/", me_view, name="api_auth_me"),
+    path("2fa/setup/", totp_setup_view, name="api_auth_totp_setup"),
+    path("2fa/confirm/", totp_confirm_view, name="api_auth_totp_confirm"),
+    path("2fa/verify/", totp_verify_view, name="api_auth_totp_verify"),
+]
+
 urlpatterns = [
     path("healthz", HealthzView.as_view(), name="healthz"),
     path("admin/", admin.site.urls),
@@ -23,6 +40,7 @@ urlpatterns = [
     path("2fa/setup/", TwoFactorSetupView.as_view(), name="two_factor_setup"),
     path("2fa/confirm/", TwoFactorConfirmView.as_view(), name="two_factor_confirm"),
     path("2fa/verify/", TwoFactorVerifyView.as_view(), name="two_factor_verify"),
+    path("api/auth/", include(api_auth_patterns)),
     path("mcp/ping", McpPingView.as_view(), name="mcp_ping"),
     path("", HomeView.as_view(), name="home"),
 ]
