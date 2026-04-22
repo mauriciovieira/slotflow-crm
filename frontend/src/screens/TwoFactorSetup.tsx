@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useConfirmTotp, useTotpSetup } from "../lib/authHooks";
 
@@ -8,6 +8,16 @@ export function TwoFactorSetup() {
   const navigate = useNavigate();
   const [token, setToken] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const normalizedLength = token.replace(/\s+/g, "").length;
+
+  // Backend returns `confirmed: true` with blank otpauth_uri / qr_svg when the
+  // device is already enrolled (prevents silent authenticator re-cloning). The
+  // UX path for a user who lands here anyway is to go verify their session.
+  useEffect(() => {
+    if (setup.data?.confirmed) {
+      navigate("/2fa/verify", { replace: true });
+    }
+  }, [setup.data?.confirmed, navigate]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -44,7 +54,7 @@ export function TwoFactorSetup() {
             {setup.error.message}
           </p>
         )}
-        {setup.data && (
+        {setup.data && !setup.data.confirmed && (
           <>
             <div
               className="mx-auto w-64 h-64 mb-6 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
@@ -72,7 +82,7 @@ export function TwoFactorSetup() {
               )}
               <button
                 type="submit"
-                disabled={confirm.isPending || token.length < 6}
+                disabled={confirm.isPending || normalizedLength < 6}
                 className="w-full rounded-md bg-brand text-white py-2 font-medium hover:bg-brand-deep disabled:opacity-60"
               >
                 {confirm.isPending ? "Confirming…" : "Confirm"}

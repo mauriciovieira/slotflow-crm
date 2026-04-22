@@ -1,30 +1,38 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../test-utils/renderWithProviders";
 import { TwoFactorSetup } from "./TwoFactorSetup";
 
 const confirmMutateAsync = vi.fn();
+const useTotpSetupMock = vi.fn();
+
+const unconfirmedSetup = {
+  data: {
+    otpauth_uri: "otpauth://totp/Slotflow%20CRM:admin?secret=XXX&issuer=Slotflow%20CRM",
+    qr_svg: '<svg data-testid="qr" width="10" height="10"></svg>',
+    confirmed: false,
+  },
+  isLoading: false,
+  error: null,
+};
 
 vi.mock("../lib/authHooks", async () => {
   const actual = await vi.importActual<typeof import("../lib/authHooks")>("../lib/authHooks");
   return {
     ...actual,
-    useTotpSetup: () => ({
-      data: {
-        otpauth_uri: "otpauth://totp/Slotflow%20CRM:admin?secret=XXX&issuer=Slotflow%20CRM",
-        qr_svg: '<svg data-testid="qr" width="10" height="10"></svg>',
-        confirmed: false,
-      },
-      isLoading: false,
-      error: null,
-    }),
+    useTotpSetup: () => useTotpSetupMock(),
     useConfirmTotp: () => ({
       mutateAsync: confirmMutateAsync,
       isPending: false,
       error: null,
     }),
   };
+});
+
+beforeEach(() => {
+  useTotpSetupMock.mockReturnValue(unconfirmedSetup);
+  confirmMutateAsync.mockReset();
 });
 
 describe("TwoFactorSetup", () => {
@@ -77,5 +85,37 @@ describe("TwoFactorSetup", () => {
 
     await waitFor(() => expect(screen.getByText("verify placeholder")).toBeInTheDocument());
     expect(screen.queryByText("home placeholder")).not.toBeInTheDocument();
+  });
+
+  it("redirects to /2fa/verify when setup reports the device is already confirmed", async () => {
+    useTotpSetupMock.mockReturnValue({
+      data: { otpauth_uri: "", qr_svg: "", confirmed: true },
+      isLoading: false,
+      error: null,
+    });
+    renderWithProviders(<TwoFactorSetup />, {
+      path: "/2fa/setup",
+      initialEntries: ["/2fa/setup"],
+      extraRoutes: [{ path: "/2fa/verify", element: <p>verify placeholder</p> }],
+    });
+    await waitFor(() => expect(screen.getByText("verify placeholder")).toBeInTheDocument());
+    expect(screen.queryByTestId("qr")).not.toBeInTheDocument();
+  });
+
+  it("keeps the Confirm button disabled when spaced input has fewer than 6 digits", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<TwoFactorSetup />);
+    const input = screen.getByLabelText(/6-digit code/i);
+    const button = screen.getByRole("button", { name: /^confirm$/i });
+    expect(button).toBeDisabled();
+
+    await user.type(input, "1 2 3 4");
+    // 7 chars raw, 4 digits normalized — must stay disabled.
+    expect(button).toBeDisabled();
+
+    await user.clear(input);
+    await user.type(input, "123 456");
+    // 7 chars raw, 6 digits normalized — enabled.
+    expect(button).toBeEnabled();
   });
 });
