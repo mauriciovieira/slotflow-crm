@@ -33,13 +33,19 @@ export async function resetDb(request: APIRequestContext): Promise<void> {
         // Keep the raw response text when the body isn't JSON.
       }
     }
+    // Collapse newlines and cap length so a Django DEBUG 500 HTML page does
+    // not dump kilobytes into CI logs or surface stack-trace-ish detail.
+    const MAX_DETAIL = 300;
+    const compactDetail = detail.replace(/\s+/g, " ").trim();
+    const truncatedDetail =
+      compactDetail.length > MAX_DETAIL ? `${compactDetail.slice(0, MAX_DETAIL)}…` : compactDetail;
     const hint =
       response.status() === 403
         ? "Is SLOTFLOW_BYPASS_2FA=1 set on the backend, and does X-Reset-Token match SLOTFLOW_E2E_PASSWORD?"
         : "Is SLOTFLOW_BYPASS_2FA=1 set on the backend?";
     throw new Error(
       `resetDb failed: ${response.status()} ${response.statusText()}` +
-        (detail ? ` - ${detail}` : "") +
+        (truncatedDetail ? ` - ${truncatedDetail}` : "") +
         `. ${hint}`,
     );
   }
