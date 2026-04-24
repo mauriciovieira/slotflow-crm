@@ -45,12 +45,12 @@ def test_flushes_and_reseeds_when_bypass_active(bypass_on, settings):
 
 
 def test_allowlisted_by_require_2fa_middleware(monkeypatch, settings):
-    """Proves /api/test/ short-circuits before Require2FAMiddleware's other checks.
+    """Proves /api/test/_reset/ short-circuits before Require2FAMiddleware's other checks.
 
     We authenticate a user who has NO confirmed TOTP device and is NOT verified,
     then ensure the middleware's bypass branch is OFF (is_2fa_bypass_active=False).
     The request must still reach the view — the only thing that can save it is
-    the /api/test/ prefix in the allowlist.
+    the exact path match for /api/test/_reset/ in the allowlist.
     """
     settings.DEBUG = True
     # View-side must succeed so we can observe the 200.
