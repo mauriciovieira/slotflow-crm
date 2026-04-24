@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.3.0...frontend-v1.4.0) (2026-04-24)
+
+
+### Bug Fixes
+
+* **frontend:** check is_verified before has_totp_device in auth routing ([054ae30](https://github.com/mauriciovieira/slotflow-crm/commit/054ae305b596d8d43212cefea47ba24cc8b1a17d))
+
+
+### Features
+
+* **frontend:** add shared testIds + wire data-testid on auth surfaces ([dc7246c](https://github.com/mauriciovieira/slotflow-crm/commit/dc7246cb030f14e1dba28132ee2b0ef0baf3a624))
+
 # [1.3.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.2.0...frontend-v1.3.0) (2026-04-22)
 
 
