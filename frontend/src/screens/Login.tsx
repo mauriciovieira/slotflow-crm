@@ -14,9 +14,13 @@ export function Login() {
   const me = useMe();
   useEffect(() => {
     if (!me.data?.authenticated) return;
-    if (!me.data.has_totp_device) navigate("/2fa/setup", { replace: true });
-    else if (!me.data.is_verified) navigate("/2fa/verify", { replace: true });
-    else navigate("/", { replace: true });
+    // `is_verified` is the authoritative "fully authenticated" signal. In
+    // production it implies a confirmed TOTP device; in dev under
+    // SLOTFLOW_BYPASS_2FA it is forced true without a device. Check it first
+    // so the bypass flow doesn't get intercepted by the device check below.
+    if (me.data.is_verified) navigate("/", { replace: true });
+    else if (!me.data.has_totp_device) navigate("/2fa/setup", { replace: true });
+    else navigate("/2fa/verify", { replace: true });
   }, [me.data, navigate]);
 
   async function handleSubmit(event: FormEvent) {
@@ -24,9 +28,9 @@ export function Login() {
     setSubmitError(null);
     try {
       const result = await login.mutateAsync({ username, password });
-      if (!result.has_totp_device) navigate("/2fa/setup", { replace: true });
-      else if (!result.is_verified) navigate("/2fa/verify", { replace: true });
-      else navigate("/", { replace: true });
+      if (result.is_verified) navigate("/", { replace: true });
+      else if (!result.has_totp_device) navigate("/2fa/setup", { replace: true });
+      else navigate("/2fa/verify", { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Sign-in failed.");
     }
