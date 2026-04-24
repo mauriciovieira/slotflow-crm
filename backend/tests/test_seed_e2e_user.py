@@ -54,3 +54,27 @@ def test_refuses_when_debug_off(settings):
     settings.DEBUG = False
     with pytest.raises(CommandError, match="DEBUG"):
         _run()
+
+
+def test_password_env_is_stripped_and_empty_falls_back(monkeypatch, settings):
+    """Seed command must normalize the env var the same way as the reset view.
+
+    Both sides apply ``(env or "").strip() or default``. If they diverged,
+    setting ``SLOTFLOW_E2E_PASSWORD=" secret "`` would seed the raw string on
+    the backend while the reset token / login password used the stripped
+    version — a confusing desync that would succeed at the reset endpoint but
+    fail to log in.
+    """
+    settings.DEBUG = True
+    monkeypatch.setenv("SLOTFLOW_E2E_PASSWORD", "  padded-pw  ")
+    _run()
+    User = get_user_model()
+    user = User.objects.get(username="e2e")
+    assert user.check_password("padded-pw") is True
+    assert user.check_password("  padded-pw  ") is False
+
+    # Whitespace-only value is treated as empty → falls back to default.
+    monkeypatch.setenv("SLOTFLOW_E2E_PASSWORD", "   ")
+    _run()
+    user.refresh_from_db()
+    assert user.check_password("e2e-local-only") is True

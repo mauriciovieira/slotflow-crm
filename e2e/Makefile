@@ -2,7 +2,11 @@
 
 install:
 	npm ci
-	npx playwright install chromium
+	@if [ "$$(uname -s)" = "Linux" ]; then \
+	  npx playwright install --with-deps chromium; \
+	else \
+	  npx playwright install chromium; \
+	fi
 
 test:
 	npm test

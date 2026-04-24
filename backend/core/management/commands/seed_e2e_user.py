@@ -31,7 +31,10 @@ class Command(BaseCommand):
         if not settings.DEBUG:
             raise CommandError("seed_e2e_user only runs when DEBUG is True.")
 
-        password = os.environ.get(E2E_PASSWORD_ENV) or E2E_PASSWORD_DEFAULT
+        # Match api_test_reset.reset_view so the seeded password and the
+        # expected X-Reset-Token stay identical. Strips whitespace so a value
+        # like " secret " does not produce different results on each side.
+        password = (os.environ.get(E2E_PASSWORD_ENV) or "").strip() or E2E_PASSWORD_DEFAULT
 
         User = get_user_model()
         user, created = User.objects.update_or_create(
