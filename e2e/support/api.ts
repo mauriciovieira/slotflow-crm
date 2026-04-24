@@ -8,7 +8,13 @@ import type { APIRequestContext } from "@playwright/test";
  * misconfigured target fails the test fast instead of through a 30s timeout.
  */
 export async function resetDb(request: APIRequestContext): Promise<void> {
-  const response = await request.post("/api/test/_reset/");
+  const response = await request.post("/api/test/_reset/", {
+    headers: {
+      // The reset endpoint requires this header to match SLOTFLOW_E2E_PASSWORD
+      // on the server, preventing arbitrary cross-site POSTs from wiping the DB.
+      "X-Reset-Token": process.env.SLOTFLOW_E2E_PASSWORD ?? "e2e-local-only",
+    },
+  });
   if (!response.ok()) {
     throw new Error(
       `resetDb failed: ${response.status()} ${response.statusText()}. ` +

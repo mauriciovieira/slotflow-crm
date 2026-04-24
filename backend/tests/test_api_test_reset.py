@@ -6,6 +6,9 @@ from django.test import Client
 
 pytestmark = pytest.mark.django_db
 
+# Matches the default value used by reset_view when SLOTFLOW_E2E_PASSWORD is unset.
+_VALID_TOKEN = "e2e-local-only"
+
 
 @pytest.fixture
 def bypass_on(monkeypatch):
@@ -21,12 +24,36 @@ def bypass_on(monkeypatch):
     monkeypatch.setattr("core.middleware.require_2fa.is_2fa_bypass_active", lambda: True)
 
 
+def _post_reset(client: Client, token: str | None = _VALID_TOKEN):
+    """POST to the reset endpoint, optionally with an X-Reset-Token header."""
+    kwargs = {}
+    if token is not None:
+        kwargs["HTTP_X_RESET_TOKEN"] = token
+    return client.post("/api/test/_reset/", **kwargs)
+
+
 def test_returns_404_when_bypass_inactive(monkeypatch):
     monkeypatch.setattr("core.api_test_reset.is_2fa_bypass_active", lambda: False)
     monkeypatch.setattr("core.middleware.require_2fa.is_2fa_bypass_active", lambda: False)
     client = Client(enforce_csrf_checks=False)
-    response = client.post("/api/test/_reset/")
+    response = _post_reset(client)
     assert response.status_code == 404
+
+
+def test_returns_403_when_token_missing(bypass_on, settings):
+    settings.DEBUG = True
+    client = Client(enforce_csrf_checks=False)
+    response = _post_reset(client, token=None)
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Invalid reset token."
+
+
+def test_returns_403_when_token_wrong(bypass_on, settings):
+    settings.DEBUG = True
+    client = Client(enforce_csrf_checks=False)
+    response = _post_reset(client, token="wrong-token")
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Invalid reset token."
 
 
 def test_flushes_and_reseeds_when_bypass_active(bypass_on, settings):
@@ -36,7 +63,7 @@ def test_flushes_and_reseeds_when_bypass_active(bypass_on, settings):
     User.objects.create_user(username="ghost", email="ghost@example.com", password="x")
 
     client = Client(enforce_csrf_checks=False)
-    response = client.post("/api/test/_reset/")
+    response = _post_reset(client)
 
     assert response.status_code == 200, response.content
     assert response.json() == {"status": "reset"}
@@ -61,14 +88,14 @@ def test_allowlisted_by_require_2fa_middleware(monkeypatch, settings):
     user = User.objects.create_user(username="u", email="u@example.com", password="p")
     client = Client(enforce_csrf_checks=False)
     client.force_login(user)
-    response = client.post("/api/test/_reset/")
+    response = _post_reset(client)
     assert response.status_code == 200
     assert response.json() == {"status": "reset"}
 
 
-def test_csrf_exempt(bypass_on, settings):
-    """POST without CSRF token succeeds under bypass."""
+def test_csrf_exempt_with_valid_token(bypass_on, settings):
+    """POST with a valid token succeeds even when Django's CSRF enforcement is on."""
     settings.DEBUG = True
     client = Client(enforce_csrf_checks=True)
-    response = client.post("/api/test/_reset/")
+    response = _post_reset(client)
     assert response.status_code == 200
