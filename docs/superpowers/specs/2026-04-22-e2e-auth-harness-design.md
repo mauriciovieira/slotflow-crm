@@ -72,7 +72,7 @@ Three moving parts:
 ### 4. CI
 
 - `.github/workflows/ci.yml` — new `test-e2e` job.
-  - `services.postgres: postgres:18` (GitHub Actions service container).
+  - `services.postgres: postgres:16` (GitHub Actions service container).
   - `env: { SLOTFLOW_BYPASS_2FA: "1", POSTGRES_HOST: localhost, POSTGRES_PORT: 5432, POSTGRES_DB: slotflow, POSTGRES_USER: slotflow, POSTGRES_PASSWORD: slotflow }` (matching `.env.example` defaults).
   - Steps: checkout, setup python/node via mise, `make install`, `make setup-local-db`, `make test-e2e`.
   - On failure: upload `e2e/playwright-report/` as artifact.

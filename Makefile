@@ -132,7 +132,7 @@ setup-worktree:
 	echo "Main repo: $$MAIN"; \
 	if [ -f "$$MAIN/.env" ] && [ ! -f .env ]; then cp "$$MAIN/.env" .env && echo "Copied .env"; else echo "Skip .env (already present or missing in main)"; fi; \
 	for link in backend/.venv frontend/node_modules e2e/node_modules; do \
-	  if [ -e "$$MAIN/$$link" ] && [ ! -e "$$link" ]; then ln -sfn "$$MAIN/$$link" "$$link" && echo "Linked $$link"; else echo "Skip $$link (already present or missing in main)"; fi; \
+	  if { [ -e "$$MAIN/$$link" ] || [ -L "$$MAIN/$$link" ]; } && [ ! -e "$$link" ] && [ ! -L "$$link" ]; then ln -sfn "$$MAIN/$$link" "$$link" && echo "Linked $$link"; else echo "Skip $$link (already present or missing in main)"; fi; \
 	done; \
 	echo "Worktree setup done."
 

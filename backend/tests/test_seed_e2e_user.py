@@ -10,8 +10,8 @@ from django.core.management.base import CommandError
 pytestmark = pytest.mark.django_db
 
 
-def _run(**env):
-    """Run the command with optional env overrides, capturing stdout."""
+def _run():
+    """Run the command and capture stdout."""
     out = StringIO()
     call_command("seed_e2e_user", stdout=out)
     return out.getvalue()
