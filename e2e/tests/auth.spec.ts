@@ -10,7 +10,6 @@ test.describe("auth flow", () => {
 
   test("authenticated non-admin user can sign in, see home, and sign out", async ({
     page,
-    request,
   }) => {
     await page.goto("/login");
 
@@ -24,8 +23,10 @@ test.describe("auth flow", () => {
     const finishedLogin = await loginResponse;
     expect(finishedLogin.status()).toBe(200);
 
-    // Fail fast if the target server is not running under bypass.
-    const me = await request.get("/api/auth/me/");
+    // Fail fast if the target server is not running under bypass. Uses
+    // page.request so the browser session cookie is included — the top-level
+    // `request` fixture has its own cookie jar and would appear anonymous.
+    const me = await page.request.get("/api/auth/me/");
     expect(me.ok()).toBeTruthy();
     const body = await me.json();
     expect(
