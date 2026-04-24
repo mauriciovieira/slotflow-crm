@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.0.0...e2e-v1.0.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* **e2e:** use page.request for is_verified check ([a7010c2](https://github.com/mauriciovieira/slotflow-crm/commit/a7010c2c1adcff647395feadec48d062c07c142a))
+* **security:** require X-Reset-Token header on reset_view ([781ef59](https://github.com/mauriciovieira/slotflow-crm/commit/781ef59121eddfd6384bf8ec383b83f94a8cb724))
+
 # 1.0.0 (2026-04-18)
 
 
