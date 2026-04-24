@@ -1,4 +1,4 @@
-.PHONY: help lint test test-unit test-e2e ci install dev setup-local-db reset-local-db migrations migrate ensure-superuser bootstrap-local shell-simple shell shell-sql shell-sql-full show_urls
+.PHONY: help lint test test-unit test-e2e ci install dev setup-local-db reset-local-db setup-worktree migrations migrate ensure-superuser bootstrap-local shell-simple shell shell-sql shell-sql-full show_urls
 
 help:
 	@echo "Slotflow CRM — targets (run from repo root):"
@@ -7,6 +7,7 @@ help:
 	@echo "  install              Backend venv + dev deps; frontend + e2e npm install; Playwright Chromium"
 	@echo "  setup-local-db       Create Postgres role/database from .env"
 	@echo "  reset-local-db       Drop and recreate DB (needs CONFIRM_RESET_LOCAL_DB=1)"
+	@echo "  setup-worktree       Symlink .venv + node_modules, copy .env from main repo (worktree only)"
 	@echo "  bootstrap-local      setup-local-db + migrate + ensure-superuser"
 	@echo ""
 	@echo "Django (uses .env + backend/.venv)"
@@ -122,6 +123,18 @@ ensure-superuser:
 	@test -f .env || (echo >&2 "Missing .env. Run: cp .env.example .env"; exit 1)
 	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
 	@set -a; . ./.env; set +a; cd backend && .venv/bin/python manage.py ensure_superuser
+
+setup-worktree:
+	@COMMON=$$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || (echo >&2 "Not in a git repo."; exit 1); \
+	GITDIR=$$(git rev-parse --path-format=absolute --git-dir); \
+	if [ "$$COMMON" = "$$GITDIR" ]; then echo >&2 "Not in a linked worktree. Run this from a worktree under .worktrees/<name>/."; exit 1; fi; \
+	MAIN="$${COMMON%/.git}"; \
+	echo "Main repo: $$MAIN"; \
+	if [ -f "$$MAIN/.env" ] && [ ! -f .env ]; then cp "$$MAIN/.env" .env && echo "Copied .env"; else echo "Skip .env (already present or missing in main)"; fi; \
+	for link in backend/.venv frontend/node_modules e2e/node_modules; do \
+	  if [ -e "$$MAIN/$$link" ] && [ ! -e "$$link" ]; then ln -sfn "$$MAIN/$$link" "$$link" && echo "Linked $$link"; else echo "Skip $$link (already present or missing in main)"; fi; \
+	done; \
+	echo "Worktree setup done."
 
 bootstrap-local: setup-local-db migrate ensure-superuser
 
