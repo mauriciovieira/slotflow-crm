@@ -17,21 +17,13 @@ def bypass_on(monkeypatch):
     would not flow through. Each consumer module must be patched directly.
     If a third consumer is added later, extend this fixture.
     """
-    monkeypatch.setattr(
-        "core.api_test_reset.is_2fa_bypass_active", lambda: True
-    )
-    monkeypatch.setattr(
-        "core.middleware.require_2fa.is_2fa_bypass_active", lambda: True
-    )
+    monkeypatch.setattr("core.api_test_reset.is_2fa_bypass_active", lambda: True)
+    monkeypatch.setattr("core.middleware.require_2fa.is_2fa_bypass_active", lambda: True)
 
 
 def test_returns_404_when_bypass_inactive(monkeypatch):
-    monkeypatch.setattr(
-        "core.api_test_reset.is_2fa_bypass_active", lambda: False
-    )
-    monkeypatch.setattr(
-        "core.middleware.require_2fa.is_2fa_bypass_active", lambda: False
-    )
+    monkeypatch.setattr("core.api_test_reset.is_2fa_bypass_active", lambda: False)
+    monkeypatch.setattr("core.middleware.require_2fa.is_2fa_bypass_active", lambda: False)
     client = Client(enforce_csrf_checks=False)
     response = client.post("/api/test/_reset/")
     assert response.status_code == 404
@@ -62,13 +54,9 @@ def test_allowlisted_by_require_2fa_middleware(monkeypatch, settings):
     """
     settings.DEBUG = True
     # View-side must succeed so we can observe the 200.
-    monkeypatch.setattr(
-        "core.api_test_reset.is_2fa_bypass_active", lambda: True
-    )
+    monkeypatch.setattr("core.api_test_reset.is_2fa_bypass_active", lambda: True)
     # Middleware-side bypass OFF — so the allowlist is the only escape hatch.
-    monkeypatch.setattr(
-        "core.middleware.require_2fa.is_2fa_bypass_active", lambda: False
-    )
+    monkeypatch.setattr("core.middleware.require_2fa.is_2fa_bypass_active", lambda: False)
     User = get_user_model()
     user = User.objects.create_user(username="u", email="u@example.com", password="p")
     client = Client(enforce_csrf_checks=False)
