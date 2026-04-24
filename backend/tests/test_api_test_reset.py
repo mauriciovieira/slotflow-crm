@@ -99,3 +99,22 @@ def test_csrf_exempt_with_valid_token(bypass_on, settings):
     client = Client(enforce_csrf_checks=True)
     response = _post_reset(client)
     assert response.status_code == 200
+
+
+def test_empty_env_falls_back_to_default_token(bypass_on, settings, monkeypatch):
+    """An exported-but-empty SLOTFLOW_E2E_PASSWORD must not accept empty tokens.
+
+    An earlier implementation used ``os.environ.get(name, default)``, which only
+    returns ``default`` when the key is absent. Exporting
+    ``SLOTFLOW_E2E_PASSWORD=""`` would have flipped the expected token to the
+    empty string, silently weakening the check and desyncing from the seed
+    command's ``or`` fallback. The reset view now strips + falls back on empty.
+    """
+    settings.DEBUG = True
+    monkeypatch.setenv("SLOTFLOW_E2E_PASSWORD", "")
+    client = Client(enforce_csrf_checks=False)
+
+    # Empty token must be rejected.
+    assert _post_reset(client, token="").status_code == 403
+    # Default-token still accepted.
+    assert _post_reset(client, token=_VALID_TOKEN).status_code == 200

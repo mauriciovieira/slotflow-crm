@@ -40,7 +40,7 @@ _RESET_TOKEN_HEADER = "HTTP_X_RESET_TOKEN"
 def reset_view(request: Request) -> Response:
     if not is_2fa_bypass_active():
         raise Http404
-    expected_token = os.environ.get("SLOTFLOW_E2E_PASSWORD", "e2e-local-only")
+    expected_token = (os.environ.get("SLOTFLOW_E2E_PASSWORD") or "").strip() or "e2e-local-only"
     if request.META.get(_RESET_TOKEN_HEADER) != expected_token:
         return Response(
             {"detail": "Invalid reset token."},
