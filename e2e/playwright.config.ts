@@ -27,9 +27,9 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       SLOTFLOW_BYPASS_2FA: "1",
-      // `make dev` also starts the Celery worker. In Playwright/CI runs we
-      // do not guarantee Redis is available, so force an in-memory broker
-      // and result backend to keep the worker from failing the whole stack.
+      // `make dev` also starts the Celery worker. For Playwright runs, force
+      // an in-memory broker and result backend so the e2e stack does not
+      // require Redis to be available.
       CELERY_BROKER_URL: "memory://",
       CELERY_RESULT_BACKEND: "cache+memory://",
     },
