@@ -31,13 +31,15 @@ export function AuthGuard({ children, requireVerified = true }: AuthGuardProps) 
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (requireVerified) {
+  if (requireVerified && !data.is_verified) {
+    // `is_verified` is the authoritative "fully authenticated" signal. In
+    // production a true value implies a confirmed TOTP device; in dev under
+    // SLOTFLOW_BYPASS_2FA it's forced true without a device. Only send the
+    // user through setup/verify when they're not yet verified.
     if (!data.has_totp_device) {
       return <Navigate to="/2fa/setup" replace />;
     }
-    if (!data.is_verified) {
-      return <Navigate to="/2fa/verify" replace />;
-    }
+    return <Navigate to="/2fa/verify" replace />;
   }
 
   return <>{children}</>;

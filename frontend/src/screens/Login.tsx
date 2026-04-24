@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import lockup from "../assets/brand/lockup.svg";
 import { useLogin, useMe } from "../lib/authHooks";
+import { TestIds } from "../testIds";
 
 export function Login() {
   const [username, setUsername] = useState("");
@@ -13,9 +14,13 @@ export function Login() {
   const me = useMe();
   useEffect(() => {
     if (!me.data?.authenticated) return;
-    if (!me.data.has_totp_device) navigate("/2fa/setup", { replace: true });
-    else if (!me.data.is_verified) navigate("/2fa/verify", { replace: true });
-    else navigate("/", { replace: true });
+    // `is_verified` is the authoritative "fully authenticated" signal. In
+    // production it implies a confirmed TOTP device; in dev under
+    // SLOTFLOW_BYPASS_2FA it is forced true without a device. Check it first
+    // so the bypass flow doesn't get intercepted by the device check below.
+    if (me.data.is_verified) navigate("/", { replace: true });
+    else if (!me.data.has_totp_device) navigate("/2fa/setup", { replace: true });
+    else navigate("/2fa/verify", { replace: true });
   }, [me.data, navigate]);
 
   async function handleSubmit(event: FormEvent) {
@@ -23,9 +28,9 @@ export function Login() {
     setSubmitError(null);
     try {
       const result = await login.mutateAsync({ username, password });
-      if (!result.has_totp_device) navigate("/2fa/setup", { replace: true });
-      else if (!result.is_verified) navigate("/2fa/verify", { replace: true });
-      else navigate("/", { replace: true });
+      if (result.is_verified) navigate("/", { replace: true });
+      else if (!result.has_totp_device) navigate("/2fa/setup", { replace: true });
+      else navigate("/2fa/verify", { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Sign-in failed.");
     }
@@ -73,6 +78,7 @@ export function Login() {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              data-testid={TestIds.LOGIN_USERNAME}
               className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
             />
           </label>
@@ -84,6 +90,7 @@ export function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              data-testid={TestIds.LOGIN_PASSWORD}
               className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
             />
           </label>
@@ -95,6 +102,7 @@ export function Login() {
           <button
             type="submit"
             disabled={login.isPending}
+            data-testid={TestIds.LOGIN_SUBMIT}
             className="w-full rounded-md bg-brand text-white py-2 font-medium hover:bg-brand-deep disabled:opacity-60"
           >
             {login.isPending ? "Signing in…" : "Sign in"}

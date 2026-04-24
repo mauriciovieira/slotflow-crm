@@ -3,6 +3,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../test-utils/renderWithProviders";
 import { Login } from "./Login";
+import { TestIds } from "../testIds";
 
 const loginMutateAsync = vi.fn();
 
@@ -29,9 +30,9 @@ describe("Login", () => {
     expect(screen.getByRole("img", { name: /slotflow/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /continue with google/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /continue with github/i })).toBeDisabled();
-    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^sign in$/i })).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.LOGIN_USERNAME)).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.LOGIN_PASSWORD)).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.LOGIN_SUBMIT)).toBeInTheDocument();
   });
 
   it("submits credentials and navigates on success", async () => {
@@ -48,9 +49,9 @@ describe("Login", () => {
       extraRoutes: [{ path: "/", element: <p>home placeholder</p> }],
     });
 
-    await user.type(screen.getByLabelText(/username/i), "admin");
-    await user.type(screen.getByLabelText(/password/i), "pw-test-123");
-    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
+    await user.type(screen.getByTestId(TestIds.LOGIN_USERNAME), "admin");
+    await user.type(screen.getByTestId(TestIds.LOGIN_PASSWORD), "pw-test-123");
+    await user.click(screen.getByTestId(TestIds.LOGIN_SUBMIT));
 
     expect(loginMutateAsync).toHaveBeenCalledWith({
       username: "admin",
@@ -65,9 +66,9 @@ describe("Login", () => {
     );
     const user = userEvent.setup();
     renderWithProviders(<Login />);
-    await user.type(screen.getByLabelText(/username/i), "admin");
-    await user.type(screen.getByLabelText(/password/i), "wrong");
-    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
+    await user.type(screen.getByTestId(TestIds.LOGIN_USERNAME), "admin");
+    await user.type(screen.getByTestId(TestIds.LOGIN_PASSWORD), "wrong");
+    await user.click(screen.getByTestId(TestIds.LOGIN_SUBMIT));
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(/invalid credentials/i),
     );

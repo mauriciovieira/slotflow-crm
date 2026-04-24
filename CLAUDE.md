@@ -21,7 +21,7 @@ Three sibling packages orchestrated from the repo root:
 All from the repo root. Requires `backend/.venv` to exist first (`cd backend && python -m venv .venv`).
 
 ```bash
-make install            # backend install-dev + frontend npm ci
+make install            # backend install-dev + frontend npm ci + e2e npm ci + Playwright Chromium
 make bootstrap-local    # setup-local-db + migrate + ensure-superuser (first-run Postgres path)
 make dev                # Honcho runs API + Celery via Procfile.dev
 make lint               # ruff check/format + eslint
@@ -68,7 +68,7 @@ Project config is `config/`; each domain is a first-class app. When adding a new
 
 MCP endpoints additionally require a **fresh** OTP session (default 15 minutes) via `mcp.auth.require_fresh_2fa_session`. `mark_otp_session_fresh` is called after successful TOTP confirm/verify. Pattern for new MCP-style endpoints: call `require_fresh_2fa_session(request)` inside the view and return its `McpAuthError.status_code` on failure — see `core/views.py::McpPingView`.
 
-**Dev-only 2FA bypass** (`core/auth_bypass.py::is_2fa_bypass_active`): when `SLOTFLOW_BYPASS_2FA` is truthy **and** `settings.DEBUG` is True, `Require2FAMiddleware` skips the redirect and `/api/auth/me/` reports `is_verified=true`. The DEBUG gate makes the flag inert in staging/production. Exists so Playwright e2e can exercise authenticated flows without computing TOTP. Never read the env var directly — always call `is_2fa_bypass_active()`.
+**Dev-only 2FA bypass** (`core/auth_bypass.py::is_2fa_bypass_active`): when `SLOTFLOW_BYPASS_2FA` is truthy **and** `settings.DEBUG` is True, `Require2FAMiddleware` skips the redirect and `/api/auth/me/` reports `is_verified=true`. The DEBUG gate makes the flag inert in staging/production. Exists so Playwright e2e can exercise authenticated flows without computing TOTP. Never read the env var directly — always call `is_2fa_bypass_active()`. When the bypass flag is active the backend also exposes `POST /api/test/_reset/`, which flushes the DB and re-runs `seed_e2e_user`. Playwright hits it in `beforeEach` to start each spec from a known baseline. The endpoint returns 404 when bypass is inactive (i.e., in staging/production regardless of env flag).
 
 ### Celery
 

@@ -77,14 +77,62 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: slotflow
+          POSTGRES_PASSWORD: slotflow
+          POSTGRES_DB: slotflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U slotflow -d slotflow"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: slotflow
+      POSTGRES_USER: slotflow
+      POSTGRES_PASSWORD: slotflow
+      REDIS_URL: redis://localhost:6379/0
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      SLOTFLOW_BYPASS_2FA: "1"
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
 
       - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: npm
-          cache-dependency-path: e2e/package-lock.json
+          cache-dependency-path: |
+            e2e/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install Python tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m venv backend/.venv
+          backend/.venv/bin/pip install -r backend/requirements-dev.txt
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
 
       - name: Install e2e dependencies
         working-directory: e2e
@@ -94,9 +142,12 @@ jobs:
         working-directory: e2e
         run: npx playwright install --with-deps chromium
 
+      - name: Apply migrations
+        working-directory: backend
+        run: .venv/bin/python manage.py migrate --noinput
+
       - name: Run Playwright tests
-        working-directory: e2e
-        run: npm test
+        run: make test-e2e
 
       - name: Upload Playwright report
         if: failure()

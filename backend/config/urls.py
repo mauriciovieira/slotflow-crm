@@ -14,6 +14,7 @@ from core.api_auth import (
     totp_setup_view,
     totp_verify_view,
 )
+from core.api_test_reset import api_test_patterns
 from core.views import (
     HealthzView,
     HomeView,
@@ -41,6 +42,7 @@ urlpatterns = [
     path("2fa/confirm/", TwoFactorConfirmView.as_view(), name="two_factor_confirm"),
     path("2fa/verify/", TwoFactorVerifyView.as_view(), name="two_factor_verify"),
     path("api/auth/", include(api_auth_patterns)),
+    path("api/test/", include(api_test_patterns)),
     path("mcp/ping", McpPingView.as_view(), name="mcp_ping"),
     path("", HomeView.as_view(), name="home"),
 ]
