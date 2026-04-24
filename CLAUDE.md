@@ -21,7 +21,7 @@ Three sibling packages orchestrated from the repo root:
 All from the repo root. Requires `backend/.venv` to exist first (`cd backend && python -m venv .venv`).
 
 ```bash
-make install            # backend install-dev + frontend npm ci
+make install            # backend install-dev + frontend npm ci + e2e npm ci + Playwright Chromium
 make bootstrap-local    # setup-local-db + migrate + ensure-superuser (first-run Postgres path)
 make dev                # Honcho runs API + Celery via Procfile.dev
 make lint               # ruff check/format + eslint

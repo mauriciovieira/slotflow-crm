@@ -4,7 +4,7 @@ help:
 	@echo "Slotflow CRM — targets (run from repo root):"
 	@echo ""
 	@echo "Setup & local DB"
-	@echo "  install              Backend venv + dev deps; frontend npm install"
+	@echo "  install              Backend venv + dev deps; frontend + e2e npm install; Playwright Chromium"
 	@echo "  setup-local-db       Create Postgres role/database from .env"
 	@echo "  reset-local-db       Drop and recreate DB (needs CONFIRM_RESET_LOCAL_DB=1)"
 	@echo "  bootstrap-local      setup-local-db + migrate + ensure-superuser"
@@ -30,6 +30,7 @@ install:
 	@test -x backend/.venv/bin/python || (echo >&2 "Missing backend/.venv. Run: cd backend && python -m venv .venv"; exit 1)
 	$(MAKE) -C backend install-dev
 	$(MAKE) -C frontend install
+	$(MAKE) -C e2e install
 
 dev:
 	@test -x backend/.venv/bin/honcho || (echo >&2 "Missing backend/.venv and Honcho. Run: make install"; exit 1)
