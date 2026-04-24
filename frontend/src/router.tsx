@@ -1,5 +1,8 @@
-import { createBrowserRouter } from "react-router";
+import { Navigate, createBrowserRouter } from "react-router";
 import { AuthGuard } from "./components/AuthGuard";
+import { DashboardLayout } from "./components/DashboardLayout";
+import { StubPanel } from "./components/StubPanel";
+import { DASHBOARD_NAV } from "./dashboardNav";
 import { Landing } from "./screens/Landing";
 import { Login } from "./screens/Login";
 import { TwoFactorSetup } from "./screens/TwoFactorSetup";
@@ -23,5 +26,20 @@ export const router = createBrowserRouter([
         <TwoFactorVerify />
       </AuthGuard>
     ),
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <AuthGuard>
+        <DashboardLayout />
+      </AuthGuard>
+    ),
+    children: [
+      { index: true, element: <Navigate to="opportunities" replace /> },
+      ...DASHBOARD_NAV.map((item) => ({
+        path: item.slug,
+        element: <StubPanel title={item.label} />,
+      })),
+    ],
   },
 ]);
