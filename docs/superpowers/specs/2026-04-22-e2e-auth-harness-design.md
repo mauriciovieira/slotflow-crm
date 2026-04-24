@@ -39,9 +39,9 @@ Three moving parts:
 - `backend/core/api_test_reset.py` — DRF function view `POST /api/test/_reset/`.
   - Guard: `if not is_2fa_bypass_active(): raise Http404`. Hard-gated on `DEBUG=True` (enforced by `is_2fa_bypass_active()`).
   - Behavior: `call_command("flush", "--noinput", verbosity=0)` then `call_command("seed_e2e_user")`. Returns `{"status": "reset"}` JSON.
-  - CSRF-exempt (`@csrf_exempt`) — same-origin test traffic, bypass-gated.
+  - CSRF handling: relies on DRF `@api_view` + `@authentication_classes([])` + `@permission_classes([AllowAny])`. No explicit `@csrf_exempt` decorator.
 
-- `backend/core/middleware/require_2fa.py` — path allowlist gains `/api/test/` so the reset endpoint is reachable without a verified session.
+- `backend/core/middleware/require_2fa.py` — path allowlist gains only the exact reset paths (`/api/test/_reset` and `/api/test/_reset/`), so the reset endpoint is reachable without a verified session without broadly exempting the `/api/test/` prefix.
 
 - `backend/config/urls.py` — mounts `/api/test/_reset/`.
 

@@ -125,10 +125,10 @@ ensure-superuser:
 	@set -a; . ./.env; set +a; cd backend && .venv/bin/python manage.py ensure_superuser
 
 setup-worktree:
-	@COMMON=$$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || (echo >&2 "Not in a git repo."; exit 1); \
-	GITDIR=$$(git rev-parse --path-format=absolute --git-dir); \
+	@COMMON=$$(common_dir=$$(git rev-parse --git-common-dir 2>/dev/null) && cd "$$common_dir" && pwd -P) || (echo >&2 "Not in a git repo."; exit 1); \
+	GITDIR=$$(git_dir=$$(git rev-parse --git-dir 2>/dev/null) && cd "$$git_dir" && pwd -P) || (echo >&2 "Not in a git repo."; exit 1); \
 	if [ "$$COMMON" = "$$GITDIR" ]; then echo >&2 "Not in a linked worktree. Run this from a worktree under .worktrees/<name>/."; exit 1; fi; \
-	MAIN="$${COMMON%/.git}"; \
+	MAIN=$$(cd "$$COMMON/.." && pwd -P); \
 	echo "Main repo: $$MAIN"; \
 	if [ -f "$$MAIN/.env" ] && [ ! -f .env ]; then cp "$$MAIN/.env" .env && echo "Copied .env"; else echo "Skip .env (already present or missing in main)"; fi; \
 	for link in backend/.venv frontend/node_modules e2e/node_modules; do \
