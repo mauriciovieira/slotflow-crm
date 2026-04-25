@@ -56,6 +56,38 @@ def test_refuses_when_debug_off(settings):
         _run()
 
 
+def test_creates_default_workspace_with_owner_membership(settings):
+    """Seed must give the e2e user something to act inside.
+
+    Without a Workspace + Membership, every workspace-scoped POST after a
+    fresh reset (e.g. ``/api/opportunities/``) returns 400 because the
+    "active workspace" fallback in the views finds no membership.
+    """
+    settings.DEBUG = True
+    from tenancy.models import Membership, MembershipRole, Workspace
+
+    _run()
+
+    ws = Workspace.objects.get(slug="e2e")
+    assert ws.name == "E2E Workspace"
+    user = get_user_model().objects.get(username="e2e")
+    membership = Membership.objects.get(user=user, workspace=ws)
+    assert membership.role == MembershipRole.OWNER
+
+
+def test_workspace_seeding_is_idempotent(settings):
+    settings.DEBUG = True
+    from tenancy.models import Membership, Workspace
+
+    _run()
+    _run()
+
+    assert Workspace.objects.filter(slug="e2e").count() == 1
+    # Scope the membership assertion to the seeded user so future fixtures
+    # that join other users to the e2e workspace don't break this test.
+    assert Membership.objects.filter(workspace__slug="e2e", user__username="e2e").count() == 1
+
+
 def test_password_env_is_stripped_and_empty_falls_back(monkeypatch, settings):
     """Seed command must normalize the env var the same way as the reset view.
 
