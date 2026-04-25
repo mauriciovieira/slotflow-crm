@@ -57,7 +57,10 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, extractErrorMessage(body, response.statusText));
+    throw new ApiError(
+      response.status,
+      extractErrorMessage(body, response.statusText, isJsonResponse),
+    );
   }
 
   return body as T;
@@ -90,9 +93,20 @@ function flattenToString(value: unknown): string | null {
  * (e.g. "Bad Request"), which is useless to the user. Prefer `detail`, then
  * `non_field_errors`, then the first field error; finally fall back to the
  * raw text body or HTTP status text.
+ *
+ * `isJsonResponse=false` means the body is not parseable JSON — typically a
+ * Django DEBUG=True 500 page (a multi-thousand-character HTML traceback) or
+ * a generic proxy error. Surfacing that raw text into the UI dumps the
+ * entire traceback into whatever component renders the error string, so
+ * for non-JSON bodies we ignore the body and fall back to the status text.
  */
-function extractErrorMessage(body: unknown, statusText: string): string {
+function extractErrorMessage(
+  body: unknown,
+  statusText: string,
+  isJsonResponse: boolean,
+): string {
   if (typeof body === "string") {
+    if (!isJsonResponse) return statusText;
     const trimmed = body.trim();
     if (trimmed) return trimmed;
   }
