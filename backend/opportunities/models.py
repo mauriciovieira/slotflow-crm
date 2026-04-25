@@ -39,6 +39,7 @@ class Opportunity(TimeStampedModel):
         blank=True,
         related_name="created_opportunities",
     )
+    archived_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ("-created_at",)

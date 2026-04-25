@@ -73,3 +73,16 @@ def test_default_ordering_is_newest_first():
     ordered = list(Opportunity.objects.all())
     assert ordered[0].pk == newer.pk
     assert ordered[1].pk == older.pk
+
+
+def test_archived_at_defaults_none_and_is_writable():
+    from django.utils import timezone
+
+    ws = _workspace()
+    opp = Opportunity.objects.create(workspace=ws, title="x", company="y")
+    assert opp.archived_at is None
+
+    opp.archived_at = timezone.now()
+    opp.save(update_fields=["archived_at"])
+    opp.refresh_from_db()
+    assert opp.archived_at is not None
