@@ -14,6 +14,7 @@ import { InterviewsList } from "./screens/InterviewsList";
 import { ResumeCreate } from "./screens/ResumeCreate";
 import { ResumeDetail } from "./screens/ResumeDetail";
 import { ResumesList } from "./screens/ResumesList";
+import { Settings } from "./screens/Settings";
 import { TwoFactorSetup } from "./screens/TwoFactorSetup";
 import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 
@@ -62,7 +63,9 @@ export const routes: RouteObject[] = [
               ? <ResumesList />
               : item.slug === "interviews"
                 ? <InterviewsList />
-                : <StubPanel />,
+                : item.slug === "settings"
+                  ? <Settings />
+                  : <StubPanel />,
       })),
     ],
   },

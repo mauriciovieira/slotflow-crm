@@ -134,6 +134,11 @@ CELERY_TASK_ROUTES = {
     "core.tasks.render_placeholder": {"queue": "render"},
     "core.tasks.insights_placeholder": {"queue": "insights"},
     "core.tasks.fx_placeholder": {"queue": "fx"},
+    # Real fx app tasks. The `@shared_task(queue="fx")` decorator already
+    # routes this task at registration time, but listing it here keeps
+    # the routing config self-documenting and avoids surprises if the
+    # decorator-level kwarg ever drifts.
+    "fx.refresh_rates": {"queue": "fx"},
 }
 
 

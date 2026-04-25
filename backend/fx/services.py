@@ -1,0 +1,228 @@
+from __future__ import annotations
+
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+from django.db import transaction
+
+from audit.services import write_audit_event
+from tenancy.models import MembershipRole
+from tenancy.permissions import get_membership
+
+from .models import FxRate
+
+if TYPE_CHECKING:
+    from datetime import date as date_type
+
+    from django.contrib.auth.models import AbstractBaseUser
+
+    from tenancy.models import Workspace
+
+
+WRITE_ROLES = frozenset({MembershipRole.OWNER, MembershipRole.MEMBER})
+
+
+class WorkspaceMembershipRequired(PermissionError):
+    """Raised when an actor tries to act on a workspace they don't belong to."""
+
+
+class WorkspaceWriteForbidden(PermissionError):
+    """Raised when an actor has a membership but the role is read-only (viewer)."""
+
+
+class FxRateMissing(LookupError):
+    """Raised when no `FxRate` exists for the requested currency/date."""
+
+
+class FxRateNonManualDeleteForbidden(PermissionError):
+    """Raised when an actor tries to delete a non-manual FxRate row.
+
+    `task` / `seed` rates are populated by automation; deleting them
+    through the API would let a UI bug or a stale tab silently wipe
+    data the automation will re-create. Operators can still drop a
+    bad row through the Django admin.
+    """
+
+
+def _enforce_write_role(actor, workspace) -> None:
+    if actor is None:
+        return
+    membership = get_membership(actor, workspace)
+    if membership is None:
+        raise WorkspaceMembershipRequired(
+            f"User {actor.pk} has no membership in workspace {workspace.pk}."
+        )
+    if membership.role not in WRITE_ROLES:
+        raise WorkspaceWriteForbidden(
+            f"User {actor.pk} has read-only membership in workspace {workspace.pk}."
+        )
+
+
+@transaction.atomic
+def upsert_fx_rate(
+    *,
+    actor: AbstractBaseUser | None,
+    workspace: Workspace,
+    currency: str,
+    base_currency: str,
+    rate: Decimal | str | float,
+    date: date_type,
+    source: str = "manual",
+) -> FxRate:
+    """Create or update the FX rate row for `(workspace, currency,
+    base_currency, date)`. Audit `fx_rate.upserted`.
+
+    `rate` must be > 0; `convert(...)` divides by it, so a zero or
+    negative value would either crash with `DivisionByZero` or yield
+    nonsense. Reject at the service boundary so the DB never holds a
+    rate the rest of the system can't safely consume.
+    """
+    _enforce_write_role(actor, workspace)
+    rate_decimal = rate if isinstance(rate, Decimal) else Decimal(str(rate))
+    if rate_decimal <= 0:
+        raise ValueError("FX rate must be > 0.")
+
+    # Preserve a manual override against the Celery refresher: if a row
+    # already exists at source="manual" and the incoming write is from a
+    # non-manual source (`task`/`seed`), keep the manual rate intact —
+    # otherwise the refresher would silently revert the user's change on
+    # the next tick. Manual writes always win.
+    #
+    # Use `select_for_update()` rather than `first()` so a manual upsert
+    # racing a task refresh can't slip through: the task transaction
+    # blocks until the manual write commits, then re-reads the row and
+    # bails. The surrounding `@transaction.atomic` is what makes the
+    # row lock real.
+    existing = (
+        FxRate.objects.select_for_update()
+        .filter(
+            workspace=workspace,
+            currency=currency.upper(),
+            base_currency=base_currency.upper(),
+            date=date,
+        )
+        .first()
+    )
+    if existing is not None and existing.source == "manual" and source != "manual":
+        return existing
+
+    obj, created = FxRate.objects.update_or_create(
+        workspace=workspace,
+        currency=currency.upper(),
+        base_currency=base_currency.upper(),
+        date=date,
+        defaults={
+            "rate": rate_decimal,
+            "source": source,
+            "created_by": actor,
+        },
+    )
+    write_audit_event(
+        actor=actor,
+        action="fx_rate.upserted",
+        entity=obj,
+        workspace=workspace,
+        metadata={
+            "currency": obj.currency,
+            "base_currency": obj.base_currency,
+            "rate": str(obj.rate),
+            "date": obj.date.isoformat(),
+            "source": obj.source,
+            "created": created,
+        },
+    )
+    return obj
+
+
+def _latest_rate_on_or_before(
+    *, workspace: Workspace, currency: str, base_currency: str, date: date_type
+) -> FxRate | None:
+    """Pick the most-recent rate for `currency` on or before `date`. The
+    canonical lookup behind `convert(...)` — driven by the
+    `(workspace, currency, -date)` index."""
+    return (
+        FxRate.objects.filter(
+            workspace=workspace,
+            currency=currency.upper(),
+            base_currency=base_currency.upper(),
+            date__lte=date,
+        )
+        .order_by("-date")
+        .first()
+    )
+
+
+def convert(
+    *,
+    workspace: Workspace,
+    amount: Decimal | str | float,
+    from_currency: str,
+    to_currency: str,
+    date: date_type,
+    base_currency: str = "USD",
+) -> Decimal:
+    """Convert `amount` from `from_currency` to `to_currency` using the
+    workspace's stored rates relative to `base_currency`.
+
+    Returns a `Decimal`. Raises `FxRateMissing` if either side lacks a
+    stored rate on or before `date`. Read-only — no audit row, since
+    Insights compute paths can call this many times per render.
+    """
+    amount_decimal = amount if isinstance(amount, Decimal) else Decimal(str(amount))
+    from_upper = from_currency.upper()
+    to_upper = to_currency.upper()
+    base_upper = base_currency.upper()
+
+    # Identity short-circuit so a no-op call (USD→USD) doesn't require a row.
+    if from_upper == to_upper:
+        return amount_decimal
+
+    def _rate(code: str) -> Decimal:
+        if code == base_upper:
+            return Decimal("1")
+        row = _latest_rate_on_or_before(
+            workspace=workspace, currency=code, base_currency=base_upper, date=date
+        )
+        if row is None:
+            raise FxRateMissing(
+                f"No FX rate for {code}/{base_upper} on or before {date.isoformat()}."
+            )
+        return row.rate
+
+    rate_from = _rate(from_upper)
+    rate_to = _rate(to_upper)
+    # `rate` represents "1 base = X currency", so `amount` in `from` is
+    # `amount / rate_from` base units, then `* rate_to` of the target.
+    return (amount_decimal / rate_from) * rate_to
+
+
+@transaction.atomic
+def delete_fx_rate(*, actor: AbstractBaseUser, fx_rate: FxRate) -> FxRate:
+    """Hard-delete an `FxRate` row. Manual-source only.
+
+    `task` / `seed` rows are owned by automation; the API rejects
+    deletes on them with `FxRateNonManualDeleteForbidden` (mapped to
+    400 by the view). Audit metadata is frozen *before* the delete so
+    the trail keeps the row's identifying fields.
+    """
+    _enforce_write_role(actor, fx_rate.workspace)
+    if fx_rate.source != "manual":
+        raise FxRateNonManualDeleteForbidden(
+            f"Cannot delete `{fx_rate.source}` FX rate via API; use the admin."
+        )
+    metadata = {
+        "currency": fx_rate.currency,
+        "base_currency": fx_rate.base_currency,
+        "rate": str(fx_rate.rate),
+        "date": fx_rate.date.isoformat(),
+        "source": fx_rate.source,
+    }
+    write_audit_event(
+        actor=actor,
+        action="fx_rate.deleted",
+        entity=fx_rate,
+        workspace=fx_rate.workspace,
+        metadata=metadata,
+    )
+    fx_rate.delete()
+    return fx_rate
