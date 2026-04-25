@@ -5,6 +5,7 @@ export const DASHBOARD_NAV = [
   { slug: "resumes", label: "Resumes", testId: TestIds.NAV_RESUMES },
   { slug: "interviews", label: "Interviews", testId: TestIds.NAV_INTERVIEWS },
   { slug: "insights", label: "Insights", testId: TestIds.NAV_INSIGHTS },
+  { slug: "audit", label: "Audit log", testId: TestIds.NAV_AUDIT },
   { slug: "settings", label: "Settings", testId: TestIds.NAV_SETTINGS },
 ] as const satisfies ReadonlyArray<{ slug: string; label: string; testId: TestId }>;
 

@@ -13,6 +13,7 @@ export const TestIds = {
   NAV_RESUMES: "nav-resumes",
   NAV_INTERVIEWS: "nav-interviews",
   NAV_INSIGHTS: "nav-insights",
+  NAV_AUDIT: "nav-audit",
   NAV_SETTINGS: "nav-settings",
   STUB_PANEL: "stub-panel",
   OPPORTUNITIES_LIST: "opportunities-list",
@@ -199,6 +200,19 @@ export const TestIds = {
   SETTINGS_MCP_REVOKE_CONFIRM: "settings-mcp-revoke-confirm",
   SETTINGS_MCP_REVOKE_CANCEL: "settings-mcp-revoke-cancel",
   SETTINGS_MCP_REVOKE_ERROR: "settings-mcp-revoke-error",
+  AUDIT_SECTION: "audit-section",
+  AUDIT_LOADING: "audit-loading",
+  AUDIT_ERROR: "audit-error",
+  AUDIT_EMPTY: "audit-empty",
+  AUDIT_TABLE: "audit-table",
+  AUDIT_ROW: "audit-row",
+  AUDIT_FILTER_ACTION: "audit-filter-action",
+  AUDIT_FILTER_ENTITY_TYPE: "audit-filter-entity-type",
+  AUDIT_FILTER_ENTITY_ID: "audit-filter-entity-id",
+  AUDIT_FILTER_CLEAR: "audit-filter-clear",
+  AUDIT_LOAD_MORE: "audit-load-more",
+  AUDIT_METADATA_EXPAND: "audit-metadata-expand",
+  AUDIT_METADATA_BODY: "audit-metadata-body",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

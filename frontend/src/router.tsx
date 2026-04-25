@@ -11,6 +11,7 @@ import { OpportunityDetail } from "./screens/OpportunityDetail";
 import { InterviewCycleCreate } from "./screens/InterviewCycleCreate";
 import { InterviewCycleDetail } from "./screens/InterviewCycleDetail";
 import { InterviewsList } from "./screens/InterviewsList";
+import { AuditLog } from "./screens/AuditLog";
 import { Insights } from "./screens/Insights";
 import { ResumeCreate } from "./screens/ResumeCreate";
 import { ResumeDetail } from "./screens/ResumeDetail";
@@ -66,9 +67,11 @@ export const routes: RouteObject[] = [
                 ? <InterviewsList />
                 : item.slug === "insights"
                   ? <Insights />
-                  : item.slug === "settings"
-                    ? <Settings />
-                    : <StubPanel />,
+                  : item.slug === "audit"
+                    ? <AuditLog />
+                    : item.slug === "settings"
+                      ? <Settings />
+                      : <StubPanel />,
       })),
     ],
   },

@@ -57,6 +57,7 @@ urlpatterns = [
     ),
     path("api/fx-rates/", include("fx.urls")),
     path("api/insights/", include("insights.urls")),
+    path("api/", include("audit.urls")),
     path("api/mcp/tokens/", include("mcp.tokens.urls")),
     path("api/test/", include(api_test_patterns)),
     path("mcp/ping", McpPingView.as_view(), name="mcp_ping"),
