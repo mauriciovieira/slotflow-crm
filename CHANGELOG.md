@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.6.0...root-v1.6.1) (2026-04-25)
+
+
+### Bug Fixes
+
+* **dev:** migrate database when resetting local db ([8c294f2](https://github.com/mauriciovieira/slotflow-crm/commit/8c294f2d3151b60499dcf0a4f3911215ed6cc486))
+
 # [1.6.0](https://github.com/mauriciovieira/slotflow-crm/compare/root-v1.5.0...root-v1.6.0) (2026-04-25)
 
 
