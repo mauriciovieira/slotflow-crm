@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-25 — Backend 0.7.0
+
+- [Release notes](backend/CHANGELOG.md)
+
 ## 2026-04-25 — Root 1.4.0
 
 - [Release notes](CHANGELOG.md)
