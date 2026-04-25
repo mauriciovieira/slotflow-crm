@@ -190,6 +190,41 @@ def test_create_link_succeeds():
     assert body["role"] == OpportunityResumeRole.SUBMITTED
     assert body["note"] == "via referral"
     assert body["resume_version_summary"]["version_number"] == 1
+    # Sanity: the response carries the resume name without a follow-up
+    # query — a regression here would mean `resume_version.base_resume`
+    # was un-prefetched at serialization time.
+    assert body["resume_version_summary"]["base_resume_name"] == "Senior Eng"
+
+
+def test_create_response_does_not_trigger_extra_resume_lookup():
+    """The view re-fetches the freshly-created link with a `select_related`
+    chain so `resume_version_summary` renders without a follow-up query for
+    `resume_version.base_resume`. Bound the create-path query count."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    opp = _opp(ws)
+    version = _resume_version(ws)
+
+    client = _client(alice)
+    with CaptureQueriesContext(connection) as ctx:
+        response = client.post(
+            "/api/opportunity-resumes/",
+            data={
+                "opportunity": str(opp.pk),
+                "resume_version": str(version.pk),
+                "role": OpportunityResumeRole.SUBMITTED,
+            },
+            format="json",
+        )
+    assert response.status_code == 201
+    # Tight upper bound so a regression that loses the `select_related` on
+    # the response refetch (or a follow-up `base_resume` SELECT during
+    # serialization) trips this assertion.
+    assert len(ctx) <= 18, [q["sql"] for q in ctx]
 
 
 def test_create_rejects_cross_workspace_resume_version():

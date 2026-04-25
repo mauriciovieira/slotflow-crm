@@ -94,7 +94,18 @@ class OpportunityResumeViewSet(
                     ]
                 }
             ) from exc
-        out = OpportunityResumeSerializer(link, context=self.get_serializer_context())
+        # Re-fetch with the same `select_related` chain the list queryset
+        # uses so the response serializer's `resume_version_summary` doesn't
+        # trigger a follow-up query for `resume_version.base_resume.name`
+        # (the create serializer's PrimaryKeyRelatedField loads neither).
+        hydrated = OpportunityResume.objects.select_related(
+            "opportunity",
+            "opportunity__workspace",
+            "resume_version",
+            "resume_version__base_resume",
+            "created_by",
+        ).get(pk=link.pk)
+        out = OpportunityResumeSerializer(hydrated, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):

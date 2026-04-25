@@ -139,10 +139,13 @@ function setLink(mutateAsync: ReturnType<typeof vi.fn>, isPending = false) {
   } as unknown as ReturnType<typeof useLinkResumeToOpportunity>);
 }
 
-function setUnlink(mutate: ReturnType<typeof vi.fn>, isPending = false) {
+function setUnlink(
+  mutateAsync: ReturnType<typeof vi.fn>,
+  isPending = false,
+) {
   useUnlinkMock.mockReturnValue({
-    mutate,
-    mutateAsync: vi.fn(),
+    mutate: vi.fn(),
+    mutateAsync,
     isPending,
     isError: false,
     isSuccess: false,
@@ -286,18 +289,51 @@ describe("OpportunityResumesSection", () => {
       status: "success",
     });
     setLink(vi.fn());
-    const mutate = vi.fn();
-    setUnlink(mutate);
+    const mutateAsync = vi.fn().mockResolvedValueOnce(null);
+    setUnlink(mutateAsync);
     const user = userEvent.setup();
     renderSection();
 
     await user.click(
       screen.getByTestId(`${TestIds.OPPORTUNITY_RESUMES_UNLINK}-link-1`),
     );
-    expect(mutate).not.toHaveBeenCalled();
+    expect(mutateAsync).not.toHaveBeenCalled();
     await user.click(
       screen.getByTestId(`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CONFIRM}-link-1`),
     );
-    expect(mutate).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+  });
+
+  it("renders an inline error when unlink mutation rejects (e.g. 403/500)", async () => {
+    setResumes();
+    setVersions();
+    setLinksQuery({
+      data: [fixture()],
+      isSuccess: true,
+      status: "success",
+    });
+    setLink(vi.fn());
+    const mutateAsync = vi
+      .fn()
+      .mockRejectedValueOnce(Object.assign(new Error("Forbidden."), { name: "ApiError" }));
+    setUnlink(mutateAsync);
+    const user = userEvent.setup();
+    renderSection();
+
+    await user.click(
+      screen.getByTestId(`${TestIds.OPPORTUNITY_RESUMES_UNLINK}-link-1`),
+    );
+    await user.click(
+      screen.getByTestId(`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CONFIRM}-link-1`),
+    );
+
+    const error = await screen.findByTestId(
+      `${TestIds.OPPORTUNITY_RESUMES_UNLINK_ERROR}-link-1`,
+    );
+    expect(error).toHaveTextContent(/forbidden/i);
+    // Confirm UI must remain so the user can retry, not silently collapse.
+    expect(
+      screen.getByTestId(`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CONFIRM}-link-1`),
+    ).toBeVisible();
   });
 });

@@ -120,4 +120,5 @@ export const TestIds = {
   OPPORTUNITY_RESUMES_UNLINK: "opportunity-resumes-unlink",
   OPPORTUNITY_RESUMES_UNLINK_CONFIRM: "opportunity-resumes-unlink-confirm",
   OPPORTUNITY_RESUMES_UNLINK_CANCEL: "opportunity-resumes-unlink-cancel",
+  OPPORTUNITY_RESUMES_UNLINK_ERROR: "opportunity-resumes-unlink-error",
 } as const;

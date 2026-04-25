@@ -35,6 +35,22 @@ function UnlinkButton({
 }) {
   const unlink = useUnlinkOpportunityResume(opportunityId, link.id);
   const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleConfirm() {
+    setError(null);
+    try {
+      await unlink.mutateAsync();
+      // Success collapses the confirm UI; the row itself disappears once
+      // the list query refetches.
+      setConfirming(false);
+    } catch (err) {
+      // Surface 403/500/etc. inline so the user knows the unlink didn't
+      // happen, instead of silently sitting in the confirm state.
+      setError(err instanceof Error ? err.message : "Could not unlink.");
+    }
+  }
+
   if (!confirming) {
     return (
       <button
@@ -48,24 +64,38 @@ function UnlinkButton({
     );
   }
   return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => unlink.mutate()}
-        disabled={unlink.isPending}
-        data-testid={`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CONFIRM}-${link.id}`}
-        className="rounded-md bg-danger text-white px-2 py-1 text-xs font-medium disabled:opacity-60"
-      >
-        {unlink.isPending ? "Unlinking…" : "Confirm"}
-      </button>
-      <button
-        type="button"
-        onClick={() => setConfirming(false)}
-        data-testid={`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CANCEL}-${link.id}`}
-        className="rounded-md border border-border-subtle px-2 py-1 text-xs font-medium text-ink hover:bg-surface-card"
-      >
-        Cancel
-      </button>
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={unlink.isPending}
+          data-testid={`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CONFIRM}-${link.id}`}
+          className="rounded-md bg-danger text-white px-2 py-1 text-xs font-medium disabled:opacity-60"
+        >
+          {unlink.isPending ? "Unlinking…" : "Confirm"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setConfirming(false);
+            setError(null);
+          }}
+          data-testid={`${TestIds.OPPORTUNITY_RESUMES_UNLINK_CANCEL}-${link.id}`}
+          className="rounded-md border border-border-subtle px-2 py-1 text-xs font-medium text-ink hover:bg-surface-card"
+        >
+          Cancel
+        </button>
+      </div>
+      {error && (
+        <p
+          role="alert"
+          data-testid={`${TestIds.OPPORTUNITY_RESUMES_UNLINK_ERROR}-${link.id}`}
+          className="text-xs text-danger"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }
