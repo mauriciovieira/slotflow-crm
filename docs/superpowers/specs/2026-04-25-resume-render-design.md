@@ -35,7 +35,7 @@ Minimal HTML5 document. Renders top-level fields from the JSON Resume schema:
 - `education[]` — list of `{studyType} in {area}, {institution}`.
 - `skills[]` — comma-separated `{name}`.
 
-Uses `{% load %}` for safe escaping (default Django auto-escape). Inline `<style>` for basic typography.
+Relies on Django's default auto-escape (no explicit `{% load %}` tag) so any user-supplied JSON value renders as text, never markup. Inline `<style>` for basic typography.
 
 **Management command (`resumes/management/commands/render_resume_html.py`)**
 
@@ -81,12 +81,12 @@ Signed-in seeded e2e user:
 4. Switch to the new tab.
 5. Assert the page contains the candidate name from the JSON document.
 
-Use `page.context().waitForEvent("page")` to grab the new tab.
+Use `context.waitForEvent("page")` to grab the new tab spawned by the `target="_blank"` link.
 
 ## Test plan
 
-- Backend pytest gains ~10 cases (~4 service, ~5 API, 1 command). 334 → ~344.
-- Frontend vitest gains ~2 cases. 144 → ~146.
+- Backend pytest gains ~19 cases (8 service, 6 api, 5 command). Final totals on this branch: 334 → 360.
+- Frontend vitest gains 1 case. 144 → 145.
 - E2E gains 1 spec.
 
 ## Risk & rollback

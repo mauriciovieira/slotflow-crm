@@ -27,8 +27,9 @@ test.describe("resume render flow", () => {
     await page.getByTestId(TestIds.RESUME_DETAIL_NEW_VERSION_SUBMIT).click();
 
     // The version row exposes a "View HTML" link with target="_blank".
-    // Use Playwright's expectPage to grab the new tab when the link is
-    // clicked, then assert the rendered HTML contains the candidate name.
+    // Subscribe to `context.waitForEvent("page")` *before* the click so
+    // we don't miss the new tab when the browser opens it; then assert
+    // the rendered HTML contains the candidate name.
     const versionsList = page.getByTestId(TestIds.RESUME_DETAIL_VERSIONS_LIST);
     await expect(versionsList).toBeVisible();
     const renderLink = versionsList.locator(
