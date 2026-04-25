@@ -119,6 +119,33 @@ def test_upsert_with_actor_none_skips_membership_check():
     assert obj.created_by is None
 
 
+def test_upsert_rejects_zero_or_negative_rate():
+    """`convert(...)` divides by `rate_from`; a zero/negative rate would
+    crash with `DivisionByZero` or yield nonsense. Reject at the service
+    so the DB never holds an unsafe rate."""
+    user = _user()
+    ws = _ws()
+    _join(user, ws)
+    with pytest.raises(ValueError, match="> 0"):
+        upsert_fx_rate(
+            actor=user,
+            workspace=ws,
+            currency="EUR",
+            base_currency="USD",
+            rate="0",
+            date=dt.date(2026, 1, 1),
+        )
+    with pytest.raises(ValueError, match="> 0"):
+        upsert_fx_rate(
+            actor=user,
+            workspace=ws,
+            currency="EUR",
+            base_currency="USD",
+            rate="-0.5",
+            date=dt.date(2026, 1, 1),
+        )
+
+
 def test_upsert_writes_audit_event():
     from audit.models import AuditEvent
 

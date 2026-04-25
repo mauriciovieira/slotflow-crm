@@ -239,6 +239,64 @@ def test_delete_row_returns_204():
     assert FxRate.objects.filter(pk=obj.pk).count() == 0
 
 
+def test_delete_non_manual_row_returns_400():
+    """The API enforces the manual-only delete rule (the FE only hides
+    the button). A stale tab attempting to drop a `task` row gets 400."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    obj = FxRate.objects.create(
+        workspace=ws,
+        currency="EUR",
+        base_currency="USD",
+        rate=Decimal("0.92"),
+        date=dt.date(2026, 1, 1),
+        source="task",
+    )
+
+    response = _client(alice).delete(f"/api/fx-rates/{obj.pk}/")
+    assert response.status_code == 400
+    assert "non_field_errors" in response.json()
+    assert FxRate.objects.filter(pk=obj.pk).count() == 1
+
+
+def test_delete_writes_audit_event():
+    from audit.models import AuditEvent
+
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    obj = FxRate.objects.create(
+        workspace=ws,
+        currency="EUR",
+        base_currency="USD",
+        rate=Decimal("0.92"),
+        date=dt.date(2026, 1, 1),
+    )
+    _client(alice).delete(f"/api/fx-rates/{obj.pk}/")
+    events = list(AuditEvent.objects.filter(action="fx_rate.deleted"))
+    assert len(events) == 1
+
+
+def test_create_rejects_zero_rate():
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    response = _client(alice).post(
+        "/api/fx-rates/",
+        data={
+            "workspace": str(ws.pk),
+            "currency": "EUR",
+            "base_currency": "USD",
+            "rate": "0",
+            "date": "2026-01-01",
+        },
+        format="json",
+    )
+    assert response.status_code == 400
+    assert "rate" in response.json()
+
+
 def test_delete_forbidden_for_viewer():
     alice = _user()
     ws = _ws()

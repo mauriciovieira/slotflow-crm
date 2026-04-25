@@ -49,6 +49,13 @@ class FxRateSerializer(serializers.ModelSerializer):
     def get_created_by(self, obj: FxRate):
         return _render_user(obj.created_by)
 
+    def validate_rate(self, value):
+        # The service enforces this too, but rejecting at the serializer
+        # gives a clean field-keyed error instead of a generic one.
+        if value is None or value <= 0:
+            raise serializers.ValidationError("Rate must be > 0.")
+        return value
+
     def validate_workspace(self, workspace: Workspace) -> Workspace:
         request = self.context.get("request")
         actor = getattr(request, "user", None)

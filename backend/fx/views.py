@@ -13,8 +13,10 @@ from opportunities.permissions import IsWorkspaceMember
 from .models import FxRate
 from .serializers import FxRateSerializer
 from .services import (
+    FxRateNonManualDeleteForbidden,
     WorkspaceMembershipRequired,
     WorkspaceWriteForbidden,
+    delete_fx_rate,
     upsert_fx_rate,
 )
 
@@ -78,7 +80,22 @@ class FxRateViewSet(viewsets.ModelViewSet):
             )
         except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
             raise PermissionDenied(str(exc)) from exc
+        except ValueError as exc:
+            # `rate <= 0` from the service. Surface as a field-keyed 400.
+            raise ValidationError({"rate": str(exc)}) from exc
         except IntegrityError as exc:  # defensive — upsert path shouldn't normally trip
             raise ValidationError({"non_field_errors": ["Conflicting rate row."]}) from exc
         out = self.get_serializer(obj)
         return Response(out.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        try:
+            delete_fx_rate(actor=self.request.user, fx_rate=instance)
+        except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except FxRateNonManualDeleteForbidden as exc:
+            # Server-side enforcement of the manual-only rule (the FE
+            # already hides the button on non-manual rows). Surface as
+            # 400 with a `non_field_errors` key so the FE can render
+            # the message inline if a stale tab attempts the call.
+            raise ValidationError({"non_field_errors": [str(exc)]}) from exc

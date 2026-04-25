@@ -34,6 +34,16 @@ class FxRateMissing(LookupError):
     """Raised when no `FxRate` exists for the requested currency/date."""
 
 
+class FxRateNonManualDeleteForbidden(PermissionError):
+    """Raised when an actor tries to delete a non-manual FxRate row.
+
+    `task` / `seed` rates are populated by automation; deleting them
+    through the API would let a UI bug or a stale tab silently wipe
+    data the automation will re-create. Operators can still drop a
+    bad row through the Django admin.
+    """
+
+
 def _enforce_write_role(actor, workspace) -> None:
     if actor is None:
         return
@@ -60,9 +70,17 @@ def upsert_fx_rate(
     source: str = "manual",
 ) -> FxRate:
     """Create or update the FX rate row for `(workspace, currency,
-    base_currency, date)`. Audit `fx_rate.upserted`."""
+    base_currency, date)`. Audit `fx_rate.upserted`.
+
+    `rate` must be > 0; `convert(...)` divides by it, so a zero or
+    negative value would either crash with `DivisionByZero` or yield
+    nonsense. Reject at the service boundary so the DB never holds a
+    rate the rest of the system can't safely consume.
+    """
     _enforce_write_role(actor, workspace)
     rate_decimal = rate if isinstance(rate, Decimal) else Decimal(str(rate))
+    if rate_decimal <= 0:
+        raise ValueError("FX rate must be > 0.")
     obj, created = FxRate.objects.update_or_create(
         workspace=workspace,
         currency=currency.upper(),
@@ -151,3 +169,35 @@ def convert(
     # `rate` represents "1 base = X currency", so `amount` in `from` is
     # `amount / rate_from` base units, then `* rate_to` of the target.
     return (amount_decimal / rate_from) * rate_to
+
+
+@transaction.atomic
+def delete_fx_rate(*, actor: AbstractBaseUser, fx_rate: FxRate) -> FxRate:
+    """Hard-delete an `FxRate` row. Manual-source only.
+
+    `task` / `seed` rows are owned by automation; the API rejects
+    deletes on them with `FxRateNonManualDeleteForbidden` (mapped to
+    400 by the view). Audit metadata is frozen *before* the delete so
+    the trail keeps the row's identifying fields.
+    """
+    _enforce_write_role(actor, fx_rate.workspace)
+    if fx_rate.source != "manual":
+        raise FxRateNonManualDeleteForbidden(
+            f"Cannot delete `{fx_rate.source}` FX rate via API; use the admin."
+        )
+    metadata = {
+        "currency": fx_rate.currency,
+        "base_currency": fx_rate.base_currency,
+        "rate": str(fx_rate.rate),
+        "date": fx_rate.date.isoformat(),
+        "source": fx_rate.source,
+    }
+    write_audit_event(
+        actor=actor,
+        action="fx_rate.deleted",
+        entity=fx_rate,
+        workspace=fx_rate.workspace,
+        metadata=metadata,
+    )
+    fx_rate.delete()
+    return fx_rate

@@ -41,7 +41,7 @@ class FxRate(TimeStampedModel):
 
 `source` distinguishes a hand-entered override from one populated by the (stub) Celery task.
 
-Migration `fx/migrations/0001_fxrate.py`.
+Migration `backend/fx/migrations/0001_initial.py`.
 
 **Service (`fx/services.py`):**
 
@@ -61,7 +61,7 @@ Migration `fx/migrations/0001_fxrate.py`.
 - `FxRateViewSet(ModelViewSet)` at `/api/fx-rates/`:
   - `GET` list scoped to caller's memberships; filter `?workspace=<uuid>`, `?currency=EUR`, `?date_from=YYYY-MM-DD`, `?date_to=YYYY-MM-DD`.
   - `POST` upsert (create/update) — calls service.
-  - `DELETE <uuid>` removes (manual override only).
+  - `DELETE <uuid>` removes a manual-source row. The view delegates to the `delete_fx_rate` service which writes a `fx_rate.deleted` audit row and rejects non-manual sources (`task` / `seed`) with a 400. Operators needing to drop an automated row do it through the Django admin.
 
 URL: `path("api/fx-rates/", include("fx.urls"))`.
 

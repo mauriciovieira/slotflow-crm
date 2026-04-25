@@ -9,7 +9,14 @@ import {
 import { TestIds } from "../testIds";
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  // Build the YYYY-MM-DD string in the user's local timezone. Using
+  // `toISOString().slice(0, 10)` would be UTC, which prefills the
+  // wrong calendar day for users east/west of UTC near local midnight.
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function DeleteButton({

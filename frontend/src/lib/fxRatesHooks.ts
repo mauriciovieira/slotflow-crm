@@ -30,12 +30,13 @@ export const fxRatesKey = (workspaceId: string) =>
 export function useFxRates(workspaceId: string | undefined) {
   return useQuery({
     queryKey: fxRatesKey(workspaceId ?? ""),
-    queryFn: () => {
-      const path = workspaceId
-        ? `/api/fx-rates/?workspace=${workspaceId}`
-        : "/api/fx-rates/";
-      return apiFetch<FxRate[]>(path);
-    },
+    queryFn: () =>
+      apiFetch<FxRate[]>(`/api/fx-rates/?workspace=${workspaceId}`),
+    // Don't fire an unscoped fetch while the active workspace is still
+    // loading or absent — the screen displays a "pick a workspace"
+    // message in that branch instead, and an unscoped query would leak
+    // rates from other workspaces.
+    enabled: typeof workspaceId === "string" && workspaceId.length > 0,
   });
 }
 
