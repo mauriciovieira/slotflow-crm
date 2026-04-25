@@ -14,11 +14,14 @@ export function OpportunityCreate() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSubmitError(null);
+    const trimmedNotes = notes.trim();
     try {
       await create.mutateAsync({
         title: title.trim(),
         company: company.trim(),
-        notes: notes.trim(),
+        // Omit `notes` when empty so the wire payload matches the optional
+        // type and we don't send a useless empty string.
+        ...(trimmedNotes ? { notes: trimmedNotes } : {}),
       });
       navigate("/dashboard/opportunities", { replace: true });
     } catch (err) {
@@ -32,7 +35,6 @@ export function OpportunityCreate() {
         onSubmit={handleSubmit}
         data-testid={TestIds.OPPORTUNITY_CREATE_FORM}
         className="rounded-xl border border-border-subtle bg-surface-card p-6 space-y-4"
-        noValidate
       >
         <header>
           <h1 className="text-page-title text-ink">New opportunity</h1>

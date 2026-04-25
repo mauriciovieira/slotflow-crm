@@ -80,15 +80,16 @@ The empty-state copy updates to mention the button explicitly.
 
 `frontend/src/screens/OpportunityCreate.test.tsx` — five Vitest cases via mocked `useCreateOpportunity`:
 
-1. Renders both inputs + submit button.
-2. Submit blocked when fields empty (native validation; assert `mutateAsync` not called).
-3. Happy-path submit calls the mutation with `{title, company, notes}` and navigates to the list on resolve.
-4. Error from the mutation surfaces inside `OPPORTUNITY_CREATE_ERROR`.
-5. Cancel button navigates to `/dashboard/opportunities` without calling the mutation.
+1. Renders the title, company, notes inputs and the submit button.
+2. Happy-path submit calls the mutation with `{title, company, notes}` (notes omitted when empty) and navigates to the list on resolve.
+3. Error from the mutation surfaces inside `OPPORTUNITY_CREATE_ERROR`.
+4. Cancel button navigates to `/dashboard/opportunities` without calling the mutation.
 
-`frontend/src/screens/OpportunitiesList.test.tsx` — extend with one case asserting the "New opportunity" button is rendered in both empty and populated states with the correct `href` to `/dashboard/opportunities/new`.
+Empty-field validation is left to the native `required` attribute on the inputs (no `noValidate` on the form). A dedicated empty-field unit test would only re-test the browser's HTML5 behaviour, so it's not in this PR's matrix.
 
-`frontend/src/lib/opportunitiesHooks.test.ts` (new) — one test for `useCreateOpportunity` hitting `apiFetch` with the expected body and method, plus invalidating the list cache on success. Skip if it duplicates the screen tests too closely; keep coverage tight.
+`frontend/src/screens/OpportunitiesList.test.tsx` — two new cases asserting the "New opportunity" link is rendered with the correct `href` to `/dashboard/opportunities/new` in both empty and populated states.
+
+No `opportunitiesHooks.test.ts` — coverage of `useCreateOpportunity` lives in the screen tests above; a hook unit test would mostly re-test `apiFetch` and the React Query plumbing.
 
 No backend changes, no e2e in this PR.
 
