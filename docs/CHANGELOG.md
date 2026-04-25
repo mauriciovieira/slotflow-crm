@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.7.0...docs-v1.8.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** add Resume models (BaseResume + ResumeVersion) ([#24](https://github.com/mauriciovieira/slotflow-crm/issues/24)) ([ce854a8](https://github.com/mauriciovieira/slotflow-crm/commit/ce854a8296ba2c6b43d0377a87044be225acea4a)), closes [#17](https://github.com/mauriciovieira/slotflow-crm/issues/17)
+
 # [1.7.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.6.0...docs-v1.7.0) (2026-04-25)
 
 
