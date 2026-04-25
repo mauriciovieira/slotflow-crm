@@ -246,11 +246,22 @@ class ResumeVersionViewSet(
                 notes = notes_raw
             return document, notes
 
-        # JSON body path: reject non-object root explicitly so the user
-        # gets "must be a JSON object" instead of the unhelpful
-        # "provide a document" cascade triggered by a list/scalar root.
+        # No multipart `file` part — fall through to the structured-body
+        # path. `request.data` is either a `dict` (JSON body) or a
+        # `QueryDict` (form / multipart no-file). Both subclass `dict`,
+        # so this check only fires on a genuinely non-dict root (a
+        # top-level JSON array / scalar). Phrase the message so it
+        # describes both legal request shapes equally — a multipart
+        # caller that failed this branch isn't necessarily sending JSON.
         if not isinstance(request.data, dict):
-            raise ValidationError({"non_field_errors": ["Request body must be a JSON object."]})
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        "Request body must be a JSON object, or a multipart "
+                        "upload with a `file` part."
+                    ]
+                }
+            )
         data = request.data
         if "document" not in data:
             raise ValidationError(
