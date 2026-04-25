@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.3.0...docs-v1.4.0) (2026-04-25)
+
+
+### Features
+
+* **frontend:** opportunities list view at /dashboard/opportunities ([#20](https://github.com/mauriciovieira/slotflow-crm/issues/20)) ([8ee2eb4](https://github.com/mauriciovieira/slotflow-crm/commit/8ee2eb48da747848a0b1085e2b1fe444f2280ad1))
+
 # [1.3.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.2.0...docs-v1.3.0) (2026-04-25)
 
 
