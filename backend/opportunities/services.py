@@ -54,15 +54,7 @@ def create_opportunity(
     The actor must have an active Membership in the workspace; otherwise
     `WorkspaceMembershipRequired` is raised before any DB write.
     """
-    membership = get_membership(actor, workspace)
-    if membership is None:
-        raise WorkspaceMembershipRequired(
-            f"User {actor.pk} has no membership in workspace {workspace.pk}."
-        )
-    if membership.role not in WRITE_ROLES:
-        raise WorkspaceWriteForbidden(
-            f"User {actor.pk} has read-only membership in workspace {workspace.pk}."
-        )
+    _enforce_write_role(actor, workspace)
     opportunity = Opportunity.objects.create(
         workspace=workspace,
         title=payload["title"],
@@ -95,15 +87,7 @@ def archive_opportunity(*, actor: AbstractBaseUser, opportunity: Opportunity) ->
     no-op repeat clicks (the metadata's `already_archived` flag distinguishes
     the two).
     """
-    membership = get_membership(actor, opportunity.workspace)
-    if membership is None:
-        raise WorkspaceMembershipRequired(
-            f"User {actor.pk} has no membership in workspace {opportunity.workspace_id}."
-        )
-    if membership.role not in WRITE_ROLES:
-        raise WorkspaceWriteForbidden(
-            f"User {actor.pk} has read-only membership in workspace {opportunity.workspace_id}."
-        )
+    _enforce_write_role(actor, opportunity.workspace)
     # Re-fetch the row with `SELECT ... FOR UPDATE` so two concurrent archive
     # calls don't both observe `archived_at is None`, both write a stamp, and
     # have the later commit overwrite the earlier one. The lock is released

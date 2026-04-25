@@ -17,8 +17,17 @@ class IsWorkspaceMember(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        # List/create gating happens in the queryset and serializer; any
-        # authenticated user is allowed to *attempt* the call.
+        # Authenticated-only at the view-permission layer. Membership /
+        # write-role enforcement happens deeper:
+        #   - List: get_queryset filters by `workspace__memberships__user`,
+        #     so non-members get an empty list (or 404 for retrieve).
+        #   - Create: the relevant service helper (`create_opportunity` /
+        #     `archive_opportunity` / `link_resume_to_opportunity`, etc.)
+        #     calls `_enforce_write_role`, which raises
+        #     `WorkspaceMembershipRequired` / `WorkspaceWriteForbidden`.
+        #     The viewset translates those to 403.
+        #   - Update / Destroy: `has_object_permission` below runs the same
+        #     membership + write-role gate against the resolved workspace.
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
