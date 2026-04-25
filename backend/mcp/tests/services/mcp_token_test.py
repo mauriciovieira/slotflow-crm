@@ -84,3 +84,58 @@ def test_revoke_token_raises_when_missing():
     user = _user()
     with pytest.raises(McpToken.DoesNotExist):
         revoke_token(actor=user, token_id=uuid.uuid4())
+
+
+def test_issue_token_writes_audit_event_without_plaintext():
+    from audit.models import AuditEvent
+
+    user = _user()
+    record, plaintext = issue_token(actor=user, name="Cursor on laptop")
+
+    events = list(AuditEvent.objects.filter(action="mcp_token.issued"))
+    assert len(events) == 1
+    event = events[0]
+    assert event.actor_id == user.pk
+    assert event.entity_type == "mcp.McpToken"
+    assert event.entity_id == str(record.pk)
+    assert event.metadata["last_four"] == record.last_four
+    # The plaintext must NEVER reach the audit log.
+    assert plaintext not in str(event.metadata)
+    for value in event.metadata.values():
+        assert plaintext != value
+
+
+def test_revoke_token_writes_audit_event_with_already_revoked_false_first_call():
+    from audit.models import AuditEvent
+
+    user = _user()
+    record, _ = issue_token(actor=user, name="x")
+
+    revoke_token(actor=user, token_id=record.pk)
+
+    events = list(AuditEvent.objects.filter(action="mcp_token.revoked"))
+    assert len(events) == 1
+    assert events[0].metadata["already_revoked"] is False
+    assert events[0].metadata["last_four"] == record.last_four
+
+
+def test_revoke_token_writes_audit_event_with_already_revoked_true_on_second_call():
+    from audit.models import AuditEvent
+
+    user = _user()
+    record, _ = issue_token(actor=user, name="x")
+
+    revoke_token(actor=user, token_id=record.pk)
+    record.refresh_from_db()
+    first_stamp = record.revoked_at
+
+    revoke_token(actor=user, token_id=record.pk)
+
+    record.refresh_from_db()
+    # Second call must not bump the timestamp.
+    assert record.revoked_at == first_stamp
+
+    events = list(AuditEvent.objects.filter(action="mcp_token.revoked").order_by("created_at"))
+    assert len(events) == 2
+    assert events[0].metadata["already_revoked"] is False
+    assert events[1].metadata["already_revoked"] is True
