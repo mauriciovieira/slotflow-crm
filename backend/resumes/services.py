@@ -150,3 +150,85 @@ def create_resume_version(
         },
     )
     return version
+
+
+@transaction.atomic
+def import_resume_json(
+    *,
+    actor: AbstractBaseUser | None,
+    base_resume: BaseResume,
+    document: Any,
+    notes: str = "",
+    source: str = "api",
+) -> ResumeVersion:
+    """Create a new ResumeVersion from a parsed JSON document.
+
+    Thin wrapper around `create_resume_version` that emits an additional
+    `resume_version.imported` audit event (alongside the standard
+    `resume_version.created` row) so ops can distinguish imports from
+    manual UI creates without parsing payloads. `source` is recorded in
+    metadata to keep API and management-command imports separable.
+
+    `actor=None` is allowed for the management-command path. Without an
+    actor, role gates are skipped (the operator already has shell access).
+    """
+    if actor is not None:
+        # API / authenticated import path — same gate as create_resume_version,
+        # which we delegate to below.
+        membership = get_membership(actor, base_resume.workspace)
+        if membership is None:
+            raise WorkspaceMembershipRequired(
+                f"User {actor.pk} has no membership in workspace {base_resume.workspace_id}."
+            )
+        if membership.role not in WRITE_ROLES:
+            raise WorkspaceWriteForbidden(
+                f"User {actor.pk} has read-only membership in workspace {base_resume.workspace_id}."
+            )
+        version = create_resume_version(
+            actor=actor, base_resume=base_resume, document=document, notes=notes
+        )
+    else:
+        # System / management-command path: build the version directly so
+        # `created_by` lands as NULL rather than carrying a fake actor.
+        BaseResume.objects.select_for_update().get(pk=base_resume.pk)
+        current_max = (
+            ResumeVersion.objects.filter(base_resume=base_resume).aggregate(Max("version_number"))[
+                "version_number__max"
+            ]
+            or 0
+        )
+        next_number = current_max + 1
+        digest = _document_hash(document)
+        version = ResumeVersion.objects.create(
+            base_resume=base_resume,
+            version_number=next_number,
+            document=document,
+            document_hash=digest,
+            notes=notes,
+            created_by=None,
+        )
+        write_audit_event(
+            actor=None,
+            action="resume_version.created",
+            entity=version,
+            workspace=base_resume.workspace,
+            metadata={
+                "base_resume_id": str(base_resume.pk),
+                "version_number": version.version_number,
+                "document_hash": digest,
+            },
+        )
+
+    write_audit_event(
+        actor=actor,
+        action="resume_version.imported",
+        entity=version,
+        workspace=base_resume.workspace,
+        metadata={
+            "base_resume_id": str(base_resume.pk),
+            "version_number": version.version_number,
+            "document_hash": version.document_hash,
+            "source": source,
+        },
+    )
+    return version

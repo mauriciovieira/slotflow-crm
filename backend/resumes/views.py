@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -7,7 +8,9 @@ from django.db.models import Max
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from tenancy.models import Membership
@@ -25,6 +28,7 @@ from .services import (
     archive_resume,
     create_resume,
     create_resume_version,
+    import_resume_json,
 )
 
 
@@ -178,3 +182,71 @@ class ResumeVersionViewSet(
         # `request`, `format`, and `view` stay consistent.
         out = ResumeVersionSerializer(version, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="import",
+        parser_classes=[JSONParser, MultiPartParser],
+    )
+    def import_version(self, request, base_resume_id=None):
+        """Create a new ResumeVersion from a JSON document.
+
+        Two input shapes:
+          - JSON body: ``{"document": <object>, "notes"?: <str>}``
+          - multipart/form-data: a ``file`` part containing the JSON, plus
+            optional ``notes``.
+
+        Both flow into the same `import_resume_json` service so the audit
+        trail records `resume_version.imported` regardless of input shape.
+        """
+        base_resume = self._get_base_resume()
+        document, notes = self._parse_import_payload(request)
+        try:
+            version = import_resume_json(
+                actor=request.user,
+                base_resume=base_resume,
+                document=document,
+                notes=notes,
+                source="api",
+            )
+        except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        out = ResumeVersionSerializer(version, context=self.get_serializer_context())
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _parse_import_payload(request):
+        """Pull `document` + `notes` out of either a JSON body or a
+        multipart upload. Multipart wins when a `file` part is present.
+        Raises 400 with descriptive messages on bad input.
+        """
+        notes = ""
+        upload = request.FILES.get("file") if hasattr(request, "FILES") else None
+        if upload is not None:
+            try:
+                raw = upload.read().decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValidationError({"file": "File is not valid UTF-8 text."}) from exc
+            try:
+                document = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                raise ValidationError({"file": f"Invalid JSON: {exc.msg}."}) from exc
+            # `request.data` for multipart forms can carry sibling fields.
+            notes_raw = request.data.get("notes") if hasattr(request.data, "get") else None
+            if isinstance(notes_raw, str):
+                notes = notes_raw
+        else:
+            data = request.data if isinstance(request.data, dict) else {}
+            if "document" not in data:
+                raise ValidationError(
+                    {"document": "Provide a `document` JSON object or a `file` upload."}
+                )
+            document = data.get("document")
+            notes_raw = data.get("notes", "")
+            if isinstance(notes_raw, str):
+                notes = notes_raw
+
+        if not isinstance(document, dict):
+            raise ValidationError({"document": "Document must be a JSON object."})
+        return document, notes

@@ -5,6 +5,7 @@ import {
   isNotFound,
   useArchiveResume,
   useCreateResumeVersion,
+  useImportResumeVersion,
   useResume,
   useResumeVersions,
 } from "../lib/resumesHooks";
@@ -30,12 +31,17 @@ export function ResumeDetail() {
   const query = useResume(resumeId);
   const versionsQuery = useResumeVersions(resumeId);
   const createVersion = useCreateResumeVersion(resumeId ?? "");
+  const importVersion = useImportResumeVersion(resumeId ?? "");
   const archive = useArchiveResume(resumeId ?? "");
 
   const [composing, setComposing] = useState(false);
   const [documentText, setDocumentText] = useState("");
   const [versionNotes, setVersionNotes] = useState("");
   const [versionError, setVersionError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importNotes, setImportNotes] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
   const [confirmingArchive, setConfirmingArchive] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
 
@@ -125,6 +131,27 @@ export function ResumeDetail() {
     }
   }
 
+  async function handleImport(event: FormEvent) {
+    event.preventDefault();
+    setImportError(null);
+    if (!importFile) {
+      setImportError("Pick a JSON file.");
+      return;
+    }
+    const trimmedNotes = importNotes.trim();
+    try {
+      await importVersion.mutateAsync({
+        file: importFile,
+        ...(trimmedNotes ? { notes: trimmedNotes } : {}),
+      });
+      setImporting(false);
+      setImportFile(null);
+      setImportNotes("");
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Could not import.");
+    }
+  }
+
   return (
     <section className="px-6 py-6 max-w-3xl mx-auto">
       <Link
@@ -150,15 +177,25 @@ export function ResumeDetail() {
       <div className="rounded-xl border border-border-subtle bg-surface-card p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-ink">Versions</h2>
-          {!composing && (
-            <button
-              type="button"
-              onClick={() => setComposing(true)}
-              data-testid={TestIds.RESUME_DETAIL_NEW_VERSION_TOGGLE}
-              className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep"
-            >
-              New version
-            </button>
+          {!composing && !importing && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setImporting(true)}
+                data-testid={TestIds.RESUME_DETAIL_IMPORT_TOGGLE}
+                className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface"
+              >
+                Import JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => setComposing(true)}
+                data-testid={TestIds.RESUME_DETAIL_NEW_VERSION_TOGGLE}
+                className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep"
+              >
+                New version
+              </button>
+            </div>
           )}
         </div>
 
@@ -221,6 +258,68 @@ export function ResumeDetail() {
                 className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep disabled:opacity-60"
               >
                 {createVersion.isPending ? "Saving…" : "Save version"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {importing && (
+          <form
+            onSubmit={handleImport}
+            data-testid={TestIds.RESUME_DETAIL_IMPORT_FORM}
+            className="border border-border-subtle rounded-lg p-4 mb-6 space-y-3 bg-surface"
+          >
+            <label className="block">
+              <span className="text-sm text-ink-secondary mb-1 block">JSON file</span>
+              <input
+                type="file"
+                accept="application/json,.json"
+                required
+                onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+                data-testid={TestIds.RESUME_DETAIL_IMPORT_FILE}
+                className="w-full text-sm"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm text-ink-secondary mb-1 block">Notes (optional)</span>
+              <input
+                type="text"
+                value={importNotes}
+                onChange={(e) => setImportNotes(e.target.value)}
+                data-testid={TestIds.RESUME_DETAIL_IMPORT_NOTES}
+                className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
+                placeholder="Imported from LinkedIn export"
+              />
+            </label>
+            {importError && (
+              <p
+                role="alert"
+                data-testid={TestIds.RESUME_DETAIL_IMPORT_ERROR}
+                className="text-sm text-danger"
+              >
+                {importError}
+              </p>
+            )}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setImporting(false);
+                  setImportFile(null);
+                  setImportError(null);
+                }}
+                data-testid={TestIds.RESUME_DETAIL_IMPORT_CANCEL}
+                className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={importVersion.isPending}
+                data-testid={TestIds.RESUME_DETAIL_IMPORT_SUBMIT}
+                className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep disabled:opacity-60"
+              >
+                {importVersion.isPending ? "Importing…" : "Import"}
               </button>
             </div>
           </form>
