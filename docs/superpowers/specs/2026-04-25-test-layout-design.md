@@ -51,16 +51,16 @@ This is the third (and final) iteration on the layout:
 
 ### Rationale for ambiguous picks
 
-- `api_auth_test.py` → `core/tests/api/auth_test.py`: the file tests DRF endpoints under `/api/auth/...`.
-- `api_test_reset_test.py` → `core/tests/api/test_reset_test.py`: keeps the `_test_reset_test` shape because `/api/test/_reset/` is a real path; the leading `test_` is part of the URL, not a typo.
-- `healthz_test.py` → `core/tests/views/`: `HealthzView` is a Django view (not DRF).
-- `auth_bypass_test.py` → `core/tests/services/`: `is_2fa_bypass_active` is a helper, not a view or model.
-- `ensure_superuser_test.py`, `seed_e2e_user_test.py` → `services/`: management commands are services in this taxonomy.
-- `totp_qr_test.py` → `core/tests/services/`: helper module.
-- `mcp/tests/services/auth_test.py`: `mcp.auth` is a service helper used inside MCP views.
-- `tenancy/tests/services/permissions_test.py`: `tenancy.permissions` is a service module used by callers.
-- `opportunity_test.py` → `models/`: the suite covers the model invariants only. When PR G adds API tests, they land at `opportunities/tests/api/opportunity_test.py`.
-- `mathutils_test.py`: tutorial leftover. Stays under repo-wide `backend/tests/` because `slotflow.mathutils` is not part of any app.
+- `backend/tests/test_api_auth.py` → `core/tests/api/auth_test.py`: the file tests DRF endpoints under `/api/auth/...`.
+- `backend/tests/test_api_test_reset.py` → `core/tests/api/test_reset_test.py`: keeps the `test_reset` segment because `/api/test/_reset/` is a real URL path; the doubled `test` in the destination filename comes from "this is the test of the test endpoint" — not a typo.
+- `backend/tests/test_healthz.py` → `core/tests/views/healthz_test.py`: `HealthzView` is a Django view (not DRF).
+- `backend/tests/test_auth_bypass.py` → `core/tests/services/auth_bypass_test.py`: `is_2fa_bypass_active` is a helper, not a view or model.
+- `backend/tests/test_ensure_superuser.py`, `backend/tests/test_seed_e2e_user.py` → `core/tests/services/`: management commands are services in this taxonomy.
+- `backend/tests/test_totp_qr.py` → `core/tests/services/totp_qr_test.py`: helper module.
+- `backend/tests/test_mcp_auth.py` → `mcp/tests/services/auth_test.py`: `mcp.auth` is a service helper used inside MCP views.
+- `backend/tests/test_tenancy_permissions.py` → `tenancy/tests/services/permissions_test.py`: `tenancy.permissions` is a service module used by callers.
+- `backend/opportunities/tests/opportunity_tests.py` → `opportunities/tests/models/opportunity_test.py`: the suite covers model invariants only. When PR G adds API tests, they land at `opportunities/tests/api/opportunity_test.py`.
+- `backend/tests/test_mathutils.py` → `backend/tests/mathutils_test.py`: tutorial leftover. Stays under repo-wide `backend/tests/` because `slotflow.mathutils` is not part of any app.
 
 ### Pytest configuration
 
