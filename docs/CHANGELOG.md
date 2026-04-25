@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.12.0...docs-v1.13.0) (2026-04-25)
+
+
+### Features
+
+* full-stack Resume slice (BE + FE + e2e) ([#31](https://github.com/mauriciovieira/slotflow-crm/issues/31)) ([1b76eea](https://github.com/mauriciovieira/slotflow-crm/commit/1b76eea1a726716ef6f67c12aed434cc12983ee6))
+
 # [1.12.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.11.0...docs-v1.12.0) (2026-04-25)
 
 
