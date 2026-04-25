@@ -36,12 +36,14 @@ test.describe("auth flow", () => {
 
     // Post-login redirect chains /dashboard → /dashboard/opportunities (the
     // default sub-route set by the dashboard router). The dashboard header
-    // shows the signed-in username, and the opportunities stub is rendered in
-    // the outlet.
+    // shows the signed-in username, and the opportunities list view (now a
+    // real screen, not a stub) renders its empty state because resetDb just
+    // wiped the DB and seed_e2e_user only provisions the user + workspace,
+    // no opportunity rows.
     await expect(page).toHaveURL("/dashboard/opportunities");
     await expect(page.getByTestId(TestIds.SIGNED_IN_HEADER)).toBeVisible();
     await expect(page.getByTestId(TestIds.DASHBOARD_HEADER)).toContainText("Opportunities");
-    await expect(page.getByTestId(TestIds.STUB_PANEL)).toBeVisible();
+    await expect(page.getByTestId(TestIds.OPPORTUNITIES_EMPTY)).toBeVisible();
 
     // Sign out from the dashboard header. AuthGuard sees the session is gone
     // and navigates to /login; the primary submit button is our proxy for "the
