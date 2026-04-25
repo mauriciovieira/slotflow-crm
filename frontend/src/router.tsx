@@ -8,6 +8,9 @@ import { Login } from "./screens/Login";
 import { OpportunitiesList } from "./screens/OpportunitiesList";
 import { OpportunityCreate } from "./screens/OpportunityCreate";
 import { OpportunityDetail } from "./screens/OpportunityDetail";
+import { ResumeCreate } from "./screens/ResumeCreate";
+import { ResumeDetail } from "./screens/ResumeDetail";
+import { ResumesList } from "./screens/ResumesList";
 import { TwoFactorSetup } from "./screens/TwoFactorSetup";
 import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 
@@ -43,9 +46,16 @@ export const routes: RouteObject[] = [
       { index: true, element: <Navigate to="opportunities" replace /> },
       { path: "opportunities/new", element: <OpportunityCreate /> },
       { path: "opportunities/:opportunityId", element: <OpportunityDetail /> },
+      { path: "resumes/new", element: <ResumeCreate /> },
+      { path: "resumes/:resumeId", element: <ResumeDetail /> },
       ...DASHBOARD_NAV.map((item) => ({
         path: item.slug,
-        element: item.slug === "opportunities" ? <OpportunitiesList /> : <StubPanel />,
+        element:
+          item.slug === "opportunities"
+            ? <OpportunitiesList />
+            : item.slug === "resumes"
+              ? <ResumesList />
+              : <StubPanel />,
       })),
     ],
   },

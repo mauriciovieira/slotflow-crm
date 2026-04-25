@@ -69,6 +69,25 @@ def test_two_workspaces_can_share_a_resume_name():
     assert BaseResume.objects.filter(name="Senior Eng").count() == 2
 
 
+def test_archived_at_defaults_to_none():
+    ws = _workspace()
+    r = BaseResume.objects.create(workspace=ws, name="r1")
+    r.refresh_from_db()
+    assert r.archived_at is None
+
+
+def test_archived_at_round_trip():
+    from django.utils import timezone
+
+    ws = _workspace()
+    r = BaseResume.objects.create(workspace=ws, name="r1")
+    stamp = timezone.now()
+    r.archived_at = stamp
+    r.save(update_fields=["archived_at"])
+    r.refresh_from_db()
+    assert r.archived_at == stamp
+
+
 def test_versions_related_name_is_versions():
     ws = _workspace()
     r = BaseResume.objects.create(workspace=ws, name="r1")
