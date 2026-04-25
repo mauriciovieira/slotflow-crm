@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "core.middleware.correlation_id.CorrelationIdMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -133,4 +134,36 @@ CELERY_TASK_ROUTES = {
     "core.tasks.render_placeholder": {"queue": "render"},
     "core.tasks.insights_placeholder": {"queue": "insights"},
     "core.tasks.fx_placeholder": {"queue": "fx"},
+}
+
+
+# --- Logging -------------------------------------------------------------
+# `SLOTFLOW_LOG_JSON=1` flips the root console handler to the JSON formatter
+# in `core.logging.JsonFormatter`. Default is the human-readable `verbose`
+# format so dev `make dev` output stays scannable.
+SLOTFLOW_LOG_JSON = env_bool("SLOTFLOW_LOG_JSON", default=False)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "%(asctime)s %(levelname)-7s %(name)s %(message)s",
+        },
+        "json": {
+            "()": "core.logging.JsonFormatter",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json" if SLOTFLOW_LOG_JSON else "verbose",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "slotflow": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
 }

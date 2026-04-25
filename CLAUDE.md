@@ -70,6 +70,12 @@ MCP endpoints additionally require a **fresh** OTP session (default 15 minutes) 
 
 **Dev-only 2FA bypass** (`core/auth_bypass.py::is_2fa_bypass_active`): when `SLOTFLOW_BYPASS_2FA` is truthy **and** `settings.DEBUG` is True, `Require2FAMiddleware` skips the redirect and `/api/auth/me/` reports `is_verified=true`. The DEBUG gate makes the flag inert in staging/production. Exists so Playwright e2e can exercise authenticated flows without computing TOTP. Never read the env var directly — always call `is_2fa_bypass_active()`. When the bypass flag is active the backend also exposes `POST /api/test/_reset/`, which flushes the DB and re-runs `seed_e2e_user`. Playwright hits it in `beforeEach` to start each spec from a known baseline. The endpoint returns 404 when bypass is inactive (i.e., in staging/production regardless of env flag).
 
+### Logging
+
+Every request lands a stable `correlation_id` on `request.correlation_id`, on the `X-Request-ID` response header, and on a `contextvars.ContextVar` reachable via `core.middleware.correlation_id.get_correlation_id()`. The middleware reads `X-Request-ID` from upstream when it matches a safe charset (`^[A-Za-z0-9-]{8,64}$`), otherwise it mints a fresh `uuid.uuid4().hex`. The contextvar resets after each request so it does not leak between threads.
+
+`SLOTFLOW_LOG_JSON=1` switches the root console handler to `core.logging.JsonFormatter`, which emits one JSON object per record (`timestamp`, `level`, `logger`, `message`, `module`, `func`, `line`, plus `correlation_id` when set, plus any `extra={...}` kwargs). Default is the human-readable `verbose` format so `make dev` output stays scannable; staging/production turn it on.
+
 ### Celery
 
 Broker + result backend both default to `REDIS_URL`. Four named queues (`imports`, `render`, `insights`, `fx`) plus `default`. When adding a task, register it in `CELERY_TASK_ROUTES` if it belongs on a dedicated queue; otherwise it runs on `default`.
