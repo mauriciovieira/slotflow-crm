@@ -34,11 +34,24 @@ test.describe("auth flow", () => {
       "bypass flag not active on target server; set SLOTFLOW_BYPASS_2FA=1",
     ).toBe(true);
 
-    await expect(page).toHaveURL("/");
+    // Post-login redirect chains /dashboard → /dashboard/opportunities (the
+    // default sub-route set by the dashboard router). The dashboard header
+    // shows the signed-in username, and the opportunities stub is rendered in
+    // the outlet.
+    await expect(page).toHaveURL("/dashboard/opportunities");
     await expect(page.getByTestId(TestIds.SIGNED_IN_HEADER)).toBeVisible();
+    await expect(page.getByTestId(TestIds.DASHBOARD_HEADER)).toContainText("Opportunities");
+    await expect(page.getByTestId(TestIds.STUB_PANEL)).toBeVisible();
 
+    // Sign out from the dashboard header. AuthGuard sees the session is gone
+    // and navigates to /login; the primary submit button is our proxy for "the
+    // login form is back on screen."
     await page.getByTestId(TestIds.SIGN_OUT_BUTTON).click();
+    await expect(page).toHaveURL("/login");
+    await expect(page.getByTestId(TestIds.LOGIN_SUBMIT)).toBeVisible();
 
+    // Sanity: the anonymous marketing CTA still loads when we navigate back to /.
+    await page.goto("/");
     await expect(page.getByTestId(TestIds.LANDING_CTA_PRIMARY)).toBeVisible();
   });
 });

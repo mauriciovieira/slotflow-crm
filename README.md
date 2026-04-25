@@ -94,9 +94,10 @@ celery -A config worker -l info
 
 | Location    | Target                                         | Purpose                                                                          |
 | ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
-| Repo root   | `make install`                                 | `backend` `install-dev` + `frontend` `install` (requires `backend/.venv`)        |
+| Repo root   | `make install`                                 | `backend` `install-dev` + `frontend` `install` + `e2e` `install` (incl. Playwright Chromium) |
 | Repo root   | `make setup-local-db`                          | create role/database from `.env` (`POSTGRES_*`) if missing                       |
 | Repo root   | `make reset-local-db CONFIRM_RESET_LOCAL_DB=1` | drop and recreate local database from `.env` values                              |
+| Repo root   | `make setup-worktree`                          | inside a linked worktree, symlink `backend/.venv` + `node_modules` and copy `.env` from the main checkout |
 | Repo root   | `make migrate`                                 | `manage.py migrate` with repo-root `.env` loaded                                 |
 | Repo root   | `make ensure-superuser`                        | idempotent local superuser from `DJANGO_SUPERUSER_*` (see `.env.example`)        |
 | Repo root   | `make bootstrap-local`                         | `setup-local-db` + `migrate` + `ensure-superuser` (Postgres path)                |
@@ -106,6 +107,23 @@ celery -A config worker -l info
 | `backend/`  | `make install-dev`                             | `pip install -r requirements-dev.txt` (includes base + dev tools such as Honcho) |
 | `frontend/` | `make install`                                 | `npm ci`                                                                         |
 
+
+### Working in a linked worktree
+
+Feature branches live under `.worktrees/<name>/`. The `setup-worktree`
+target wires a fresh worktree to the main checkout's dependencies so you
+don't reinstall Python/Node packages per branch:
+
+```bash
+git worktree add .worktrees/feat-thing -b feat/thing main
+cd .worktrees/feat-thing
+make setup-worktree     # symlinks backend/.venv + frontend/node_modules +
+                        # e2e/node_modules, copies .env. Refuses to run
+                        # outside a linked worktree.
+```
+
+After that, `make dev`, `make test`, and `make test-e2e` behave the same
+as in the main checkout.
 
 ### Frontend and E2E
 

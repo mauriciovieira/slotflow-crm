@@ -7,6 +7,13 @@ export const TestIds = {
   SIGNED_IN_HEADER: "signed-in-header",
   SIGN_OUT_BUTTON: "sign-out-button",
   LANDING_CTA_PRIMARY: "landing-cta-primary",
+  DASHBOARD_SIDEBAR: "dashboard-sidebar",
+  DASHBOARD_HEADER: "dashboard-header",
+  NAV_OPPORTUNITIES: "nav-opportunities",
+  NAV_RESUMES: "nav-resumes",
+  NAV_INTERVIEWS: "nav-interviews",
+  NAV_SETTINGS: "nav-settings",
+  STUB_PANEL: "stub-panel",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

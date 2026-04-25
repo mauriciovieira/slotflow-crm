@@ -8,10 +8,16 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+# Symlink form used by `make setup-worktree` in linked worktrees (the
+# trailing-slash entries above only match real directories).
+backend/.venv
 backend/db.sqlite3
 
 # Node
 node_modules/
+# Symlink form used by `make setup-worktree` in linked worktrees.
+frontend/node_modules
+e2e/node_modules
 frontend/dist/
 npm-debug.log*
 yarn-debug.log*

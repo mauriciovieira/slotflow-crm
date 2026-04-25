@@ -1,11 +1,16 @@
-import { createBrowserRouter } from "react-router";
+import { Navigate, type RouteObject, createBrowserRouter } from "react-router";
 import { AuthGuard } from "./components/AuthGuard";
+import { DashboardLayout } from "./components/DashboardLayout";
+import { StubPanel } from "./components/StubPanel";
+import { DASHBOARD_NAV } from "./dashboardNav";
 import { Landing } from "./screens/Landing";
 import { Login } from "./screens/Login";
 import { TwoFactorSetup } from "./screens/TwoFactorSetup";
 import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 
-export const router = createBrowserRouter([
+// Exported so tests (and any future tooling) can build a memory router from
+// the production config instead of reconstructing the tree by hand.
+export const routes: RouteObject[] = [
   { path: "/", element: <Landing /> },
   { path: "/login", element: <Login /> },
   {
@@ -24,4 +29,21 @@ export const router = createBrowserRouter([
       </AuthGuard>
     ),
   },
-]);
+  {
+    path: "/dashboard",
+    element: (
+      <AuthGuard>
+        <DashboardLayout />
+      </AuthGuard>
+    ),
+    children: [
+      { index: true, element: <Navigate to="opportunities" replace /> },
+      ...DASHBOARD_NAV.map((item) => ({
+        path: item.slug,
+        element: <StubPanel />,
+      })),
+    ],
+  },
+];
+
+export const router = createBrowserRouter(routes);

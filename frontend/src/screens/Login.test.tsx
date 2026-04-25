@@ -46,7 +46,7 @@ describe("Login", () => {
     renderWithProviders(<Login />, {
       path: "/login",
       initialEntries: ["/login"],
-      extraRoutes: [{ path: "/", element: <p>home placeholder</p> }],
+      extraRoutes: [{ path: "/dashboard", element: <p>dashboard placeholder</p> }],
     });
 
     await user.type(screen.getByTestId(TestIds.LOGIN_USERNAME), "admin");
@@ -57,7 +57,7 @@ describe("Login", () => {
       username: "admin",
       password: "pw-test-123",
     });
-    await waitFor(() => expect(screen.getByText("home placeholder")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("dashboard placeholder")).toBeInTheDocument());
   });
 
   it("shows an error when the mutation rejects", async () => {
