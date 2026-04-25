@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.4.0...frontend-v1.5.0) (2026-04-25)
+
+
+### Features
+
+* **frontend:** dashboard shell with stub nav panels ([#15](https://github.com/mauriciovieira/slotflow-crm/issues/15)) ([0f381e8](https://github.com/mauriciovieira/slotflow-crm/commit/0f381e8570606cde87448b3aa70bf7210f241e52))
+
 # [1.4.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.3.0...frontend-v1.4.0) (2026-04-24)
 
 
