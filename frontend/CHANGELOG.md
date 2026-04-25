@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.14.0...frontend-v1.15.0) (2026-04-25)
+
+
+### Features
+
+* full-stack Resume HTML render slice (BE + FE + e2e) ([#36](https://github.com/mauriciovieira/slotflow-crm/issues/36)) ([e639893](https://github.com/mauriciovieira/slotflow-crm/commit/e639893d8c6069cbf44b795afea695949ab3fc9a))
+
 # [1.14.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.13.0...frontend-v1.14.0) (2026-04-25)
 
 
