@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.8.0...docs-v1.9.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** structured JSON logging + correlation_id middleware ([#25](https://github.com/mauriciovieira/slotflow-crm/issues/25)) ([f18520b](https://github.com/mauriciovieira/slotflow-crm/commit/f18520b12c6e0a2c4f00e512ca6053f7bc61865a))
+
 # [1.8.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.7.0...docs-v1.8.0) (2026-04-25)
 
 
