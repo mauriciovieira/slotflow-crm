@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
 import uuid
+from collections.abc import Mapping
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Max
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
@@ -25,6 +28,7 @@ from .services import (
     archive_resume,
     create_resume,
     create_resume_version,
+    import_resume_json,
 )
 
 
@@ -178,3 +182,109 @@ class ResumeVersionViewSet(
         # `request`, `format`, and `view` stay consistent.
         out = ResumeVersionSerializer(version, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
+
+    # NOTE: no `parser_classes=[...]` here. DRF's default parsers
+    # (JSONParser + FormParser + MultiPartParser) already cover both the
+    # JSON body and multipart file paths we need. Setting it on `@action`
+    # would also be a no-op: `resumes/urls.py` mounts this action via an
+    # explicit `path(..., ResumeVersionViewSet.as_view({"post": "import_version"}))`
+    # rather than the DRF router, and only router-generated routes read
+    # action-level metadata. Subclass / set on the viewset class if a
+    # tighter parser allowlist is ever needed.
+    @action(detail=False, methods=["post"], url_path="import")
+    def import_version(self, request, base_resume_id=None):
+        """Create a new ResumeVersion from a JSON document.
+
+        Two input shapes:
+          - JSON body: ``{"document": <object>, "notes"?: <str>}``
+          - multipart/form-data: a ``file`` part containing the JSON, plus
+            optional ``notes``.
+
+        Both flow into the same `import_resume_json` service so the audit
+        trail records `resume_version.imported` regardless of input shape.
+        """
+        base_resume = self._get_base_resume()
+        document, notes = self._parse_import_payload(request)
+        try:
+            version = import_resume_json(
+                actor=request.user,
+                base_resume=base_resume,
+                document=document,
+                notes=notes,
+                source="api",
+            )
+        except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        out = ResumeVersionSerializer(version, context=self.get_serializer_context())
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _parse_import_payload(request):
+        """Pull `document` + `notes` out of either a JSON body or a
+        multipart upload. Multipart wins when a `file` part is present.
+        Raises 400 with descriptive messages on bad input.
+
+        Error keys mirror the input shape so the FE can render messages
+        next to the right control: file uploads surface under `file`,
+        JSON bodies under `document`.
+        """
+        notes = ""
+        # Detect multipart up front so a missing/misnamed `file` part can
+        # surface its error under the `file` key (where the FE renders
+        # next to the picker), instead of falling through to the JSON
+        # body branch and complaining about a missing `document`.
+        content_type = (request.content_type or "").lower()
+        is_multipart = content_type.startswith("multipart/")
+        upload = request.FILES.get("file") if hasattr(request, "FILES") else None
+        if is_multipart and upload is None:
+            raise ValidationError({"file": "Multipart upload must include a `file` part."})
+        if upload is not None:
+            try:
+                raw = upload.read().decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValidationError({"file": "File is not valid UTF-8 text."}) from exc
+            try:
+                document = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                raise ValidationError({"file": f"Invalid JSON: {exc.msg}."}) from exc
+            if not isinstance(document, dict):
+                raise ValidationError({"file": "File must contain a JSON object at the top level."})
+            # `request.data` for multipart forms can carry sibling fields.
+            notes_raw = request.data.get("notes") if hasattr(request.data, "get") else None
+            if isinstance(notes_raw, str):
+                notes = notes_raw
+            return document, notes
+
+        # No multipart `file` part — fall through to the structured-body
+        # path. Use `Mapping` rather than `dict` so the check accepts
+        # any mapping-shaped payload (DRF returns `QueryDict` for
+        # form/multipart, and even though current Django subclasses
+        # `dict`, a future refactor or a third-party parser might not).
+        # The check still rejects genuinely non-mapping roots — a
+        # top-level JSON array or scalar.
+        if not isinstance(request.data, Mapping):
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        "Request body must be a JSON object, or a multipart "
+                        "upload with a `file` part."
+                    ]
+                }
+            )
+        data = request.data
+        if "document" not in data:
+            raise ValidationError(
+                {"document": "Provide a `document` JSON object or a `file` upload."}
+            )
+        document = data.get("document")
+        if "notes" in data:
+            notes_raw = data.get("notes")
+            # Don't silently drop a non-string `notes` — surface a 400 so the
+            # caller knows their payload was malformed instead of finding the
+            # field empty after the fact.
+            if not isinstance(notes_raw, str):
+                raise ValidationError({"notes": "Notes must be a string."})
+            notes = notes_raw
+        if not isinstance(document, dict):
+            raise ValidationError({"document": "Document must be a JSON object."})
+        return document, notes

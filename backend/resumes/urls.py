@@ -15,6 +15,11 @@ urlpatterns = [
         name="resume-versions",
     ),
     path(
+        "<base_resume_id>/versions/import/",
+        ResumeVersionViewSet.as_view({"post": "import_version"}),
+        name="resume-versions-import",
+    ),
+    path(
         "<base_resume_id>/versions/<pk>/",
         ResumeVersionViewSet.as_view({"get": "retrieve"}),
         name="resume-version-detail",

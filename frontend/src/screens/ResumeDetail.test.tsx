@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../test-utils/renderWithProviders";
@@ -16,6 +16,7 @@ vi.mock("../lib/resumesHooks", async () => {
     useResume: vi.fn(),
     useResumeVersions: vi.fn(),
     useCreateResumeVersion: vi.fn(),
+    useImportResumeVersion: vi.fn(),
     useArchiveResume: vi.fn(),
   };
 });
@@ -23,6 +24,7 @@ vi.mock("../lib/resumesHooks", async () => {
 import {
   useArchiveResume,
   useCreateResumeVersion,
+  useImportResumeVersion,
   useResume,
   useResumeVersions,
 } from "../lib/resumesHooks";
@@ -30,6 +32,7 @@ import {
 const useResumeMock = vi.mocked(useResume);
 const useResumeVersionsMock = vi.mocked(useResumeVersions);
 const useCreateResumeVersionMock = vi.mocked(useCreateResumeVersion);
+const useImportResumeVersionMock = vi.mocked(useImportResumeVersion);
 const useArchiveResumeMock = vi.mocked(useArchiveResume);
 
 const FIXED_ID = "11111111-1111-1111-1111-111111111111";
@@ -115,6 +118,17 @@ function setArchive(mutateAsync: ReturnType<typeof vi.fn>, isPending = false) {
   } as unknown as ReturnType<typeof useArchiveResume>);
 }
 
+function setImportVersion(mutateAsync: ReturnType<typeof vi.fn>, isPending = false) {
+  useImportResumeVersionMock.mockReturnValue({
+    mutateAsync,
+    isPending,
+    isError: false,
+    isSuccess: false,
+    isIdle: !isPending,
+    status: isPending ? "pending" : "idle",
+  } as unknown as ReturnType<typeof useImportResumeVersion>);
+}
+
 function renderDetail() {
   return renderWithProviders(<ResumeDetail />, {
     path: "/dashboard/resumes/:resumeId",
@@ -124,6 +138,10 @@ function renderDetail() {
 }
 
 describe("ResumeDetail", () => {
+  // The import hook is new and not exercised by every test; default it to
+  // a no-op so existing cases don't need to set it explicitly. Tests that
+  // need to assert calls override via `setImportVersion`.
+  beforeEach(() => setImportVersion(vi.fn()));
   it("renders the loading state", () => {
     setResumeQuery({ isLoading: true, status: "pending" });
     setVersionsQuery({ data: [], isSuccess: true, status: "success" });
@@ -269,5 +287,85 @@ describe("ResumeDetail", () => {
     await user.click(screen.getByTestId(TestIds.RESUME_DETAIL_ARCHIVE_CONFIRM));
     await screen.findByText("list placeholder");
     expect(archive).toHaveBeenCalledTimes(1);
+  });
+
+  it("import form posts a File on submit", async () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({ data: [], isSuccess: true, status: "success" });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    const mutateAsync = vi.fn().mockResolvedValueOnce(versionFixture());
+    setImportVersion(mutateAsync);
+    const user = userEvent.setup();
+    renderDetail();
+
+    await user.click(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_TOGGLE));
+    const file = new File(['{"basics":{"name":"Alice"}}'], "resume.json", {
+      type: "application/json",
+    });
+    await user.upload(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_FILE), file);
+    fireEvent.submit(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_FORM));
+
+    await vi.waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    const [arg] = mutateAsync.mock.calls[0];
+    expect(arg.file).toBe(file);
+  });
+
+  it("import form blocks submit with no file picked", async () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({ data: [], isSuccess: true, status: "success" });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    const mutateAsync = vi.fn();
+    setImportVersion(mutateAsync);
+    const user = userEvent.setup();
+    renderDetail();
+
+    await user.click(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_TOGGLE));
+    fireEvent.submit(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_FORM));
+
+    expect(await screen.findByTestId(TestIds.RESUME_DETAIL_IMPORT_ERROR)).toHaveTextContent(
+      /pick a json file/i,
+    );
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("import form disables Cancel while the mutation is pending", async () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({ data: [], isSuccess: true, status: "success" });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    // Mark the import as pending so we can assert Cancel is locked.
+    setImportVersion(vi.fn(), true);
+    const user = userEvent.setup();
+    renderDetail();
+
+    await user.click(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_TOGGLE));
+    const cancel = screen.getByTestId(
+      TestIds.RESUME_DETAIL_IMPORT_CANCEL,
+    ) as HTMLButtonElement;
+    expect(cancel.disabled).toBe(true);
+  });
+
+  it("import form renders inline error when API rejects", async () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({ data: [], isSuccess: true, status: "success" });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    const mutateAsync = vi
+      .fn()
+      .mockRejectedValueOnce(Object.assign(new Error("file: Invalid JSON."), { name: "ApiError" }));
+    setImportVersion(mutateAsync);
+    const user = userEvent.setup();
+    renderDetail();
+
+    await user.click(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_TOGGLE));
+    const file = new File(["not json"], "resume.json");
+    await user.upload(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_FILE), file);
+    fireEvent.submit(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_FORM));
+
+    expect(await screen.findByTestId(TestIds.RESUME_DETAIL_IMPORT_ERROR)).toHaveTextContent(
+      /invalid json/i,
+    );
   });
 });

@@ -114,6 +114,34 @@ export function useCreateResumeVersion(baseId: string) {
   });
 }
 
+export interface ResumeVersionImportFilePayload {
+  file: File;
+  notes?: string;
+}
+
+export function useImportResumeVersion(baseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: ResumeVersionImportFilePayload) => {
+      // multipart/form-data: do NOT set Content-Type — the browser fills in
+      // the multipart boundary header. `apiFetch` skips its default
+      // application/json header when the body isn't a string.
+      const fd = new FormData();
+      fd.append("file", payload.file);
+      if (payload.notes) fd.append("notes", payload.notes);
+      return apiFetch<ResumeVersion>(`/api/resumes/${baseId}/versions/import/`, {
+        method: "POST",
+        body: fd,
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: resumeVersionsKey(baseId) });
+      qc.invalidateQueries({ queryKey: resumeKey(baseId) });
+      return qc.invalidateQueries({ queryKey: RESUMES_KEY });
+    },
+  });
+}
+
 export function isNotFound(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
 }
