@@ -216,15 +216,18 @@ export function Settings() {
       <div className="rounded-xl border border-border-subtle bg-surface-card p-6">
         <h2 className="text-base font-semibold text-ink mb-4">FX rates</h2>
 
-        {workspaceId ? (
-          <UpsertForm workspaceId={workspaceId} />
-        ) : (
-          <p className="text-sm text-ink-secondary mb-4">
+        {!workspaceId ? (
+          // No active workspace yet: the FX hook is disabled, so we never
+          // render the loading / empty / table branches in this state —
+          // they'd misleadingly imply "this workspace has no rates" when
+          // the truth is "no workspace selected".
+          <p className="text-sm text-ink-secondary">
             Pick an active workspace to manage FX rates.
           </p>
-        )}
-
-        {fxQuery.isLoading ? (
+        ) : (
+          <>
+            <UpsertForm workspaceId={workspaceId} />
+            {fxQuery.isLoading ? (
           <p
             data-testid={TestIds.SETTINGS_FX_LOADING}
             className="text-sm text-ink-secondary"
@@ -280,6 +283,8 @@ export function Settings() {
               ))}
             </tbody>
           </table>
+        )}
+          </>
         )}
       </div>
     </section>

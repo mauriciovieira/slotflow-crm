@@ -146,6 +146,71 @@ def test_upsert_rejects_zero_or_negative_rate():
         )
 
 
+def test_upsert_task_source_does_not_overwrite_existing_manual_row():
+    """A manual override must survive the next Celery refresh tick.
+    The task path silently keeps the existing row when source=manual."""
+    user = _user()
+    ws = _ws()
+    _join(user, ws)
+
+    # User pins a manual rate.
+    manual = upsert_fx_rate(
+        actor=user,
+        workspace=ws,
+        currency="EUR",
+        base_currency="USD",
+        rate="1.10",
+        date=dt.date(2026, 1, 1),
+        source="manual",
+    )
+
+    # Celery refresher tries to write today's automated rate at the same key.
+    obj = upsert_fx_rate(
+        actor=None,
+        workspace=ws,
+        currency="EUR",
+        base_currency="USD",
+        rate="0.92",
+        date=dt.date(2026, 1, 1),
+        source="task",
+    )
+
+    # Returns the existing manual row untouched.
+    assert obj.pk == manual.pk
+    assert obj.source == "manual"
+    assert obj.rate == Decimal("1.10")
+    assert FxRate.objects.count() == 1
+
+
+def test_upsert_manual_overrides_existing_task_row():
+    """A user's manual upsert always wins over a previously-task rate."""
+    ws = _ws()
+    user = _user()
+    _join(user, ws)
+    upsert_fx_rate(
+        actor=None,
+        workspace=ws,
+        currency="EUR",
+        base_currency="USD",
+        rate="0.92",
+        date=dt.date(2026, 1, 1),
+        source="task",
+    )
+
+    obj = upsert_fx_rate(
+        actor=user,
+        workspace=ws,
+        currency="EUR",
+        base_currency="USD",
+        rate="1.10",
+        date=dt.date(2026, 1, 1),
+        source="manual",
+    )
+    assert obj.source == "manual"
+    assert obj.rate == Decimal("1.10")
+    assert FxRate.objects.count() == 1
+
+
 def test_upsert_writes_audit_event():
     from audit.models import AuditEvent
 

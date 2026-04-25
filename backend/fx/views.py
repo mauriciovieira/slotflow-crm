@@ -25,9 +25,12 @@ class FxRateViewSet(viewsets.ModelViewSet):
     """Workspace-scoped CRUD-ish for FxRate.
 
     No PATCH: rates are immutable per-day; an "edit" is an upsert with
-    the same key. The API allows DELETE on any row; the UI hides the
-    button on non-manual rows so an automated rate isn't silently
-    dropped through the FE.
+    the same key. DELETE is restricted to `source="manual"` rows by the
+    `delete_fx_rate` service — `task`/`seed` rows return 400 with a
+    `non_field_errors` message. The UI hides the delete button on
+    non-manual rows; the server-side check defends against stale tabs.
+    Operators dropping a bad automated row do it through the Django
+    admin.
     """
 
     serializer_class = FxRateSerializer

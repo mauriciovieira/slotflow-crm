@@ -81,6 +81,21 @@ def upsert_fx_rate(
     rate_decimal = rate if isinstance(rate, Decimal) else Decimal(str(rate))
     if rate_decimal <= 0:
         raise ValueError("FX rate must be > 0.")
+
+    # Preserve a manual override against the Celery refresher: if a row
+    # already exists at source="manual" and the incoming write is from a
+    # non-manual source (`task`/`seed`), keep the manual rate intact —
+    # otherwise the refresher would silently revert the user's change on
+    # the next tick. Manual writes always win.
+    existing = FxRate.objects.filter(
+        workspace=workspace,
+        currency=currency.upper(),
+        base_currency=base_currency.upper(),
+        date=date,
+    ).first()
+    if existing is not None and existing.source == "manual" and source != "manual":
+        return existing
+
     obj, created = FxRate.objects.update_or_create(
         workspace=workspace,
         currency=currency.upper(),
