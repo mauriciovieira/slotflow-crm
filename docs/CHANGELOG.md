@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.16.0...docs-v1.17.0) (2026-04-25)
+
+
+### Features
+
+* full-stack JSON Resume import slice (BE + FE + e2e) ([#35](https://github.com/mauriciovieira/slotflow-crm/issues/35)) ([404396c](https://github.com/mauriciovieira/slotflow-crm/commit/404396c87111ddb1c0f30990451b87f4f15bb7a1))
+
 # [1.16.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.15.0...docs-v1.16.0) (2026-04-25)
 
 
