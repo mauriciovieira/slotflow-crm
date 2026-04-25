@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.9.0...docs-v1.10.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** add AuditEvent model + write_audit_event service ([#26](https://github.com/mauriciovieira/slotflow-crm/issues/26)) ([bb3250e](https://github.com/mauriciovieira/slotflow-crm/commit/bb3250e0f3c1e1144ace9c8651f82d1cd2522725)), closes [#25](https://github.com/mauriciovieira/slotflow-crm/issues/25)
+
 # [1.9.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.8.0...docs-v1.9.0) (2026-04-25)
 
 
