@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.4.0...e2e-v1.5.0) (2026-04-25)
+
+
+### Features
+
+* **backend, frontend:** workspace switcher API + dashboard dropdown ([ac010cb](https://github.com/mauriciovieira/slotflow-crm/commit/ac010cbd33a41891bdcc281dba872c3cf9c6c02e))
+
 # [1.4.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.3.0...e2e-v1.4.0) (2026-04-25)
 
 
