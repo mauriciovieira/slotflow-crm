@@ -109,6 +109,12 @@ class OpportunityViewSet(viewsets.ModelViewSet):
                     "company": serializer.validated_data["company"],
                     "stage": serializer.validated_data.get("stage", OpportunityStage.APPLIED),
                     "notes": serializer.validated_data.get("notes", ""),
+                    "expected_total_compensation": serializer.validated_data.get(
+                        "expected_total_compensation"
+                    ),
+                    "compensation_currency": serializer.validated_data.get(
+                        "compensation_currency", ""
+                    ),
                 },
             )
         except WorkspaceWriteForbidden as exc:

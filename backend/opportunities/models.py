@@ -32,6 +32,13 @@ class Opportunity(TimeStampedModel):
         default=OpportunityStage.APPLIED,
     )
     notes = models.TextField(blank=True, default="")
+    # Optional comp metadata. Both nullable so existing rows (created
+    # before the Insights track) keep working unchanged. The snapshot
+    # service skips rows where either field is missing.
+    expected_total_compensation = models.DecimalField(
+        max_digits=14, decimal_places=2, null=True, blank=True
+    )
+    compensation_currency = models.CharField(max_length=8, blank=True, default="")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
