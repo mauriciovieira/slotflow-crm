@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Prefetch
+from django.db.models import Max
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, viewsets
@@ -36,22 +36,21 @@ class BaseResumeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Prefetch the *whole* version queryset (newest first via Meta.ordering).
-        # `BaseResumeSerializer.get_latest_version` reads from the prefetched
-        # cache, so a list of N resumes only triggers 2 queries (resumes +
-        # versions), not N+1 — without this, every row would trigger a
-        # `obj.versions.first()` SELECT on serialization.
-        latest_versions = Prefetch(
-            "versions",
-            queryset=ResumeVersion.objects.select_related("created_by"),
-        )
+        # Annotate the newest `version_number` directly on the row instead of
+        # fetching version objects. The list serializer only renders
+        # `{"version_number": N}` for `latest_version`, so this stays:
+        #   - O(1) queries (one SELECT with a JOIN+aggregate, no prefetch),
+        #   - O(1) per-row memory (a single int column, not a JSONField row),
+        #   - Correct under arbitrary version-history depth.
+        # Detail-level consumers needing the full version object should hit
+        # `/api/resumes/<id>/versions/` directly.
         qs = (
             BaseResume.objects.filter(
                 workspace__memberships__user=user,
                 archived_at__isnull=True,
             )
+            .annotate(_latest_version_number=Max("versions__version_number"))
             .select_related("workspace", "created_by")
-            .prefetch_related(latest_versions)
             .distinct()
         )
         workspace = self.request.query_params.get("workspace")

@@ -71,6 +71,22 @@ describe("ResumeCreate", () => {
     expect(error).toHaveTextContent(/name taken/i);
   });
 
+  it("blocks whitespace-only name client-side without calling the mutation", async () => {
+    const mutateAsync = vi.fn();
+    setMutation(mutateAsync);
+    const user = userEvent.setup();
+    renderWithProviders(<ResumeCreate />);
+
+    // Native `required` rejects empty strings but accepts spaces; the
+    // component must catch that itself and surface a friendly error.
+    await user.type(screen.getByTestId(TestIds.RESUME_CREATE_NAME), "   ");
+    fireEvent.submit(screen.getByTestId(TestIds.RESUME_CREATE_FORM));
+
+    const error = await screen.findByTestId(TestIds.RESUME_CREATE_ERROR);
+    expect(error).toHaveTextContent(/name is required/i);
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
   it("cancel navigates to list without calling the mutation", async () => {
     const mutateAsync = vi.fn();
     setMutation(mutateAsync);

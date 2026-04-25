@@ -92,18 +92,19 @@ class BaseResumeSerializer(serializers.ModelSerializer):
         return _render_user(obj.created_by)
 
     def get_latest_version(self, obj: BaseResume):
-        # Prefer the prefetched cache so list endpoints stay O(1) queries (the
-        # viewset prefetches `versions` ordered by Meta.ordering = -version_number,
-        # so element 0 is the newest). Fall back to a row fetch when the
-        # serializer is used outside the viewset (e.g. service-layer tests).
-        prefetched = getattr(obj, "_prefetched_objects_cache", {}).get("versions")
-        if prefetched is not None:
-            latest = prefetched[0] if prefetched else None
-        else:
-            latest = obj.versions.first()
+        # The viewset annotates `_latest_version_number` (a single integer
+        # column) onto each row to avoid loading version objects on list
+        # endpoints — version histories can grow long, so we never prefetch
+        # the whole set just to render the number. Service-layer / non-API
+        # callers without the annotation fall back to a single `.first()`
+        # against the prefetch ordering.
+        annotated_number = getattr(obj, "_latest_version_number", None)
+        if annotated_number is not None:
+            return {"version_number": annotated_number}
+        latest = obj.versions.first()
         if latest is None:
             return None
-        return ResumeVersionSerializer(latest, context=self.context).data
+        return {"version_number": latest.version_number}
 
     def validate_workspace(self, workspace: Workspace | None) -> Workspace | None:
         if workspace is None:

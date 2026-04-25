@@ -13,6 +13,10 @@ export interface ResumeVersion {
   updated_at: string;
 }
 
+export interface ResumeLatestVersionSummary {
+  version_number: number;
+}
+
 export interface BaseResume {
   id: string;
   workspace: string;
@@ -21,7 +25,11 @@ export interface BaseResume {
   created_at: string;
   updated_at: string;
   archived_at: string | null;
-  latest_version: ResumeVersion | null;
+  // The list/detail endpoints render this as a minimal shape — only the
+  // version number — so list payloads don't carry full version documents.
+  // Hit `/api/resumes/<id>/versions/` (via `useResumeVersions`) for the
+  // full set when needed.
+  latest_version: ResumeLatestVersionSummary | null;
 }
 
 export interface ResumeCreatePayload {
@@ -98,7 +106,10 @@ export function useCreateResumeVersion(baseId: string) {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: resumeVersionsKey(baseId) });
-      return qc.invalidateQueries({ queryKey: resumeKey(baseId) });
+      qc.invalidateQueries({ queryKey: resumeKey(baseId) });
+      // The list endpoint embeds `latest_version`, so a new version on any
+      // resume must invalidate the list cache too.
+      return qc.invalidateQueries({ queryKey: RESUMES_KEY });
     },
   });
 }

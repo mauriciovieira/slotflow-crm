@@ -95,17 +95,7 @@ describe("ResumesList", () => {
         makeResume({
           id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
           name: "Backend",
-          latest_version: {
-            id: "v1",
-            base_resume: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            version_number: 3,
-            document: {},
-            document_hash: "x",
-            notes: "",
-            created_by: null,
-            created_at: "2026-04-25T00:00:00Z",
-            updated_at: "2026-04-25T00:00:00Z",
-          },
+          latest_version: { version_number: 3 },
         }),
         makeResume({
           id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",

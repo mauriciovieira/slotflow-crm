@@ -325,6 +325,41 @@ def test_list_does_not_n_plus_one_on_latest_version():
     assert len(ctx) <= 8, [q["sql"] for q in ctx]
 
 
+def test_list_does_not_load_full_version_history_into_memory():
+    """The list endpoint renders `latest_version` from a `Max` annotation,
+    not from a prefetched version queryset, so memory cost stays flat as the
+    version count per resume grows."""
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    r = BaseResume.objects.create(workspace=ws, name="r1")
+    for n in range(1, 6):
+        ResumeVersion.objects.create(
+            base_resume=r,
+            version_number=n,
+            document={"n": n},
+            document_hash=f"{n:0>64}",
+        )
+
+    response = _client(alice).get("/api/resumes/")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["latest_version"] == {"version_number": 5}
+
+    # The annotation should land on the queryset row directly, with no
+    # prefetched-objects cache attached — proving we do not pull version
+    # records into memory just to render the latest number.
+    from resumes.views import BaseResumeViewSet
+
+    factory_request = type("Req", (), {"user": alice, "query_params": {}, "_request": None})()
+    view = BaseResumeViewSet()
+    view.request = factory_request
+    instance = view.get_queryset().get(pk=r.pk)
+    assert getattr(instance, "_latest_version_number", None) == 5
+    assert getattr(instance, "_prefetched_objects_cache", {}) == {}
+
+
 def test_latest_version_field_renders_when_a_version_exists():
     alice = _user()
     ws = _workspace()
@@ -337,4 +372,6 @@ def test_latest_version_field_renders_when_a_version_exists():
     response = _client(alice).get(f"/api/resumes/{r.pk}/")
     assert response.status_code == 200
     body = response.json()
-    assert body["latest_version"]["version_number"] == 1
+    # `latest_version` is intentionally minimal — only the number, not the
+    # full document/hash — so list payloads stay small.
+    assert body["latest_version"] == {"version_number": 1}

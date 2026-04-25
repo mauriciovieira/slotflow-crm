@@ -12,8 +12,16 @@ export function ResumeCreate() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSubmitError(null);
+    const trimmed = name.trim();
+    if (!trimmed) {
+      // Block whitespace-only submissions client-side. The native `required`
+      // attribute only rejects fully empty inputs; trimming here gives a
+      // friendlier error than the API's generic 400 detail.
+      setSubmitError("Name is required.");
+      return;
+    }
     try {
-      const created = await create.mutateAsync({ name: name.trim() });
+      const created = await create.mutateAsync({ name: trimmed });
       navigate(`/dashboard/resumes/${created.id}`, { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not create resume.");
