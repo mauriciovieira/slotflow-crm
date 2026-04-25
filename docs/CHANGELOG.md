@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.2.0...docs-v1.3.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** expose Opportunity DRF API ([#18](https://github.com/mauriciovieira/slotflow-crm/issues/18)) ([9dcb150](https://github.com/mauriciovieira/slotflow-crm/commit/9dcb150d550492e7c29e964403529372256549b6))
+
 # [1.2.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.1.0...docs-v1.2.0) (2026-04-25)
 
 
