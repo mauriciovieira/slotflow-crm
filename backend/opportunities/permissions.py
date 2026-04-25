@@ -22,7 +22,15 @@ class IsWorkspaceMember(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        membership = get_membership(request.user, obj.workspace)
+        # Resolve the workspace from `obj` directly when present, otherwise
+        # walk through `opportunity` (this lets `OpportunityResume` rows
+        # share the same permission class without subclassing).
+        workspace = getattr(obj, "workspace", None)
+        if workspace is None:
+            workspace = getattr(getattr(obj, "opportunity", None), "workspace", None)
+        if workspace is None:
+            return False
+        membership = get_membership(request.user, workspace)
         if membership is None:
             return False
         if request.method in WRITE_METHODS:

@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { OpportunityResumesSection } from "../components/OpportunityResumesSection";
 import {
   STAGES,
   STAGE_LABEL,
@@ -240,6 +241,8 @@ export function OpportunityDetail() {
           </div>
         )}
       </div>
+
+      {opportunityId && <OpportunityResumesSection opportunityId={opportunityId} />}
     </section>
   );
 }

@@ -45,6 +45,10 @@ urlpatterns = [
     path("2fa/verify/", TwoFactorVerifyView.as_view(), name="two_factor_verify"),
     path("api/auth/", include(api_auth_patterns)),
     path("api/opportunities/", include("opportunities.urls")),
+    path(
+        "api/opportunity-resumes/",
+        include("opportunities.opportunity_resume_urls"),
+    ),
     path("api/resumes/", include("resumes.urls")),
     path("api/interview-cycles/", include("interviews.urls")),
     path("api/mcp/tokens/", include("mcp.tokens.urls")),
