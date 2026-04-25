@@ -84,23 +84,26 @@ Register both with sensible inlines:
 
 `backend/resumes/tests/models/`:
 
-- `base_resume_test.py` — six cases:
+- `base_resume_test.py` — seven cases:
   1. Minimum-field create + defaults.
   2. `__str__` formats as `f"{name} (workspace.slug)"`.
   3. Workspace cascade.
   4. Creator delete nullifies `created_by`.
   5. Default ordering newest-first.
-  6. Two BaseResumes in different workspaces don't conflict.
+  6. Two BaseResumes in different workspaces don't conflict on name.
+  7. The `versions` reverse accessor returns the related `ResumeVersion` rows.
 
-- `resume_version_test.py` — six cases:
+- `resume_version_test.py` — eight cases:
   1. Minimum-field create with `version_number=1`, asserts `document` round-trips a small dict.
   2. `(base_resume, version_number)` unique — second create with same pair raises `IntegrityError`.
   3. Different bases can each have their own `version_number=1`.
   4. Cascade on base resume delete.
   5. Default ordering inside one base is newest-version first.
   6. Creator delete nullifies `created_by`.
+  7. `__str__` formats as `f"{base.pk} v{version_number}"`.
+  8. `version_number=0` is rejected by the `check_constraint`.
 
-Twelve new tests, ~111 → 123.
+Fifteen new tests, 111 → 126.
 
 ## Risk & rollback
 

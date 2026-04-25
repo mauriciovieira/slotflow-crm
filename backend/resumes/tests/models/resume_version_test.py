@@ -93,3 +93,9 @@ def test_str_includes_base_id_and_version_number():
     base = _base()
     v = _version(base, version_number=3)
     assert str(v) == f"{base.pk} v3"
+
+
+def test_version_number_zero_rejected_by_check_constraint():
+    base = _base()
+    with pytest.raises(IntegrityError):
+        _version(base, version_number=0)

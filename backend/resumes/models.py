@@ -28,7 +28,6 @@ class BaseResume(TimeStampedModel):
 
     class Meta:
         ordering = ("-created_at",)
-        indexes = [models.Index(fields=("workspace",))]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.workspace.slug})"
@@ -68,8 +67,13 @@ class ResumeVersion(TimeStampedModel):
                 fields=("base_resume", "version_number"),
                 name="uniq_resume_version_number",
             ),
+            # 1-indexed by contract; enforce at the DB layer so the importer
+            # can't silently land a `version_number=0` row.
+            models.CheckConstraint(
+                condition=models.Q(version_number__gte=1),
+                name="resume_version_number_gte_1",
+            ),
         ]
-        indexes = [models.Index(fields=("base_resume", "version_number"))]
 
     def __str__(self) -> str:
         return f"{self.base_resume_id} v{self.version_number}"
