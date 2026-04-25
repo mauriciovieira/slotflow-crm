@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from django.db import transaction
 from django.utils import timezone
 
+from audit.services import write_audit_event
 from tenancy.models import MembershipRole
 from tenancy.permissions import get_membership
 
@@ -45,7 +46,7 @@ def create_opportunity(
         raise WorkspaceWriteForbidden(
             f"User {actor.pk} has read-only membership in workspace {workspace.pk}."
         )
-    return Opportunity.objects.create(
+    opportunity = Opportunity.objects.create(
         workspace=workspace,
         title=payload["title"],
         company=payload["company"],
@@ -53,6 +54,18 @@ def create_opportunity(
         notes=payload.get("notes", ""),
         created_by=actor,
     )
+    write_audit_event(
+        actor=actor,
+        action="opportunity.created",
+        entity=opportunity,
+        workspace=workspace,
+        metadata={
+            "title": opportunity.title,
+            "company": opportunity.company,
+            "stage": opportunity.stage,
+        },
+    )
+    return opportunity
 
 
 @transaction.atomic
@@ -67,7 +80,20 @@ def archive_opportunity(*, actor: AbstractBaseUser, opportunity: Opportunity) ->
         raise WorkspaceWriteForbidden(
             f"User {actor.pk} has read-only membership in workspace {opportunity.workspace_id}."
         )
-    if opportunity.archived_at is None:
+    already_archived = opportunity.archived_at is not None
+    if not already_archived:
         opportunity.archived_at = timezone.now()
         opportunity.save(update_fields=["archived_at", "updated_at"])
+    write_audit_event(
+        actor=actor,
+        action="opportunity.archived",
+        entity=opportunity,
+        workspace=opportunity.workspace,
+        metadata={
+            "title": opportunity.title,
+            "company": opportunity.company,
+            "stage": opportunity.stage,
+            "already_archived": already_archived,
+        },
+    )
     return opportunity
