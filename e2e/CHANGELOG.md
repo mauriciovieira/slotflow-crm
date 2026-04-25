@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.3.0...e2e-v1.4.0) (2026-04-25)
+
+
+### Features
+
+* **frontend:** opportunity detail/edit + archive ([#22](https://github.com/mauriciovieira/slotflow-crm/issues/22)) ([5767b3f](https://github.com/mauriciovieira/slotflow-crm/commit/5767b3f5da8e8059821580c87b15dfec36f61597)), closes [#20](https://github.com/mauriciovieira/slotflow-crm/issues/20)
+
 # [1.3.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.2.0...e2e-v1.3.0) (2026-04-25)
 
 
