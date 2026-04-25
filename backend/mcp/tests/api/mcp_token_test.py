@@ -126,7 +126,12 @@ def test_list_renders_expires_at_iso(fresh_2fa):
     response = _client(user).get("/api/mcp/tokens/")
     body = response.json()
     assert len(body) == 1
-    # Must be a parseable ISO timestamp in the future.
+    # Use Django's parse_datetime so we accept both `+00:00` and `Z`
+    # offsets — `datetime.fromisoformat` chokes on `Z` on older Pythons,
+    # which DRF can emit depending on its renderer version.
+    from django.utils.dateparse import parse_datetime
+
     assert body[0]["expires_at"]
-    parsed = timezone.datetime.fromisoformat(body[0]["expires_at"])
+    parsed = parse_datetime(body[0]["expires_at"])
+    assert parsed is not None
     assert parsed > timezone.now() - timezone.timedelta(seconds=5)

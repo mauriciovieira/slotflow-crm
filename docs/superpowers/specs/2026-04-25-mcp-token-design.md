@@ -21,7 +21,7 @@ Give a 2FA-verified user a way to mint short-lived, revocable, hashed-at-rest to
 
 ### Model
 
-`backend/mcp/tokens/models.py` (new package — see below):
+`backend/mcp/models.py` (Django auto-discovers models from each app's `models.py`, so the row lives at the app root; the rest of the token machinery — services, serializers, views, urls — lives in the `backend/mcp/tokens/` sub-package described below):
 
 ```py
 class McpToken(TimeStampedModel):
@@ -49,14 +49,14 @@ Choices:
 - **`revoked_at` instead of a `revoked: bool`** so we can audit when revocation happened and let the resolver detect race conditions.
 - **`last_used_at`** is nullable. The future MCP transport will bump it; for now it stays NULL.
 
-`tokens/` is a package under `mcp/` because PR D's CLAUDE.md note said tokens live there. We make it a real Python package: `mcp/tokens/__init__.py`, `mcp/tokens/models.py`, `mcp/tokens/services.py`, `mcp/tokens/views.py`, `mcp/tokens/serializers.py`, `mcp/tokens/urls.py`. The existing `mcp/models.py` stays empty (default Django scaffold).
+`tokens/` is a package under `mcp/` for the rest of the token machinery: `mcp/tokens/__init__.py`, `mcp/tokens/services.py`, `mcp/tokens/views.py`, `mcp/tokens/serializers.py`, `mcp/tokens/urls.py`. The `McpToken` model itself lives at `mcp/models.py` so Django's per-app models discovery picks it up without app-config gymnastics.
 
 ### Service layer
 
 `backend/mcp/tokens/services.py`:
 
-- `generate_token(...) -> tuple[McpToken, str]` — creates a row, returns `(record, plaintext)`. The plaintext is the only place the secret is exposed; callers must hand it back to the user immediately and discard.
-- `revoke_token(actor: User, token_id: UUID) -> McpToken` — sets `revoked_at` on the row if `actor` owns it; raises `PermissionDenied` otherwise. Idempotent.
+- `issue_token(*, actor, name, ttl_days=DEFAULT_TTL_DAYS) -> tuple[McpToken, str]` — creates a row, returns `(record, plaintext)`. The plaintext is the only place the secret is exposed; callers must hand it back to the user immediately and discard. Raises `ValueError` when `ttl_days` is outside `[1, MAX_TTL_DAYS]`.
+- `revoke_token(*, actor, token_id) -> McpToken` — sets `revoked_at` on the row if `actor` owns it; raises `PermissionDenied` otherwise. Idempotent (no timestamp re-bump on second call). Raises `McpToken.DoesNotExist` for missing ids.
 
 Plaintext format: `"slt_" + secrets.token_urlsafe(32)` — `slt_` for "slotflow", urlsafe so it lives cleanly in a header. ~43 chars total.
 
@@ -93,7 +93,7 @@ path("api/mcp/tokens/", include("mcp.tokens.urls")),
 All under `backend/mcp/tests/`:
 
 - `models/mcp_token_test.py` — defaults, `__str__`, cascade on user delete, `revoked_at` nullable, ordering.
-- `services/mcp_token_test.py` — `generate_token` returns a row with hash + last_four + a plaintext that hashes to the stored value; idempotent `revoke_token`; non-owner `revoke_token` raises.
+- `services/mcp_token_test.py` — `issue_token` returns a row with hash + last_four + a plaintext that hashes to the stored value; default TTL = 30 days; out-of-range `ttl_days` raises `ValueError`; idempotent `revoke_token`; non-owner `revoke_token` raises `PermissionDenied`; missing-id `revoke_token` raises `McpToken.DoesNotExist`.
 - `api/mcp_token_test.py` — DRF tests for the three endpoints:
   - 401 anon on issue/list/revoke
   - 403 when 2FA not fresh (patch `mcp.auth.require_fresh_2fa_session` to raise)
