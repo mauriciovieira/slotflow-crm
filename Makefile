@@ -6,7 +6,7 @@ help:
 	@echo "Setup & local DB"
 	@echo "  install              Backend venv + dev deps; frontend + e2e npm install; Playwright Chromium"
 	@echo "  setup-local-db       Create Postgres role/database from .env"
-	@echo "  reset-local-db       Drop and recreate DB (needs CONFIRM_RESET_LOCAL_DB=1)"
+	@echo "  reset-local-db       Drop+recreate DB, then migrate + ensure-superuser (needs CONFIRM_RESET_LOCAL_DB=1)"
 	@echo "  setup-worktree       Symlink .venv + node_modules, copy .env from main repo (worktree only)"
 	@echo "  bootstrap-local      setup-local-db + migrate + ensure-superuser"
 	@echo ""
@@ -78,6 +78,8 @@ reset-local-db:
 	  psql postgres -c "DROP DATABASE \"$$DB_NAME\" WITH (FORCE);" || :; \
 	psql postgres -c "CREATE DATABASE \"$$DB_NAME\" OWNER \"$$DB_USER\";"; \
 	echo "Local database reset done."
+	@$(MAKE) migrate
+	@$(MAKE) ensure-superuser
 
 migrations:
 	@test -f .env || (echo >&2 "Missing .env. Run: cp .env.example .env"; exit 1)
