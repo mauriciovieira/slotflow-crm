@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-25 — Root 1.5.0
+
+- [Release notes](CHANGELOG.md)
+
 ## 2026-04-25 — Docs 1.9.0
 
 - [Release notes](docs/CHANGELOG.md)
