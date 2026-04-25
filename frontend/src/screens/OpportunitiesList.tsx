@@ -1,20 +1,16 @@
 import { Link } from "react-router";
-import { type Opportunity, type OpportunityStage, useOpportunities } from "../lib/opportunitiesHooks";
+import {
+  STAGE_LABEL,
+  type Opportunity,
+  type OpportunityStage,
+  useOpportunities,
+} from "../lib/opportunitiesHooks";
 import { TestIds } from "../testIds";
 
 const NEW_OPPORTUNITY_HREF = "/dashboard/opportunities/new";
 
 const NEW_BUTTON_PRIMARY =
   "inline-flex items-center rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep";
-
-const STAGE_LABEL: Record<OpportunityStage, string> = {
-  applied: "Applied",
-  screening: "Screening",
-  interview: "Interview",
-  offer: "Offer",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
-};
 
 const STAGE_PILL: Record<OpportunityStage, string> = {
   applied: "bg-brand-light text-ink-secondary",
@@ -129,7 +125,14 @@ export function OpportunitiesList() {
               data-testid={`${TestIds.OPPORTUNITIES_ROW}-${opp.id}`}
               className="border-t border-border-subtle hover:bg-surface-card"
             >
-              <td className="px-4 py-3 text-ink font-medium">{opp.title}</td>
+              <td className="px-4 py-3 text-ink font-medium">
+                <Link
+                  to={`/dashboard/opportunities/${opp.id}`}
+                  className="text-ink hover:text-brand-deep hover:underline"
+                >
+                  {opp.title}
+                </Link>
+              </td>
               <td className="px-4 py-3 text-ink-secondary">{opp.company}</td>
               <td className="px-4 py-3">
                 <StagePill stage={opp.stage} />
