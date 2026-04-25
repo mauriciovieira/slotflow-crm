@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import uuid
+
 from django.db.models import Q
 from rest_framework import permissions, status, viewsets
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from tenancy.models import Membership
@@ -10,7 +12,11 @@ from tenancy.models import Membership
 from .models import Opportunity, OpportunityStage
 from .permissions import IsWorkspaceMember
 from .serializers import OpportunitySerializer
-from .services import archive_opportunity, create_opportunity
+from .services import (
+    WorkspaceWriteForbidden,
+    archive_opportunity,
+    create_opportunity,
+)
 
 
 class OpportunityViewSet(viewsets.ModelViewSet):
@@ -40,6 +46,10 @@ class OpportunityViewSet(viewsets.ModelViewSet):
 
         workspace = self.request.query_params.get("workspace")
         if workspace:
+            try:
+                uuid.UUID(workspace)
+            except (ValueError, AttributeError, TypeError) as exc:
+                raise ValidationError({"workspace": "Invalid workspace UUID."}) from exc
             qs = qs.filter(workspace_id=workspace)
 
         q = self.request.query_params.get("q")
@@ -72,16 +82,21 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         workspace = self._resolve_active_workspace(serializer.validated_data)
-        opp = create_opportunity(
-            actor=request.user,
-            workspace=workspace,
-            payload={
-                "title": serializer.validated_data["title"],
-                "company": serializer.validated_data["company"],
-                "stage": serializer.validated_data.get("stage", OpportunityStage.APPLIED),
-                "notes": serializer.validated_data.get("notes", ""),
-            },
-        )
+        try:
+            opp = create_opportunity(
+                actor=request.user,
+                workspace=workspace,
+                payload={
+                    "title": serializer.validated_data["title"],
+                    "company": serializer.validated_data["company"],
+                    "stage": serializer.validated_data.get("stage", OpportunityStage.APPLIED),
+                    "notes": serializer.validated_data.get("notes", ""),
+                },
+            )
+        except WorkspaceWriteForbidden as exc:
+            # Read-only viewers can't create — match the role-gated 403 the
+            # `IsWorkspaceMember` permission already returns for PATCH/DELETE.
+            raise PermissionDenied(str(exc)) from exc
         out = self.get_serializer(opp)
         return Response(out.data, status=status.HTTP_201_CREATED)
 

@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from opportunities.models import Opportunity, OpportunityStage
 from opportunities.services import (
     WorkspaceMembershipRequired,
+    WorkspaceWriteForbidden,
     archive_opportunity,
     create_opportunity,
 )
@@ -55,6 +56,32 @@ def test_create_opportunity_rejects_non_member_workspace():
         create_opportunity(actor=user, workspace=ws, payload={"title": "x", "company": "y"})
 
     assert Opportunity.objects.count() == 0
+
+
+def test_create_opportunity_rejects_viewer_role():
+    user = _user()
+    ws = _workspace()
+    _join(user, ws, role=MembershipRole.VIEWER)
+
+    with pytest.raises(WorkspaceWriteForbidden):
+        create_opportunity(actor=user, workspace=ws, payload={"title": "x", "company": "y"})
+
+    assert Opportunity.objects.count() == 0
+
+
+def test_archive_opportunity_rejects_viewer_role():
+    owner = _user("owner")
+    viewer = _user("viewer")
+    ws = _workspace()
+    _join(owner, ws, role=MembershipRole.OWNER)
+    _join(viewer, ws, role=MembershipRole.VIEWER)
+    opp = create_opportunity(actor=owner, workspace=ws, payload={"title": "x", "company": "y"})
+
+    with pytest.raises(WorkspaceWriteForbidden):
+        archive_opportunity(actor=viewer, opportunity=opp)
+
+    opp.refresh_from_db()
+    assert opp.archived_at is None
 
 
 def test_archive_opportunity_sets_archived_at_and_is_idempotent():

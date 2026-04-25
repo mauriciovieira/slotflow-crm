@@ -180,6 +180,61 @@ def test_create_requires_workspace_when_user_has_multiple_memberships():
     assert "workspace" in response.json()
 
 
+def test_create_forbidden_for_viewer_membership():
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws, role=MembershipRole.VIEWER)
+
+    response = _client(alice).post(
+        "/api/opportunities/",
+        data={"workspace": str(ws.pk), "title": "Staff Eng", "company": "Acme"},
+        format="json",
+    )
+    assert response.status_code == 403
+    assert Opportunity.objects.count() == 0
+
+
+def test_list_filter_invalid_workspace_uuid_returns_400():
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+
+    response = _client(alice).get("/api/opportunities/?workspace=not-a-uuid")
+    assert response.status_code == 400
+    assert "workspace" in response.json()
+
+
+def test_patch_cannot_change_workspace():
+    alice = _user()
+    ws_a = _workspace("ws-a")
+    ws_b = _workspace("ws-b")
+    _join(alice, ws_a)
+    _join(alice, ws_b)
+    opp = Opportunity.objects.create(workspace=ws_a, title="x", company="y")
+
+    response = _client(alice).patch(
+        f"/api/opportunities/{opp.pk}/",
+        data={"workspace": str(ws_b.pk), "notes": "moved"},
+        format="json",
+    )
+    assert response.status_code == 200
+    opp.refresh_from_db()
+    # Workspace is write-once: PATCH must not move the row across workspaces.
+    assert opp.workspace_id == ws_a.pk
+    assert opp.notes == "moved"
+
+
+def test_retrieve_serializes_null_created_by():
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    opp = Opportunity.objects.create(workspace=ws, title="x", company="y", created_by=None)
+
+    response = _client(alice).get(f"/api/opportunities/{opp.pk}/")
+    assert response.status_code == 200
+    assert response.json()["created_by"] is None
+
+
 # -- Retrieve / 404 cross-workspace ------------------------------------------
 
 

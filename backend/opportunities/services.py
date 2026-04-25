@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from django.db import transaction
 from django.utils import timezone
 
+from tenancy.models import MembershipRole
 from tenancy.permissions import get_membership
 
 from .models import Opportunity
@@ -15,8 +16,15 @@ if TYPE_CHECKING:
     from tenancy.models import Workspace
 
 
+WRITE_ROLES = frozenset({MembershipRole.OWNER, MembershipRole.MEMBER})
+
+
 class WorkspaceMembershipRequired(PermissionError):
     """Raised when an actor tries to act on a workspace they don't belong to."""
+
+
+class WorkspaceWriteForbidden(PermissionError):
+    """Raised when an actor has a membership but the role is read-only (viewer)."""
 
 
 @transaction.atomic
@@ -28,9 +36,14 @@ def create_opportunity(
     The actor must have an active Membership in the workspace; otherwise
     `WorkspaceMembershipRequired` is raised before any DB write.
     """
-    if get_membership(actor, workspace) is None:
+    membership = get_membership(actor, workspace)
+    if membership is None:
         raise WorkspaceMembershipRequired(
             f"User {actor.pk} has no membership in workspace {workspace.pk}."
+        )
+    if membership.role not in WRITE_ROLES:
+        raise WorkspaceWriteForbidden(
+            f"User {actor.pk} has read-only membership in workspace {workspace.pk}."
         )
     return Opportunity.objects.create(
         workspace=workspace,
@@ -45,9 +58,14 @@ def create_opportunity(
 @transaction.atomic
 def archive_opportunity(*, actor: AbstractBaseUser, opportunity: Opportunity) -> Opportunity:
     """Soft-delete: set `archived_at` to now if not already set; idempotent."""
-    if get_membership(actor, opportunity.workspace) is None:
+    membership = get_membership(actor, opportunity.workspace)
+    if membership is None:
         raise WorkspaceMembershipRequired(
             f"User {actor.pk} has no membership in workspace {opportunity.workspace_id}."
+        )
+    if membership.role not in WRITE_ROLES:
+        raise WorkspaceWriteForbidden(
+            f"User {actor.pk} has read-only membership in workspace {opportunity.workspace_id}."
         )
     if opportunity.archived_at is None:
         opportunity.archived_at = timezone.now()

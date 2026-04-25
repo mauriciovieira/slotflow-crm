@@ -8,20 +8,12 @@ from tenancy.permissions import get_membership
 from .models import Opportunity
 
 
-class _CreatedBySerializer(serializers.Serializer):
-    """Public-safe slice of the user creator: id + username only."""
-
-    id = serializers.IntegerField()
-    username = serializers.CharField()
-
-
 class OpportunitySerializer(serializers.ModelSerializer):
     workspace = serializers.PrimaryKeyRelatedField(
         queryset=Workspace.objects.all(),
         required=False,
-        allow_null=True,
     )
-    created_by = _CreatedBySerializer(read_only=True)
+    created_by = serializers.SerializerMethodField()
 
     class Meta:
         model = Opportunity
@@ -39,7 +31,27 @@ class OpportunitySerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id", "created_by", "created_at", "updated_at", "archived_at")
 
-    def validate_workspace(self, workspace: Workspace) -> Workspace:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Workspace is write-once: setting it on PATCH would let a caller
+        # "move" an opportunity into a workspace where they have a different
+        # (or no) write role, bypassing the object-level permission check that
+        # ran against the *current* workspace. Lock the field on update.
+        if self.instance is not None:
+            self.fields["workspace"].read_only = True
+
+    def get_created_by(self, obj: Opportunity):
+        """Render `created_by` as `{id, username}` or `None` when the user has
+        been deleted (`SET_NULL` on the FK). Avoids serializer crashes on
+        missing creators."""
+        creator = obj.created_by
+        if creator is None:
+            return None
+        return {"id": creator.pk, "username": creator.username}
+
+    def validate_workspace(self, workspace: Workspace | None) -> Workspace | None:
+        if workspace is None:
+            return None
         request = self.context.get("request")
         actor = getattr(request, "user", None)
         if actor is None or not actor.is_authenticated:
