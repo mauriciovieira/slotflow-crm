@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.11.0...docs-v1.12.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** add Interview models (InterviewCycle + InterviewStep) ([#29](https://github.com/mauriciovieira/slotflow-crm/issues/29)) ([36993e4](https://github.com/mauriciovieira/slotflow-crm/commit/36993e4d47901d305e3441b5fdc181477efd0026)), closes [#24](https://github.com/mauriciovieira/slotflow-crm/issues/24)
+
 # [1.11.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.10.0...docs-v1.11.0) (2026-04-25)
 
 
