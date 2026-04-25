@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.13.0...docs-v1.14.0) (2026-04-25)
+
+
+### Features
+
+* full-stack Interview Cycle slice (BE + FE + e2e) ([#32](https://github.com/mauriciovieira/slotflow-crm/issues/32)) ([2524b41](https://github.com/mauriciovieira/slotflow-crm/commit/2524b41406c54388947e1c47f27b4222e097e547))
+
 # [1.13.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.12.0...docs-v1.13.0) (2026-04-25)
 
 
