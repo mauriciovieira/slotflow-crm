@@ -173,17 +173,9 @@ def import_resume_json(
     actor, role gates are skipped (the operator already has shell access).
     """
     if actor is not None:
-        # API / authenticated import path — same gate as create_resume_version,
-        # which we delegate to below.
-        membership = get_membership(actor, base_resume.workspace)
-        if membership is None:
-            raise WorkspaceMembershipRequired(
-                f"User {actor.pk} has no membership in workspace {base_resume.workspace_id}."
-            )
-        if membership.role not in WRITE_ROLES:
-            raise WorkspaceWriteForbidden(
-                f"User {actor.pk} has read-only membership in workspace {base_resume.workspace_id}."
-            )
+        # API / authenticated import path — `create_resume_version` already
+        # runs membership + write-role gates, so we just delegate. No
+        # pre-check (it would duplicate the same query the delegate runs).
         version = create_resume_version(
             actor=actor, base_resume=base_resume, document=document, notes=notes
         )

@@ -37,7 +37,7 @@ Add `import_version` action to `ResumeVersionViewSet`:
 - Multipart path reads the file's bytes, decodes UTF-8, parses JSON. Errors surface as 400 with descriptive messages.
 - The action delegates to `import_resume_json` with `actor=request.user`.
 
-URL: derived automatically from the action.
+URL: an explicit `path("<base_resume_id>/versions/import/", ...)` entry in `resumes/urls.py` mounts the action under the existing nested URL layout (the action lives on `ResumeVersionViewSet` but the surrounding routes are wired by hand, not via the DRF router default).
 
 **Audit:** `resume_version.imported` with metadata `{base_resume_id, version_number, document_hash, source: "api"|"command"}`.
 
@@ -50,9 +50,9 @@ URL: derived automatically from the action.
 
 **Hooks (`lib/resumesHooks.ts`)**
 
-Add `useImportResumeVersion(baseId)` — POST to `/api/resumes/<baseId>/versions/import/`. Two call shapes:
-- JSON-body form: `{ document, notes? }` → standard `apiFetch`.
-- File form: pass a `File` → constructs a `FormData` with `file` and `notes?` fields, posts as `multipart/form-data`. The hook abstracts both behind a single signature: `mutate({ source: "json" | "file", document?: unknown, file?: File, notes?: string })`.
+Add `useImportResumeVersion(baseId)` — POST to `/api/resumes/<baseId>/versions/import/`. The shipped hook is file-only: `mutate({ file, notes? })` constructs a `FormData` with `file` and optional `notes` and posts as `multipart/form-data` (the browser supplies the multipart Content-Type; `apiFetch` skips its default JSON header for non-string bodies).
+
+The endpoint also accepts a JSON body shape (`{ document, notes? }`) for non-browser callers (CLI, future scripts), but the dashboard uses the file path; a unified `{ source }` signature wasn't needed and was dropped.
 
 Cache invalidations match `useCreateResumeVersion`.
 

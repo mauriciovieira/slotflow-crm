@@ -105,6 +105,28 @@ def test_invalid_json_in_file_returns_400():
     assert "file" in response.json()
 
 
+def test_multipart_file_with_non_object_json_returns_400_under_file_key():
+    """When the upload parses but isn't a JSON object (e.g. a list), the
+    error must surface under `file` (not `document`) so the FE can render
+    it next to the file picker."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    base = _base(ws)
+    upload = io.BytesIO(json.dumps([1, 2, 3]).encode("utf-8"))
+    upload.name = "resume.json"
+
+    response = _client(alice).post(
+        _import_url(base.pk),
+        data={"file": upload},
+        format="multipart",
+    )
+    assert response.status_code == 400
+    body = response.json()
+    assert "file" in body
+    assert "document" not in body
+
+
 def test_non_object_document_returns_400():
     alice = _user()
     ws = _ws()

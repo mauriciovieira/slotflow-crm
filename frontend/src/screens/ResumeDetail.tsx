@@ -181,7 +181,15 @@ export function ResumeDetail() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setImporting(true)}
+                onClick={() => {
+                  // Reset form state on every open so a previously-cancelled
+                  // attempt doesn't leak stale notes / file / error into the
+                  // next session.
+                  setImportFile(null);
+                  setImportNotes("");
+                  setImportError(null);
+                  setImporting(true);
+                }}
                 data-testid={TestIds.RESUME_DETAIL_IMPORT_TOGGLE}
                 className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface"
               >
@@ -306,6 +314,7 @@ export function ResumeDetail() {
                 onClick={() => {
                   setImporting(false);
                   setImportFile(null);
+                  setImportNotes("");
                   setImportError(null);
                 }}
                 data-testid={TestIds.RESUME_DETAIL_IMPORT_CANCEL}

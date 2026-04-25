@@ -220,6 +220,10 @@ class ResumeVersionViewSet(
         """Pull `document` + `notes` out of either a JSON body or a
         multipart upload. Multipart wins when a `file` part is present.
         Raises 400 with descriptive messages on bad input.
+
+        Error keys mirror the input shape so the FE can render messages
+        next to the right control: file uploads surface under `file`,
+        JSON bodies under `document`.
         """
         notes = ""
         upload = request.FILES.get("file") if hasattr(request, "FILES") else None
@@ -232,21 +236,23 @@ class ResumeVersionViewSet(
                 document = json.loads(raw)
             except json.JSONDecodeError as exc:
                 raise ValidationError({"file": f"Invalid JSON: {exc.msg}."}) from exc
+            if not isinstance(document, dict):
+                raise ValidationError({"file": "File must contain a JSON object at the top level."})
             # `request.data` for multipart forms can carry sibling fields.
             notes_raw = request.data.get("notes") if hasattr(request.data, "get") else None
             if isinstance(notes_raw, str):
                 notes = notes_raw
-        else:
-            data = request.data if isinstance(request.data, dict) else {}
-            if "document" not in data:
-                raise ValidationError(
-                    {"document": "Provide a `document` JSON object or a `file` upload."}
-                )
-            document = data.get("document")
-            notes_raw = data.get("notes", "")
-            if isinstance(notes_raw, str):
-                notes = notes_raw
+            return document, notes
 
+        data = request.data if isinstance(request.data, dict) else {}
+        if "document" not in data:
+            raise ValidationError(
+                {"document": "Provide a `document` JSON object or a `file` upload."}
+            )
+        document = data.get("document")
+        notes_raw = data.get("notes", "")
+        if isinstance(notes_raw, str):
+            notes = notes_raw
         if not isinstance(document, dict):
             raise ValidationError({"document": "Document must be a JSON object."})
         return document, notes
