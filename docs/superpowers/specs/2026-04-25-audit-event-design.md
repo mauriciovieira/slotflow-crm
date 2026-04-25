@@ -74,7 +74,7 @@ Behavior:
 - `actor_repr`: `f"{actor.username} (id={actor.pk})"` if actor present; `"<system>"` otherwise. Frozen at write so deletes don't reshape history.
 - `entity_type` / `entity_id`: derived from `type(entity).__module__` + class name and `entity.pk`. Both empty strings when `entity is None`.
 - `correlation_id`: caller-provided OR pulled from `core.middleware.correlation_id.get_correlation_id()` when None. (Belt-and-braces: the middleware contextvar already covers the HTTP path; the explicit kwarg is for Celery and CLI callers that don't see the request.)
-- Always wraps in `transaction.atomic` so the audit row lands in the same DB transaction as the action it describes; if the caller is already in a transaction, this is a no-op.
+- Wraps the insert in `transaction.atomic`. This only gives rollback coupling when the caller performs the business action and calls `write_audit_event(...)` inside the same outer `atomic()` block (or from a service that is already atomic). If no outer transaction is open, the helper just creates and commits its own transaction for the audit row alone — so callers that need "audit row goes away if the action rolls back" must wrap both in their own `atomic()`.
 
 ### Admin (`backend/audit/admin.py`)
 

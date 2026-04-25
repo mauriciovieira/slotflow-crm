@@ -58,6 +58,15 @@ def test_missing_correlation_id_falls_back_to_contextvar():
     assert event.correlation_id == "req-from-ctx"
 
 
+def test_correlation_id_is_clamped_to_model_max_length():
+    """A caller passing a >64 char id is clamped instead of crashing the txn."""
+    long_id = "x" * 200
+    event = write_audit_event(actor=None, action="x", correlation_id=long_id)
+    event.refresh_from_db()
+    assert len(event.correlation_id) == 64
+    assert event.correlation_id == "x" * 64
+
+
 def test_metadata_defaults_to_empty_dict_and_round_trips():
     no_meta = write_audit_event(actor=None, action="a")
     assert no_meta.metadata == {}

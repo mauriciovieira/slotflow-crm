@@ -50,7 +50,12 @@ def write_audit_event(
     Celery / CLI callers pass an explicit value or leave it blank.
     """
     entity_type, entity_id = _entity_descriptor(entity)
-    cid = correlation_id if correlation_id is not None else (get_correlation_id() or "")
+    raw_cid = correlation_id if correlation_id is not None else (get_correlation_id() or "")
+    # Clamp to the model's `max_length=64` so a buggy caller passing a longer
+    # value can't blow up the surrounding transaction at save time. The
+    # middleware already enforces `[A-Za-z0-9-]{8,64}`; this guard is defense
+    # in depth for service-layer / Celery callers that build the id by hand.
+    cid = raw_cid[:64]
     return AuditEvent.objects.create(
         actor=actor,
         actor_repr=_format_actor(actor),
