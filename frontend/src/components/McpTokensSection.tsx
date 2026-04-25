@@ -72,6 +72,7 @@ function PlaintextPanel({
           readOnly
           value={issued.plaintext}
           onFocus={(e) => e.currentTarget.select()}
+          aria-label="Issued MCP token"
           // The plaintext value is a one-shot secret. Opt out of every
           // browser-side capture path that could surface it later
           // (autocomplete history, password managers, autocorrect /

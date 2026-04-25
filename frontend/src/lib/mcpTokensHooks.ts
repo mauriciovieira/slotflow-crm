@@ -53,10 +53,12 @@ export function useRevokeMcpToken(tokenId: string) {
     mutationFn: () =>
       apiFetch<null>(`/api/mcp/tokens/${tokenId}/`, { method: "DELETE" }),
     onSuccess: () => {
-      // Optimistically stamp `revoked_at` on the cached row so the UI
-      // flips to the dimmed / no-revoke-button state immediately. Without
-      // this, the row briefly stays "active" until the GET refetch lands
-      // and a second revoke click would race the refetch.
+      // Post-success cache update: once the DELETE returns, stamp
+      // `revoked_at` on the cached row so the UI flips to the dimmed /
+      // no-revoke-button state before the GET refetch lands. Without
+      // this the row briefly stays "active" and a second revoke click
+      // could race the refetch. (Not optimistic — onMutate would be —
+      // but cheaper and avoids rolling back on a server-side reject.)
       qc.setQueryData<McpToken[]>(MCP_TOKENS_KEY, (prev) => {
         if (!prev) return prev;
         const now = new Date().toISOString();
