@@ -39,6 +39,9 @@ export const TestIds = {
   OPPORTUNITY_DETAIL_ERROR: "opportunity-detail-error",
   OPPORTUNITY_DETAIL_NOT_FOUND: "opportunity-detail-not-found",
   OPPORTUNITY_DETAIL_BACK: "opportunity-detail-back",
+  WORKSPACE_SWITCHER: "workspace-switcher",
+  WORKSPACE_SWITCHER_LABEL: "workspace-switcher-label",
+  WORKSPACE_SWITCHER_SELECT: "workspace-switcher-select",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

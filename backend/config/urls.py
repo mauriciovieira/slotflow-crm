@@ -6,6 +6,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 import identity.admin  # noqa: F401  # OTP admin site/User admin side effects
+from core.api_active_workspace import active_workspace_view
 from core.api_auth import (
     login_view,
     logout_view,
@@ -31,6 +32,7 @@ api_auth_patterns = [
     path("2fa/setup/", totp_setup_view, name="api_auth_totp_setup"),
     path("2fa/confirm/", totp_confirm_view, name="api_auth_totp_confirm"),
     path("2fa/verify/", totp_verify_view, name="api_auth_totp_verify"),
+    path("active-workspace/", active_workspace_view, name="api_auth_active_workspace"),
 ]
 
 urlpatterns = [

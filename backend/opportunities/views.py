@@ -59,9 +59,26 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         return qs
 
     def _resolve_active_workspace(self, validated_data):
-        """Pick the workspace for create. Body wins; otherwise sole membership."""
+        """Pick the workspace for create.
+
+        Resolution order:
+        1. Request body explicitly carries `workspace`.
+        2. Session-bound active workspace (set via
+           `POST /api/auth/active-workspace/`). Validated against the user's
+           memberships every read, so a stale session value can't promote.
+        3. The user's sole membership when they have exactly one (the legacy
+           single-membership shortcut).
+        4. Otherwise 400 — multi-membership user with nothing picked yet.
+        """
+        from tenancy.active_workspace import get_active_workspace
+
         if "workspace" in validated_data and validated_data["workspace"] is not None:
             return validated_data["workspace"]
+
+        active = get_active_workspace(self.request._request)
+        if active is not None:
+            return active
+
         memberships = list(
             Membership.objects.filter(user=self.request.user).select_related("workspace")[:2]
         )
@@ -72,7 +89,8 @@ class OpportunityViewSet(viewsets.ModelViewSet):
                 {
                     "workspace": (
                         "You belong to multiple workspaces; specify `workspace` "
-                        "in the request body."
+                        "in the request body or pick one via "
+                        "/api/auth/active-workspace/."
                     )
                 }
             )
