@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { OpportunitiesList } from "./OpportunitiesList";
@@ -34,7 +35,11 @@ function setQuery(state: Partial<QueryReturn>) {
 
 function Providers({ children }: { children: ReactNode }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
+  );
 }
 
 function makeOpportunity(overrides: Partial<Opportunity> = {}): Opportunity {
@@ -133,5 +138,32 @@ describe("OpportunitiesList", () => {
     const row = screen.getByTestId("opportunities-row-11111111-1111-1111-1111-111111111111");
     const pill = row.querySelector("span");
     expect(pill?.className).toMatch(/bg-brand\b/);
+  });
+
+  it("renders a New opportunity button in the empty state pointing at /dashboard/opportunities/new", () => {
+    setQuery({ data: [], isSuccess: true, status: "success" });
+    render(
+      <Providers>
+        <OpportunitiesList />
+      </Providers>,
+    );
+    const link = screen.getByTestId(TestIds.OPPORTUNITIES_NEW_BUTTON);
+    expect(link).toBeVisible();
+    expect(link.getAttribute("href")).toBe("/dashboard/opportunities/new");
+  });
+
+  it("renders a New opportunity button in the populated state pointing at /dashboard/opportunities/new", () => {
+    setQuery({
+      data: [makeOpportunity()],
+      isSuccess: true,
+      status: "success",
+    });
+    render(
+      <Providers>
+        <OpportunitiesList />
+      </Providers>,
+    );
+    const link = screen.getByTestId(TestIds.OPPORTUNITIES_NEW_BUTTON);
+    expect(link.getAttribute("href")).toBe("/dashboard/opportunities/new");
   });
 });
