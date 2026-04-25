@@ -61,7 +61,7 @@ function PlaintextPanel({
   return (
     <div
       data-testid={TestIds.SETTINGS_MCP_PLAINTEXT_PANEL}
-      className="mb-4 rounded-lg border border-warning bg-warning-light p-4"
+      className="mb-4 rounded-lg border border-amber bg-amber/10 p-4"
     >
       <p className="text-sm font-medium text-ink mb-2">
         Copy this token now — it won&apos;t be shown again.
