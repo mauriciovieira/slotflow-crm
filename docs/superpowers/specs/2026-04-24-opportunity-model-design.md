@@ -103,7 +103,7 @@ The migration runs as part of the existing `make migrate` target; no Makefile ch
 
 ## Testing strategy
 
-`backend/opportunities/tests/opportunity_tests.py` — pytest-django. No new fixtures: create workspace + user inline.
+`backend/opportunities/tests/models/opportunity_test.py` — pytest-django. No new fixtures: create workspace + user inline.
 
 1. **Minimal create + round-trip.** `Opportunity.objects.create(workspace=w, title="Staff Eng", company="Acme")` succeeds. Defaults: stage == APPLIED, notes == "", created_by is None, created_at/updated_at are set.
 2. **`__str__` formatting** — returns `"Staff Eng @ Acme"`.
