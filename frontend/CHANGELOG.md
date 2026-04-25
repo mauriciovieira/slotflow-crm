@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.17.0...frontend-v1.18.0) (2026-04-25)
+
+
+### Features
+
+* **frontend:** MCP tokens UI in settings — issue, plaintext-once, revoke ([#39](https://github.com/mauriciovieira/slotflow-crm/issues/39)) ([d44c74c](https://github.com/mauriciovieira/slotflow-crm/commit/d44c74cb90136a4e3540fecd4ab5a0a543b0b803))
+
 # [1.17.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.16.0...frontend-v1.17.0) (2026-04-25)
 
 
