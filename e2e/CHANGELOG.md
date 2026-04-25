@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.7.0...e2e-v1.8.0) (2026-04-25)
+
+
+### Features
+
+* full-stack Opportunity ↔ Resume link slice (BE + FE + e2e) ([#33](https://github.com/mauriciovieira/slotflow-crm/issues/33)) ([1b9994a](https://github.com/mauriciovieira/slotflow-crm/commit/1b9994abc4aeed3f423306a4a4a0ebfb4500c6df))
+
 # [1.7.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.6.0...e2e-v1.7.0) (2026-04-25)
 
 
