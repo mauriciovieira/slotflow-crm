@@ -39,9 +39,9 @@ export function useUpdateOpportunity(id: string) { ... }
 export function useArchiveOpportunity(id: string) { ... }
 ```
 
-- `useOpportunity` — `useQuery({ queryKey: ["opportunities", "detail", id], queryFn: () => apiFetch<Opportunity>(`/api/opportunities/${id}/`) })`. Disables itself on missing id.
-- `useUpdateOpportunity` — `useMutation` PATCHing `/api/opportunities/${id}/` with `OpportunityUpdatePayload` (a Partial-shaped subset). On success invalidate both the detail key for that id and the list key.
-- `useArchiveOpportunity` — `useMutation` DELETEing the same URL. The API responds 204; the helper invalidates the list and removes the detail key.
+- `useOpportunity(id: string | undefined)` — `useQuery` against `["opportunities", "detail", id]` calling `apiFetch<Opportunity>(`/api/opportunities/${id}/`)`. The hook accepts `undefined` so the detail screen can pass the raw `useParams()` value; when no id is present the query disables itself via the `enabled` flag (no fetch, no cache write).
+- `useUpdateOpportunity(id)` — `useMutation` PATCHing `/api/opportunities/${id}/` with `OpportunityUpdatePayload` (a Partial-shaped subset). On success it primes the detail cache directly with the response (`qc.setQueryData(opportunityKey(id), data)`) and invalidates the list. The detail key is not invalidated because the response is the freshest value we have.
+- `useArchiveOpportunity(id)` — `useMutation` DELETEing the same URL. The API responds 204; the helper removes the detail key from the cache and invalidates the list.
 
 A new `OpportunityUpdatePayload` interface mirrors the writable fields the serializer accepts on PATCH: `title`, `company`, `stage`, `notes`. `workspace` stays out — the backend made it write-once after PR #18.
 
@@ -50,9 +50,9 @@ A new `OpportunityUpdatePayload` interface mirrors the writable fields the seria
 `frontend/src/screens/OpportunityDetail.tsx` (new):
 
 - Reads `:opportunityId` via `useParams()`.
-- Renders four states: loading, error (404 → "Not found", anything else → "Could not load"), populated, archived (renders read-only with a "This opportunity is archived" banner).
-- Populated state: edit form pre-filled with the row. Submit calls `useUpdateOpportunity(id).mutateAsync(...)`. Stage `<select>` pulls labels from a small `STAGES` array imported from `opportunitiesHooks.ts`.
-- Archive: a button below the form. Clicking shows a small inline confirm ("Archive this opportunity?") with a Yes / Cancel pair. Yes calls `useArchiveOpportunity(id).mutateAsync()` then `navigate("/dashboard/opportunities")`. Cancel hides the confirm.
+- Renders four states: loading, not found (404 → "That opportunity doesn't exist"), error (anything else → "Could not load" + retry), populated. There is no separate "archived" render state — the backend's `OpportunityViewSet.get_queryset` filters out `archived_at__isnull=True`, so direct access to an archived id resolves as 404 and the user sees the not-found branch.
+- Populated state: edit form pre-filled with the row. Submit calls `useUpdateOpportunity(id).mutateAsync(...)`. Stage `<select>` pulls labels from `STAGE_LABEL` and the option order from `STAGES`, both exported from `opportunitiesHooks.ts`.
+- Archive: a button below the form. Clicking shows a small inline confirm ("Archive this opportunity?") with a Yes / Cancel pair. Yes calls `useArchiveOpportunity(id).mutateAsync()` then `navigate("/dashboard/opportunities")`. Cancel hides the confirm. After archive, the detail route is no longer reachable for that id (the next GET 404s) — by design.
 - Back link: `<Link to="/dashboard/opportunities">`.
 - Test ids: `OPPORTUNITY_DETAIL_FORM`, `OPPORTUNITY_DETAIL_TITLE`, `OPPORTUNITY_DETAIL_COMPANY`, `OPPORTUNITY_DETAIL_STAGE`, `OPPORTUNITY_DETAIL_NOTES`, `OPPORTUNITY_DETAIL_SAVE`, `OPPORTUNITY_DETAIL_ARCHIVE`, `OPPORTUNITY_DETAIL_ARCHIVE_CONFIRM`, `OPPORTUNITY_DETAIL_ARCHIVE_CANCEL`, `OPPORTUNITY_DETAIL_ERROR`, `OPPORTUNITY_DETAIL_NOT_FOUND`, `OPPORTUNITY_DETAIL_BACK`.
 
