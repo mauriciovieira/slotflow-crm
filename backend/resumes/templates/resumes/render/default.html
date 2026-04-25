@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>{{ document.basics.name|default:"Resume" }}</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; max-width: 720px; margin: 2.5rem auto; padding: 0 1.5rem; line-height: 1.45; }
+  h1 { font-size: 1.875rem; margin: 0 0 0.25rem; }
+  h2 { font-size: 1.125rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 1.75rem 0 0.5rem; color: #444; }
+  .subtitle { color: #555; margin-bottom: 0.5rem; }
+  .contact { color: #666; font-size: 0.875rem; margin-bottom: 1rem; }
+  .contact a { color: inherit; }
+  .summary { margin-bottom: 1rem; }
+  .item { margin-bottom: 1rem; }
+  .item-head { font-weight: 600; }
+  .item-meta { color: #666; font-size: 0.875rem; }
+  .item-summary { margin-top: 0.25rem; }
+  .skills { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; list-style: none; }
+  .skills li { background: #f1f1f1; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.875rem; }
+</style>
+</head>
+<body>
+{% with basics=document.basics %}
+<header>
+  <h1>{{ basics.name|default:"" }}</h1>
+  {% if basics.label %}<p class="subtitle">{{ basics.label }}</p>{% endif %}
+  {% if basics.email or basics.phone %}
+  <p class="contact">
+    {% if basics.email %}{{ basics.email }}{% endif %}{% if basics.email and basics.phone %} · {% endif %}{% if basics.phone %}{{ basics.phone }}{% endif %}
+  </p>
+  {% endif %}
+  {% if basics.summary %}<p class="summary">{{ basics.summary }}</p>{% endif %}
+</header>
+{% endwith %}
+
+{% if document.work %}
+<section>
+  <h2>Experience</h2>
+  {% for job in document.work %}
+  <article class="item">
+    <p class="item-head">{{ job.position|default:"" }}{% if job.company %} — {{ job.company }}{% endif %}</p>
+    {% if job.startDate or job.endDate %}
+    <p class="item-meta">{{ job.startDate|default:"" }} — {{ job.endDate|default:"Present" }}</p>
+    {% endif %}
+    {% if job.summary %}<p class="item-summary">{{ job.summary }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if document.education %}
+<section>
+  <h2>Education</h2>
+  {% for edu in document.education %}
+  <article class="item">
+    <p class="item-head">{% if edu.studyType %}{{ edu.studyType }}{% if edu.area %} in {{ edu.area }}{% endif %}{% else %}{{ edu.area|default:"" }}{% endif %}</p>
+    {% if edu.institution %}<p class="item-meta">{{ edu.institution }}</p>{% endif %}
+    {% if edu.startDate or edu.endDate %}
+    <p class="item-meta">{{ edu.startDate|default:"" }} — {{ edu.endDate|default:"Present" }}</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if document.skills %}
+<section>
+  <h2>Skills</h2>
+  <ul class="skills">
+    {% for skill in document.skills %}
+    <li>{{ skill.name|default:skill }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+</body>
+</html>

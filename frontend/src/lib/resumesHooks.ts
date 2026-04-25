@@ -142,6 +142,13 @@ export function useImportResumeVersion(baseId: string) {
   });
 }
 
+// The render endpoint returns text/html (not JSON) and is GET-only, so
+// no React Query mutation hook is needed — callers attach the URL to a
+// link/anchor and let the browser do the navigation.
+export function versionRenderUrl(baseId: string, versionId: string): string {
+  return `/api/resumes/${baseId}/versions/${versionId}/render/`;
+}
+
 export function isNotFound(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
 }

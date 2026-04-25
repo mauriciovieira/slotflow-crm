@@ -224,3 +224,50 @@ def import_resume_json(
         },
     )
     return version
+
+
+def render_resume_version_html(
+    *,
+    actor: AbstractBaseUser | None,
+    version: ResumeVersion,
+    source: str = "api",
+) -> str:
+    """Render a `ResumeVersion`'s JSON document into an HTML string.
+
+    Read-only operation: viewers (and any other workspace member) can
+    render. `actor=None` is the management-command path (no membership
+    check). Audited as `resume_version.rendered`.
+
+    The template lives at `resumes/render/default.html` and uses Django's
+    auto-escape so any user-supplied JSON value renders as text, not
+    markup. Output is a complete HTML5 document.
+    """
+    from django.template.loader import render_to_string
+
+    if actor is not None:
+        membership = get_membership(actor, version.base_resume.workspace)
+        if membership is None:
+            raise WorkspaceMembershipRequired(
+                f"User {actor.pk} has no membership in workspace "
+                f"{version.base_resume.workspace_id}."
+            )
+        # No write-role gate — read-only render is allowed for viewers.
+
+    document = version.document if isinstance(version.document, dict) else {}
+    html = render_to_string(
+        "resumes/render/default.html",
+        {"document": document, "version": version},
+    )
+    write_audit_event(
+        actor=actor,
+        action="resume_version.rendered",
+        entity=version,
+        workspace=version.base_resume.workspace,
+        metadata={
+            "base_resume_id": str(version.base_resume_id),
+            "version_id": str(version.pk),
+            "version_number": version.version_number,
+            "source": source,
+        },
+    )
+    return html

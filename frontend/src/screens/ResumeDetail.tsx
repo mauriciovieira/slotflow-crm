@@ -8,6 +8,7 @@ import {
   useImportResumeVersion,
   useResume,
   useResumeVersions,
+  versionRenderUrl,
 } from "../lib/resumesHooks";
 import { TestIds } from "../testIds";
 
@@ -386,7 +387,22 @@ export function ResumeDetail() {
                   <p className="text-ink font-medium">v{v.version_number}</p>
                   {v.notes && <p className="text-sm text-ink-secondary">{v.notes}</p>}
                 </div>
-                <p className="text-sm text-ink-secondary">{formatDate(v.created_at)}</p>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={versionRenderUrl(resume.id, v.id)}
+                    target="_blank"
+                    // `noopener` is the security-relevant bit (prevents the
+                    // new tab from accessing window.opener); `noreferrer`
+                    // strips the Referer header. Both go together for
+                    // user-content links.
+                    rel="noopener noreferrer"
+                    data-testid={`${TestIds.RESUME_DETAIL_VERSION_RENDER_LINK}-${v.id}`}
+                    className="text-sm text-brand-deep hover:underline"
+                  >
+                    View HTML
+                  </a>
+                  <p className="text-sm text-ink-secondary">{formatDate(v.created_at)}</p>
+                </div>
               </li>
             ))}
           </ul>

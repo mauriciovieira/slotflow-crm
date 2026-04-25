@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Max
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
@@ -29,6 +29,7 @@ from .services import (
     create_resume,
     create_resume_version,
     import_resume_json,
+    render_resume_version_html,
 )
 
 
@@ -217,6 +218,42 @@ class ResumeVersionViewSet(
             raise PermissionDenied(str(exc)) from exc
         out = ResumeVersionSerializer(version, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
+
+    # Like `import_version` above, this action is mounted via an explicit
+    # `path(...)` in `resumes/urls.py` rather than the DRF router, so the
+    # `@action` decorator's metadata is mostly cosmetic. Keep the decorator
+    # for IDE / introspection benefits; the actual URL wiring is in urls.py.
+    @action(detail=True, methods=["get"], url_path="render")
+    def render_html(self, request, base_resume_id=None, pk=None):
+        """Render a `ResumeVersion` to HTML and return as `text/html`.
+
+        Read-only — viewers (and anyone else with workspace membership)
+        can render. Cache-Control is `no-store` so personal data never
+        lands in shared caches. Service writes a
+        `resume_version.rendered` audit row.
+        """
+        base_resume = self._get_base_resume()
+        try:
+            uuid.UUID(str(pk))
+        except (ValueError, AttributeError, TypeError) as exc:
+            raise Http404("Invalid version id.") from exc
+        try:
+            version = (
+                ResumeVersion.objects.select_related("base_resume__workspace")
+                .filter(pk=pk, base_resume=base_resume)
+                .get()
+            )
+        except (ResumeVersion.DoesNotExist, DjangoValidationError) as exc:
+            raise Http404("Resume version not found.") from exc
+
+        try:
+            html = render_resume_version_html(actor=request.user, version=version, source="api")
+        except WorkspaceMembershipRequired as exc:
+            raise PermissionDenied(str(exc)) from exc
+
+        response = HttpResponse(html, content_type="text/html; charset=utf-8")
+        response["Cache-Control"] = "no-store"
+        return response
 
     @staticmethod
     def _parse_import_payload(request):
