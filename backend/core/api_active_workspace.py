@@ -14,6 +14,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from tenancy.active_workspace import (
+    WorkspaceNotFound,
     WorkspaceNotMember,
     clear_active_workspace,
     get_active_workspace,
@@ -51,11 +52,21 @@ def active_workspace_view(request: Request) -> Response:
         clear_active_workspace(request._request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    workspace_id = request.data.get("workspace") if isinstance(request.data, dict) else None
+    # `request.data` may be a plain `dict`, a DRF `QueryDict`, or any
+    # `Mapping` depending on the parser; guard with the duck-typed `.get`
+    # so a valid request doesn't fall through to a spurious 400.
+    try:
+        workspace_id = request.data.get("workspace")
+    except AttributeError:
+        workspace_id = None
     if not workspace_id:
         return Response({"workspace": "Missing workspace id."}, status=status.HTTP_400_BAD_REQUEST)
     try:
         set_active_workspace(request._request, str(workspace_id))
+    except WorkspaceNotFound as exc:
+        # Unknown / malformed UUID — caller's fault, treat as bad request.
+        return Response({"workspace": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     except WorkspaceNotMember as exc:
+        # Workspace exists but caller doesn't belong — forbidden.
         return Response({"workspace": str(exc)}, status=status.HTTP_403_FORBIDDEN)
     return Response(_payload(request))

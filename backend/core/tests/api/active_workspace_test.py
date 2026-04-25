@@ -108,6 +108,47 @@ def test_delete_clears_active_workspace_for_multi_membership_user():
     assert follow_up.json()["active"] is None
 
 
+def test_post_with_unknown_workspace_returns_400():
+    user = _user()
+    _join(user, _workspace("ws-a"))
+    response = _client(user).post(
+        "/api/auth/active-workspace/",
+        data={"workspace": "00000000-0000-0000-0000-000000000000"},
+        format="json",
+    )
+    assert response.status_code == 400
+
+
+def test_post_with_malformed_uuid_returns_400():
+    user = _user()
+    _join(user, _workspace("ws-a"))
+    response = _client(user).post(
+        "/api/auth/active-workspace/",
+        data={"workspace": "not-a-uuid"},
+        format="json",
+    )
+    assert response.status_code == 400
+
+
+def test_get_clears_stale_session_value_with_malformed_uuid(monkeypatch):
+    """A malformed session value must not 500 — the helper just clears it."""
+    from tenancy.active_workspace import SESSION_KEY
+
+    user = _user()
+    ws = _workspace("ws-a")
+    _join(user, ws)
+    client = _client(user)
+    # Plant a malformed value directly on the session.
+    session = client.session
+    session[SESSION_KEY] = "this-is-not-a-uuid"
+    session.save()
+
+    response = client.get("/api/auth/active-workspace/")
+    assert response.status_code == 200
+    # Falls back to the lone membership; stale value swept out.
+    assert response.json()["active"]["slug"] == "ws-a"
+
+
 def test_create_opportunity_uses_session_active_workspace_for_multi_membership_user():
     """The opportunities API now consumes the session value when no body field."""
     from opportunities.models import Opportunity

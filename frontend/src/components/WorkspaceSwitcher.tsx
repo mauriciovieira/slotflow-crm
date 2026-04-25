@@ -28,10 +28,14 @@ export function WorkspaceSwitcher() {
   const activeId = data.active?.id ?? "";
 
   return (
-    <span data-testid={TestIds.WORKSPACE_SWITCHER} className="flex items-center gap-2">
+    <label
+      data-testid={TestIds.WORKSPACE_SWITCHER}
+      className="flex items-center gap-2"
+    >
       <span className="text-xs text-ink-muted">Workspace</span>
       <select
         data-testid={TestIds.WORKSPACE_SWITCHER_SELECT}
+        aria-label="Active workspace"
         value={activeId}
         disabled={setActive.isPending}
         onChange={(event) => {
@@ -53,6 +57,6 @@ export function WorkspaceSwitcher() {
           </option>
         ))}
       </select>
-    </span>
+    </label>
   );
 }
