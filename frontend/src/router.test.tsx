@@ -82,7 +82,7 @@ describe("router — /dashboard branch", () => {
     expect(screen.queryByTestId(TestIds.STUB_PANEL)).toBeNull();
   });
 
-  it("mounts the Interviews stub at /dashboard/interviews", async () => {
+  it("mounts the Interviews list at /dashboard/interviews with a matching header title", async () => {
     seedVerified();
     const { router } = renderAt("/dashboard/interviews");
     const rtl = await import("@testing-library/react");
@@ -91,7 +91,21 @@ describe("router — /dashboard branch", () => {
         <RouterProvider router={router} />
       </Providers>,
     );
+    const header = await rtl.screen.findByTestId(TestIds.DASHBOARD_HEADER);
+    expect(header).toHaveTextContent("Interviews");
+    expect(screen.queryByTestId(TestIds.STUB_PANEL)).toBeNull();
+  });
+
+  it("mounts the Settings stub at /dashboard/settings", async () => {
+    seedVerified();
+    const { router } = renderAt("/dashboard/settings");
+    const rtl = await import("@testing-library/react");
+    rtl.render(
+      <Providers>
+        <RouterProvider router={router} />
+      </Providers>,
+    );
     expect(screen.getByTestId(TestIds.STUB_PANEL)).toBeVisible();
-    expect(screen.getByTestId(TestIds.DASHBOARD_HEADER)).toHaveTextContent("Interviews");
+    expect(screen.getByTestId(TestIds.DASHBOARD_HEADER)).toHaveTextContent("Settings");
   });
 });
