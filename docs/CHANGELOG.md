@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.10.0...docs-v1.11.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** wire MCP token issue/revoke as the first audit writer ([#27](https://github.com/mauriciovieira/slotflow-crm/issues/27)) ([1f37c39](https://github.com/mauriciovieira/slotflow-crm/commit/1f37c3926bd5737d001a0c7ff1fab89d66a26761))
+
 # [1.10.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.9.0...docs-v1.10.0) (2026-04-25)
 
 
