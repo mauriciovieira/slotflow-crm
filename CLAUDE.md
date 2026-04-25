@@ -70,6 +70,10 @@ MCP endpoints additionally require a **fresh** OTP session (default 15 minutes) 
 
 **Dev-only 2FA bypass** (`core/auth_bypass.py::is_2fa_bypass_active`): when `SLOTFLOW_BYPASS_2FA` is truthy **and** `settings.DEBUG` is True, `Require2FAMiddleware` skips the redirect and `/api/auth/me/` reports `is_verified=true`. The DEBUG gate makes the flag inert in staging/production. Exists so Playwright e2e can exercise authenticated flows without computing TOTP. Never read the env var directly — always call `is_2fa_bypass_active()`. When the bypass flag is active the backend also exposes `POST /api/test/_reset/`, which flushes the DB and re-runs `seed_e2e_user`. Playwright hits it in `beforeEach` to start each spec from a known baseline. The endpoint returns 404 when bypass is inactive (i.e., in staging/production regardless of env flag).
 
+### Audit log
+
+`audit.write_audit_event(*, actor, action, entity=None, workspace=None, correlation_id=None, metadata=None)` is the canonical way to record a security-sensitive action (token issuance, opportunity archive, manual admin override, etc.). The helper freezes `actor_repr` at write so deletes don't reshape history, derives `entity_type`/`entity_id` from the model class + pk, and falls back to `core.middleware.correlation_id.get_correlation_id()` when no id is passed. The `AuditEvent` table is append-only; `AuditEventAdmin` has every write permission disabled. Two indexes are pre-built: `(action, -created_at)` for "last N events of action X" and `(entity_type, entity_id)` for "everything that ever happened to entity Y".
+
 ### Logging
 
 Every request lands a stable `correlation_id` on `request.correlation_id`, on the `X-Request-ID` response header, and on a `contextvars.ContextVar` reachable via `core.middleware.correlation_id.get_correlation_id()`. The middleware reads `X-Request-ID` from upstream when it matches a safe charset (`^[A-Za-z0-9-]{8,64}$`), otherwise it mints a fresh `uuid.uuid4().hex`. The contextvar resets after each request so it does not leak between threads.
