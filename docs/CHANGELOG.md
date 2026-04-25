@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.18.0...docs-v1.19.0) (2026-04-25)
+
+
+### Features
+
+* full-stack FX rates slice (BE + FE + e2e) ([#37](https://github.com/mauriciovieira/slotflow-crm/issues/37)) ([6631d6c](https://github.com/mauriciovieira/slotflow-crm/commit/6631d6cce3ddd3eadaf24c8a5bfcd7416293f017))
+
 # [1.18.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.17.0...docs-v1.18.0) (2026-04-25)
 
 
