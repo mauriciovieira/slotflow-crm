@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.4.0...docs-v1.5.0) (2026-04-25)
+
+
+### Features
+
+* **frontend:** opportunity create form at /dashboard/opportunities/new ([#21](https://github.com/mauriciovieira/slotflow-crm/issues/21)) ([218ffb1](https://github.com/mauriciovieira/slotflow-crm/commit/218ffb1a09f9db2ae0b21c4c18a23c97d599130d)), closes [#20](https://github.com/mauriciovieira/slotflow-crm/issues/20)
+
 # [1.4.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.3.0...docs-v1.4.0) (2026-04-25)
 
 
