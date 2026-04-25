@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 from core.models import TimeStampedModel
@@ -87,3 +88,49 @@ class InterviewStep(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.cycle.name} step {self.sequence} ({self.kind})"
+
+
+class InterviewStepResume(TimeStampedModel):
+    """Junction: which `ResumeVersion` was referenced for which `InterviewStep`.
+
+    Lives in the `interviews` app rather than `resumes` because every
+    query is step-driven (the API path filters by `?step=`) and the FE
+    attaches the section to the InterviewCycleDetail screen.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    step = models.ForeignKey(
+        InterviewStep,
+        on_delete=models.CASCADE,
+        related_name="resume_links",
+    )
+    resume_version = models.ForeignKey(
+        "resumes.ResumeVersion",
+        # PROTECT (matching `OpportunityResume`) so the audit trail isn't
+        # silently mutated by an admin-side resume-version delete.
+        on_delete=models.PROTECT,
+        related_name="step_links",
+    )
+    note = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_interview_step_resume_links",
+    )
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            # Same step + same version = same link; the unique constraint
+            # blocks the duplicate at the DB layer so the view layer can
+            # surface it as a friendly 400.
+            models.UniqueConstraint(
+                fields=("step", "resume_version"),
+                name="uniq_step_resume",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"step {self.step_id} ↔ resume {self.resume_version_id}"

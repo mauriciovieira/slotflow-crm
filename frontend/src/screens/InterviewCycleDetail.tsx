@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { Link, useParams } from "react-router";
+import { InterviewStepResumesSection } from "../components/InterviewStepResumesSection";
 import {
   STEP_KINDS,
   STEP_KIND_LABEL,
@@ -288,17 +289,23 @@ export function InterviewCycleDetail() {
               <li
                 key={step.id}
                 data-testid={`${TestIds.INTERVIEW_CYCLE_STEP_ROW}-${step.id}`}
-                className="py-3 flex items-center justify-between gap-3"
+                className="py-3"
               >
-                <div>
-                  <p className="text-ink font-medium">
-                    {step.sequence}. {STEP_KIND_LABEL[step.kind]}
-                  </p>
-                  {step.interviewer && (
-                    <p className="text-sm text-ink-secondary">{step.interviewer}</p>
-                  )}
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-ink font-medium">
+                      {step.sequence}. {STEP_KIND_LABEL[step.kind]}
+                    </p>
+                    {step.interviewer && (
+                      <p className="text-sm text-ink-secondary">{step.interviewer}</p>
+                    )}
+                  </div>
+                  <StepStatusSelect cycleId={cycleId ?? ""} step={step} />
                 </div>
-                <StepStatusSelect cycleId={cycleId ?? ""} step={step} />
+                <InterviewStepResumesSection
+                  stepId={step.id}
+                  cycleId={cycleId ?? ""}
+                />
               </li>
             ))}
           </ul>

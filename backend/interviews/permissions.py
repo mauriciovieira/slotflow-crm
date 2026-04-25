@@ -10,18 +10,27 @@ WRITE_ROLES = frozenset({MembershipRole.OWNER, MembershipRole.MEMBER})
 
 
 class IsCycleWorkspaceMember(permissions.BasePermission):
-    """Object-level permission for InterviewCycle / InterviewStep.
+    """Object-level permission for InterviewCycle / InterviewStep / InterviewStepResume.
 
-    Workspace authority lives on `opportunity.workspace`; cycles point at the
-    opportunity, steps point at the cycle. This class resolves either layer
-    transparently so it can attach to both viewsets.
+    Workspace authority lives on `opportunity.workspace`. Walk up:
+      - Cycle: `obj.opportunity.workspace`
+      - Step: `obj.cycle.opportunity.workspace`
+      - StepResume link: `obj.step.cycle.opportunity.workspace`
     """
 
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        cycle = obj if hasattr(obj, "opportunity") else getattr(obj, "cycle", None)
+        # Resolve the cycle via whichever ancestor link is present.
+        if hasattr(obj, "opportunity"):
+            cycle = obj  # InterviewCycle itself
+        elif hasattr(obj, "cycle"):
+            cycle = obj.cycle  # InterviewStep
+        elif hasattr(obj, "step"):
+            cycle = getattr(obj.step, "cycle", None)  # InterviewStepResume
+        else:
+            cycle = None
         if cycle is None:
             return False
         workspace = getattr(getattr(cycle, "opportunity", None), "workspace", None)
