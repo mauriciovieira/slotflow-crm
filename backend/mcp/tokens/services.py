@@ -9,6 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils import timezone
 
+from audit.services import write_audit_event
 from mcp.models import McpToken
 
 if TYPE_CHECKING:
@@ -51,6 +52,22 @@ def issue_token(
         last_four=plaintext[-4:],
         expires_at=timezone.now() + timedelta(days=ttl_days),
     )
+    # Audit only the safe-to-log fields. The plaintext is returned to the
+    # caller (so it can be shown to the user once) but is never included in
+    # audit metadata or persisted on the row; `last_four` + `expires_at`
+    # identify the token in the log without weakening the at-rest hash
+    # guarantee.
+    write_audit_event(
+        actor=actor,
+        action="mcp_token.issued",
+        entity=record,
+        metadata={
+            "name": record.name,
+            "expires_at": record.expires_at.isoformat(),
+            "ttl_days": ttl_days,
+            "last_four": record.last_four,
+        },
+    )
     return record, plaintext
 
 
@@ -63,7 +80,18 @@ def revoke_token(*, actor: AbstractBaseUser, token_id: uuid.UUID) -> McpToken:
         raise McpToken.DoesNotExist(f"No McpToken with id {token_id}.") from exc
     if token.user_id != actor.pk:
         raise PermissionDenied("You do not own that token.")
-    if token.revoked_at is None:
+    already_revoked = token.revoked_at is not None
+    if not already_revoked:
         token.revoked_at = timezone.now()
         token.save(update_fields=["revoked_at", "updated_at"])
+    write_audit_event(
+        actor=actor,
+        action="mcp_token.revoked",
+        entity=token,
+        metadata={
+            "name": token.name,
+            "last_four": token.last_four,
+            "already_revoked": already_revoked,
+        },
+    )
     return token

@@ -54,6 +54,8 @@ def test_collection_returns_403_when_2fa_session_not_fresh(monkeypatch):
 
 
 def test_issue_token_returns_201_with_plaintext_once(fresh_2fa):
+    from audit.models import AuditEvent
+
     user = _user()
     response = _client(user).post("/api/mcp/tokens/", data={"name": "Cursor"}, format="json")
     assert response.status_code == 201, response.content
@@ -62,6 +64,8 @@ def test_issue_token_returns_201_with_plaintext_once(fresh_2fa):
     assert body["plaintext"].startswith("slt_")
     assert body["last_four"] == body["plaintext"][-4:]
     assert "token_hash" not in body
+    # The issue path also emits an `mcp_token.issued` audit event.
+    assert AuditEvent.objects.filter(action="mcp_token.issued", actor=user).count() == 1
 
 
 def test_issue_rejects_ttl_out_of_range(fresh_2fa):
@@ -88,6 +92,8 @@ def test_list_returns_only_callers_tokens(fresh_2fa):
 
 
 def test_revoke_own_token_returns_204_and_sets_revoked_at(fresh_2fa):
+    from audit.models import AuditEvent
+
     user = _user()
     record, _ = issue_token(actor=user, name="x")
 
@@ -102,6 +108,15 @@ def test_revoke_own_token_returns_204_and_sets_revoked_at(fresh_2fa):
     assert response.status_code == 204
     record.refresh_from_db()
     assert record.revoked_at == first_stamp
+
+    # Both revoke calls land an audit event; the second is flagged
+    # `already_revoked: True` so audit readers can spot the no-op.
+    revoked_events = list(
+        AuditEvent.objects.filter(action="mcp_token.revoked").order_by("created_at")
+    )
+    assert len(revoked_events) == 2
+    assert revoked_events[0].metadata["already_revoked"] is False
+    assert revoked_events[1].metadata["already_revoked"] is True
 
 
 def test_revoke_other_users_token_returns_403(fresh_2fa):
