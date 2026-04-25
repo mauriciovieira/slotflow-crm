@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.19.0...docs-v1.20.0) (2026-04-25)
+
+
+### Features
+
+* full-stack Insights compensation snapshot (BE + FE + e2e) ([#38](https://github.com/mauriciovieira/slotflow-crm/issues/38)) ([c39c41d](https://github.com/mauriciovieira/slotflow-crm/commit/c39c41dbda696dd036d8a1815523ecc93ab23c08))
+
 # [1.19.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.18.0...docs-v1.19.0) (2026-04-25)
 
 
