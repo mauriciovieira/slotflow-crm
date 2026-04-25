@@ -79,8 +79,13 @@ describe("apiFetch", () => {
   });
 
   it("does not JSON.parse HTML error pages — surfaces ApiError with statusText", async () => {
+    // Django's DEBUG=True 500 page is a multi-thousand-character HTML
+    // traceback. If we returned the body verbatim as the error message,
+    // any UI that renders `error.message` (e.g. inline form errors)
+    // would dump the whole traceback into the page.
+    const debugTraceback = `<!DOCTYPE html><html><head><title>ProgrammingError at /api/fx-rates/</title></head><body>${"x".repeat(2000)}</body></html>`;
     fetchMock.mockResolvedValueOnce(
-      new Response("<html><body>Internal Server Error</body></html>", {
+      new Response(debugTraceback, {
         status: 500,
         statusText: "Internal Server Error",
         headers: { "Content-Type": "text/html; charset=utf-8" },
@@ -89,6 +94,7 @@ describe("apiFetch", () => {
     await expect(apiFetch("/api/auth/me/")).rejects.toMatchObject({
       name: "ApiError",
       status: 500,
+      message: "Internal Server Error",
     });
   });
 
