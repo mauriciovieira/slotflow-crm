@@ -35,7 +35,7 @@ def refresh_rates_for_workspace(workspace_id: str) -> int:
     today = date_type.today()
     written = 0
     for currency, rate in _SAMPLE_USD_RATES.items():
-        upsert_fx_rate(
+        obj = upsert_fx_rate(
             actor=None,
             workspace=workspace,
             currency=currency,
@@ -44,5 +44,10 @@ def refresh_rates_for_workspace(workspace_id: str) -> int:
             date=today,
             source="task",
         )
-        written += 1
+        # Only count as "written" when the task actually persisted a row.
+        # `upsert_fx_rate` no-ops when an existing manual override is
+        # found at the same key — preserving that row is the correct
+        # behavior, but the count would otherwise overstate refresh work.
+        if obj.source == "task":
+            written += 1
     return written

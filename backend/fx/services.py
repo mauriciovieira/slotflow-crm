@@ -87,12 +87,22 @@ def upsert_fx_rate(
     # non-manual source (`task`/`seed`), keep the manual rate intact —
     # otherwise the refresher would silently revert the user's change on
     # the next tick. Manual writes always win.
-    existing = FxRate.objects.filter(
-        workspace=workspace,
-        currency=currency.upper(),
-        base_currency=base_currency.upper(),
-        date=date,
-    ).first()
+    #
+    # Use `select_for_update()` rather than `first()` so a manual upsert
+    # racing a task refresh can't slip through: the task transaction
+    # blocks until the manual write commits, then re-reads the row and
+    # bails. The surrounding `@transaction.atomic` is what makes the
+    # row lock real.
+    existing = (
+        FxRate.objects.select_for_update()
+        .filter(
+            workspace=workspace,
+            currency=currency.upper(),
+            base_currency=base_currency.upper(),
+            date=date,
+        )
+        .first()
+    )
     if existing is not None and existing.source == "manual" and source != "manual":
         return existing
 
