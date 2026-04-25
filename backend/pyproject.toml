@@ -1,6 +1,6 @@
 [project]
 name = "slotflow-backend"
-version = "0.19.0"
+version = "0.20.0"
 requires-python = ">=3.14"
 description = "Slotflow CRM Django backend."
 
