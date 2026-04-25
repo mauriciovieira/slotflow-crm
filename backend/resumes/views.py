@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Mapping
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Max
@@ -247,13 +248,13 @@ class ResumeVersionViewSet(
             return document, notes
 
         # No multipart `file` part — fall through to the structured-body
-        # path. `request.data` is either a `dict` (JSON body) or a
-        # `QueryDict` (form / multipart no-file). Both subclass `dict`,
-        # so this check only fires on a genuinely non-dict root (a
-        # top-level JSON array / scalar). Phrase the message so it
-        # describes both legal request shapes equally — a multipart
-        # caller that failed this branch isn't necessarily sending JSON.
-        if not isinstance(request.data, dict):
+        # path. Use `Mapping` rather than `dict` so the check accepts
+        # any mapping-shaped payload (DRF returns `QueryDict` for
+        # form/multipart, and even though current Django subclasses
+        # `dict`, a future refactor or a third-party parser might not).
+        # The check still rejects genuinely non-mapping roots — a
+        # top-level JSON array or scalar.
+        if not isinstance(request.data, Mapping):
             raise ValidationError(
                 {
                     "non_field_errors": [

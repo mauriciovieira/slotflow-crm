@@ -2,24 +2,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
-import { E2E_USER, resetDb } from "../support/api";
+import { resetDb } from "../support/api";
+import { loginAsE2EUser } from "../support/auth";
 import { TestIds } from "../support/selectors";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SAMPLE_FIXTURE = path.resolve(__dirname, "..", "fixtures", "resume-sample.json");
-
-async function login(page: import("@playwright/test").Page) {
-  await page.goto("/login");
-  await page.getByTestId(TestIds.LOGIN_USERNAME).fill(E2E_USER.username);
-  await page.getByTestId(TestIds.LOGIN_PASSWORD).fill(E2E_USER.password);
-  const loginResponse = page.waitForResponse(
-    (resp) => resp.url().includes("/api/auth/login/") && resp.request().method() === "POST",
-  );
-  await page.getByTestId(TestIds.LOGIN_SUBMIT).click();
-  const finished = await loginResponse;
-  expect(finished.status()).toBe(200);
-  await expect(page).toHaveURL("/dashboard/opportunities");
-}
 
 test.describe("resume import flow", () => {
   test.beforeEach(async ({ request }) => {
@@ -27,7 +15,7 @@ test.describe("resume import flow", () => {
   });
 
   test("upload a JSON file as a new ResumeVersion", async ({ page }) => {
-    await login(page);
+    await loginAsE2EUser(page);
 
     // Resume + first version (UI flow).
     await page.getByTestId(TestIds.NAV_RESUMES).click();
