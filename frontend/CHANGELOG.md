@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.7.0...frontend-v1.8.0) (2026-04-25)
+
+
+### Features
+
+* **frontend:** opportunity detail/edit + archive ([#22](https://github.com/mauriciovieira/slotflow-crm/issues/22)) ([5767b3f](https://github.com/mauriciovieira/slotflow-crm/commit/5767b3f5da8e8059821580c87b15dfec36f61597)), closes [#20](https://github.com/mauriciovieira/slotflow-crm/issues/20)
+
 # [1.7.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.6.0...frontend-v1.7.0) (2026-04-25)
 
 
