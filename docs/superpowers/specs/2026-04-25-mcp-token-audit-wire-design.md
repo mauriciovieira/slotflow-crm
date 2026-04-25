@@ -19,7 +19,7 @@ Light up the audit log with its first real writers so token issuance/revocation 
 
 `backend/mcp/tokens/services.py`:
 
-- `issue_token(...)` already runs in `@transaction.atomic`. After `Opportunity` — sorry — after `McpToken.objects.create(...)` returns, call:
+- `issue_token(...)` already runs in `@transaction.atomic`. After `McpToken.objects.create(...)` returns, call:
 
   ```py
   write_audit_event(
@@ -72,7 +72,7 @@ Both writes carry `actor=actor` so `actor_repr` freezes the username; `entity=re
 
 `backend/mcp/tests/api/mcp_token_test.py` (modify) — extend the existing happy-path issue test to assert one `AuditEvent` was written; extend the happy-path revoke test similarly. Don't write new files; just append assertions in the existing cases.
 
-Total +5 cases (3 service + 2 API). Backend pytest: 153 → 158.
+Total +3 cases (service only). API coverage is existing tests with added assertions, not new cases. Backend pytest: 153 → 156.
 
 ## Risk & rollback
 

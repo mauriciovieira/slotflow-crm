@@ -52,9 +52,11 @@ def issue_token(
         last_four=plaintext[-4:],
         expires_at=timezone.now() + timedelta(days=ttl_days),
     )
-    # Audit only the safe-to-log fields. The plaintext never leaves this
-    # function — `last_four` and `expires_at` are enough to identify the
-    # token in the log without weakening the at-rest hash guarantee.
+    # Audit only the safe-to-log fields. The plaintext is returned to the
+    # caller (so it can be shown to the user once) but is never included in
+    # audit metadata or persisted on the row; `last_four` + `expires_at`
+    # identify the token in the log without weakening the at-rest hash
+    # guarantee.
     write_audit_event(
         actor=actor,
         action="mcp_token.issued",
