@@ -4,6 +4,7 @@ from datetime import date as date_type
 from decimal import Decimal
 
 from celery import shared_task
+from django.core.exceptions import ValidationError
 
 from tenancy.models import Workspace
 
@@ -28,9 +29,12 @@ def refresh_rates_for_workspace(workspace_id: str) -> int:
     """
     try:
         workspace = Workspace.objects.get(pk=workspace_id)
-    except Workspace.DoesNotExist:
-        # The Celery scheduler may pass a workspace that's been deleted
-        # since the periodic schedule was built. Bail quietly.
+    except (Workspace.DoesNotExist, ValidationError, ValueError):
+        # The scheduler may pass a workspace that's been deleted since the
+        # periodic schedule was built (DoesNotExist), or a malformed UUID
+        # may slip in from a misconfigured beat schedule (ValidationError
+        # for UUIDField, ValueError as a defensive catch). Bail quietly
+        # rather than letting the worker crash the whole tick.
         return 0
     today = date_type.today()
     written = 0

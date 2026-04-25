@@ -60,3 +60,9 @@ def test_refresh_rates_returns_zero_when_workspace_missing():
     """Scheduler can race with workspace deletion; bail quietly."""
     written = refresh_rates_for_workspace("00000000-0000-0000-0000-000000000000")
     assert written == 0
+
+
+def test_refresh_rates_returns_zero_for_malformed_uuid():
+    """A misconfigured beat schedule (or a manual `delay()`) might pass a
+    non-UUID string; the worker should bail quietly, not crash the tick."""
+    assert refresh_rates_for_workspace("not-a-uuid") == 0

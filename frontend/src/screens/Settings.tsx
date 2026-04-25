@@ -104,6 +104,13 @@ function UpsertForm({ workspaceId }: { workspaceId: string }) {
       setError("Rate is required.");
       return;
     }
+    // Backend rejects rate <= 0; surface the same constraint client-side
+    // so the user gets immediate feedback instead of a round-trip 400.
+    const numericRate = Number(rate);
+    if (!Number.isFinite(numericRate) || numericRate <= 0) {
+      setError("Rate must be a positive number.");
+      return;
+    }
     try {
       await upsert.mutateAsync({
         workspace: workspaceId,
@@ -153,7 +160,12 @@ function UpsertForm({ workspaceId }: { workspaceId: string }) {
           <input
             type="number"
             step="any"
-            min="0"
+            // `min` matches the backend constraint (> 0). Picking the
+            // smallest representable positive value keeps the spinner /
+            // numeric validation aligned with the server-side guard;
+            // the JS-level positive-number check below catches the
+            // edge cases that the HTML attribute alone misses.
+            min="0.00000001"
             value={rate}
             onChange={(e) => setRate(e.target.value)}
             data-testid={TestIds.SETTINGS_FX_FORM_RATE}
@@ -197,6 +209,10 @@ function UpsertForm({ workspaceId }: { workspaceId: string }) {
 
 export function Settings() {
   const activeQuery = useActiveWorkspace();
+  // Distinguish "no workspace selected" from "still loading the active
+  // workspace". The previous code treated both as the empty-string
+  // branch, which flashed "Pick a workspace" during initial load.
+  const activeLoading = activeQuery.isLoading;
   const workspaceId = activeQuery.data?.active?.id ?? "";
   const fxQuery = useFxRates(workspaceId || undefined);
 
@@ -216,7 +232,13 @@ export function Settings() {
       <div className="rounded-xl border border-border-subtle bg-surface-card p-6">
         <h2 className="text-base font-semibold text-ink mb-4">FX rates</h2>
 
-        {!workspaceId ? (
+        {activeLoading ? (
+          // Distinguish "still loading the active workspace" from "no
+          // active workspace selected": the prior code rendered the
+          // "pick a workspace" branch during initial load, which read
+          // as a permanent state instead of a transient one.
+          <p className="text-sm text-ink-secondary">Loading workspace…</p>
+        ) : !workspaceId ? (
           // No active workspace yet: the FX hook is disabled, so we never
           // render the loading / empty / table branches in this state —
           // they'd misleadingly imply "this workspace has no rates" when
