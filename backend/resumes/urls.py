@@ -24,5 +24,10 @@ urlpatterns = [
         ResumeVersionViewSet.as_view({"get": "retrieve"}),
         name="resume-version-detail",
     ),
+    path(
+        "<base_resume_id>/versions/<pk>/render/",
+        ResumeVersionViewSet.as_view({"get": "render_html"}),
+        name="resume-version-render",
+    ),
     *router.urls,
 ]

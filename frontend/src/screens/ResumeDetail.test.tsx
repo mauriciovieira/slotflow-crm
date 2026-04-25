@@ -211,6 +211,28 @@ describe("ResumeDetail", () => {
     expect(screen.getByTestId(`${TestIds.RESUME_DETAIL_VERSION_ROW}-v1`)).toHaveTextContent("v1");
   });
 
+  it("renders a 'View HTML' link per version pointing at the render endpoint", () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({
+      data: [versionFixture()],
+      isSuccess: true,
+      status: "success",
+    });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    renderDetail();
+    const link = screen.getByTestId(
+      `${TestIds.RESUME_DETAIL_VERSION_RENDER_LINK}-v1`,
+    ) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe(
+      `/api/resumes/${FIXED_ID}/versions/v1/render/`,
+    );
+    // `noopener` and `target="_blank"` together stop the new tab from
+    // touching `window.opener` and from leaking the source URL via Referer.
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+  });
+
   it("submits a new version with parsed JSON document", async () => {
     setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
     setVersionsQuery({ data: [], isSuccess: true, status: "success" });
