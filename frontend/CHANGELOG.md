@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.16.0...frontend-v1.17.0) (2026-04-25)
+
+
+### Features
+
+* full-stack Insights compensation snapshot (BE + FE + e2e) ([#38](https://github.com/mauriciovieira/slotflow-crm/issues/38)) ([c39c41d](https://github.com/mauriciovieira/slotflow-crm/commit/c39c41dbda696dd036d8a1815523ecc93ab23c08))
+
 # [1.16.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.15.0...frontend-v1.16.0) (2026-04-25)
 
 
