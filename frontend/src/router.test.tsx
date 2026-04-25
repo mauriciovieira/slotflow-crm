@@ -56,11 +56,16 @@ describe("router — /dashboard branch", () => {
         <RouterProvider router={router} />
       </Providers>,
     );
-    // The opportunities slug now mounts the real list view; the empty-state
-    // node is the deterministic anchor (no API mock here, so the query stays
-    // in flight or errors — either way the layout + header are present).
-    expect(router.state.location.pathname).toBe("/dashboard/opportunities");
-    expect(screen.getByTestId(TestIds.DASHBOARD_HEADER)).toHaveTextContent("Opportunities");
+    // The opportunities route mounts the real list view; without an API mock
+    // it shows loading or error, but the dashboard layout/header is a
+    // deterministic anchor that confirms navigation completed. Wait on the
+    // header so the index→/opportunities <Navigate> has time to resolve
+    // before we check the pathname.
+    const header = await rtl.screen.findByTestId(TestIds.DASHBOARD_HEADER);
+    await rtl.waitFor(() => {
+      expect(router.state.location.pathname).toBe("/dashboard/opportunities");
+    });
+    expect(header).toHaveTextContent("Opportunities");
   });
 
   it("mounts the Resumes stub at /dashboard/resumes with a matching header title", async () => {

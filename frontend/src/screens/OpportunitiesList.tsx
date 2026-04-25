@@ -78,7 +78,7 @@ export function OpportunitiesList() {
         <p className="font-mono text-xs uppercase tracking-wider text-ink-muted mb-3">
           No opportunities yet
         </p>
-        <h2 className="text-display-md text-ink mb-2">Track your next move.</h2>
+        <h2 className="text-page-title text-ink mb-2">Track your next move.</h2>
         <p className="text-body-lg text-ink-secondary">
           Opportunities you log will land here. Creation lands in a follow-up PR.
         </p>
