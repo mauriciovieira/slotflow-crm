@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { McpTokensSection } from "../components/McpTokensSection";
 import { useActiveWorkspace } from "../lib/activeWorkspaceHooks";
 import {
   type FxRate,
@@ -309,6 +310,8 @@ export function Settings() {
           </>
         )}
       </div>
+
+      <McpTokensSection />
     </section>
   );
 }

@@ -27,6 +27,14 @@ vi.mock("../lib/fxRatesHooks", async () => {
   };
 });
 
+vi.mock("../components/McpTokensSection", () => ({
+  // The MCP tokens section has its own dedicated test file. Stub it out
+  // here so the FX-focused Settings tests don't need to mock the MCP
+  // hooks (and so a render error in the MCP component can't bleed into
+  // unrelated assertions).
+  McpTokensSection: () => null,
+}));
+
 import { useActiveWorkspace } from "../lib/activeWorkspaceHooks";
 import {
   useDeleteFxRate,
