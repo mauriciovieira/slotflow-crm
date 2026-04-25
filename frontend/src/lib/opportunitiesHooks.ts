@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "./api";
+import { ApiError, apiFetch } from "./api";
 
 export type OpportunityStage =
   | "applied"
@@ -8,6 +8,24 @@ export type OpportunityStage =
   | "offer"
   | "rejected"
   | "withdrawn";
+
+export const STAGES: readonly OpportunityStage[] = [
+  "applied",
+  "screening",
+  "interview",
+  "offer",
+  "rejected",
+  "withdrawn",
+] as const;
+
+export const STAGE_LABEL: Record<OpportunityStage, string> = {
+  applied: "Applied",
+  screening: "Screening",
+  interview: "Interview",
+  offer: "Offer",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+};
 
 export interface Opportunity {
   id: string;
@@ -28,12 +46,28 @@ export interface OpportunityCreatePayload {
   notes?: string;
 }
 
+export interface OpportunityUpdatePayload {
+  title?: string;
+  company?: string;
+  stage?: OpportunityStage;
+  notes?: string;
+}
+
 export const OPPORTUNITIES_KEY = ["opportunities", "list"] as const;
+export const opportunityKey = (id: string) => ["opportunities", "detail", id] as const;
 
 export function useOpportunities() {
   return useQuery({
     queryKey: OPPORTUNITIES_KEY,
     queryFn: () => apiFetch<Opportunity[]>("/api/opportunities/"),
+  });
+}
+
+export function useOpportunity(id: string | undefined) {
+  return useQuery({
+    queryKey: opportunityKey(id ?? ""),
+    queryFn: () => apiFetch<Opportunity>(`/api/opportunities/${id}/`),
+    enabled: typeof id === "string" && id.length > 0,
   });
 }
 
@@ -47,4 +81,37 @@ export function useCreateOpportunity() {
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),
   });
+}
+
+export function useUpdateOpportunity(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: OpportunityUpdatePayload) =>
+      apiFetch<Opportunity>(`/api/opportunities/${id}/`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (data) => {
+      qc.setQueryData(opportunityKey(id), data);
+      return qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+    },
+  });
+}
+
+export function useArchiveOpportunity(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<null>(`/api/opportunities/${id}/`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: opportunityKey(id) });
+      return qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+    },
+  });
+}
+
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
 }

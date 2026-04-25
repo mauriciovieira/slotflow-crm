@@ -124,6 +124,28 @@ describe("OpportunitiesList", () => {
     ).toHaveTextContent(/Senior Designer/);
   });
 
+  it("links the title cell of each row to the detail page", () => {
+    setQuery({
+      data: [
+        makeOpportunity({
+          id: "11111111-1111-1111-1111-111111111111",
+          title: "Staff Engineer",
+        }),
+      ],
+      isSuccess: true,
+      status: "success",
+    });
+    render(
+      <Providers>
+        <OpportunitiesList />
+      </Providers>,
+    );
+    const link = screen.getByRole("link", { name: "Staff Engineer" });
+    expect(link.getAttribute("href")).toBe(
+      "/dashboard/opportunities/11111111-1111-1111-1111-111111111111",
+    );
+  });
+
   it("applies the interview-stage pill class for an interview row", () => {
     setQuery({
       data: [makeOpportunity({ stage: "interview" })],
