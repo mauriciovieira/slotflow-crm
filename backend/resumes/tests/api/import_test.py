@@ -88,6 +88,26 @@ def test_multipart_file_happy_path():
     assert body["notes"] == "from file"
 
 
+def test_multipart_without_file_part_returns_400_under_file_key():
+    """A multipart request without the `file` part used to fall through
+    to the JSON branch and complain about a missing `document` — wrong
+    field for a multipart caller. Surface under `file` instead."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    base = _base(ws)
+
+    response = _client(alice).post(
+        _import_url(base.pk),
+        data={"notes": "no file attached"},
+        format="multipart",
+    )
+    assert response.status_code == 400
+    body = response.json()
+    assert "file" in body
+    assert "document" not in body
+
+
 def test_invalid_json_in_file_returns_400():
     alice = _user()
     ws = _ws()

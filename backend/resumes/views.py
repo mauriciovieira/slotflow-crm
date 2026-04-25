@@ -229,7 +229,15 @@ class ResumeVersionViewSet(
         JSON bodies under `document`.
         """
         notes = ""
+        # Detect multipart up front so a missing/misnamed `file` part can
+        # surface its error under the `file` key (where the FE renders
+        # next to the picker), instead of falling through to the JSON
+        # body branch and complaining about a missing `document`.
+        content_type = (request.content_type or "").lower()
+        is_multipart = content_type.startswith("multipart/")
         upload = request.FILES.get("file") if hasattr(request, "FILES") else None
+        if is_multipart and upload is None:
+            raise ValidationError({"file": "Multipart upload must include a `file` part."})
         if upload is not None:
             try:
                 raw = upload.read().decode("utf-8")
