@@ -101,6 +101,41 @@ def test_list_filter_by_step():
     assert body[0]["step"] == str(s1.pk)
 
 
+def test_list_filter_by_cycle():
+    """`?cycle=<uuid>` returns links across all steps in that cycle so the
+    FE can fetch once per cycle and bucket client-side instead of issuing
+    one network request per step (the N+1 case)."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    opp = Opportunity.objects.create(workspace=ws, title="Staff Eng", company="Acme")
+    cycle_a = InterviewCycle.objects.create(opportunity=opp, name="A")
+    cycle_b = InterviewCycle.objects.create(opportunity=opp, name="B")
+    step_a1 = InterviewStep.objects.create(cycle=cycle_a, sequence=1, kind=InterviewStepKind.PHONE)
+    step_a2 = InterviewStep.objects.create(
+        cycle=cycle_a, sequence=2, kind=InterviewStepKind.TECHNICAL
+    )
+    step_b = InterviewStep.objects.create(cycle=cycle_b, sequence=1, kind=InterviewStepKind.PHONE)
+    InterviewStepResume.objects.create(step=step_a1, resume_version=_resume_version(ws, name="A1"))
+    InterviewStepResume.objects.create(step=step_a2, resume_version=_resume_version(ws, name="A2"))
+    InterviewStepResume.objects.create(step=step_b, resume_version=_resume_version(ws, name="B"))
+
+    response = _client(alice).get(f"/api/interview-step-resumes/?cycle={cycle_a.pk}")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 2
+    step_ids = {row["step"] for row in body}
+    assert step_ids == {str(step_a1.pk), str(step_a2.pk)}
+
+
+def test_list_invalid_cycle_uuid_returns_400():
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    response = _client(alice).get("/api/interview-step-resumes/?cycle=nope")
+    assert response.status_code == 400
+
+
 def test_list_invalid_step_uuid_returns_400():
     alice = _user()
     ws = _ws()

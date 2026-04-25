@@ -231,7 +231,9 @@ export function InterviewStepResumesSection({
   stepId: string;
   cycleId: string;
 }) {
-  const query = useInterviewStepResumes(stepId);
+  // The hook reads from the per-cycle cache: every section in a single
+  // cycle shares one network request (the parent screen drives the fetch).
+  const query = useInterviewStepResumes(stepId, cycleId);
   const [composing, setComposing] = useState(false);
 
   return (

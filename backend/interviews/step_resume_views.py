@@ -66,6 +66,16 @@ class InterviewStepResumeViewSet(
             except (ValueError, AttributeError, TypeError) as exc:
                 raise ValidationError({"step": "Invalid step UUID."}) from exc
             qs = qs.filter(step_id=step)
+        # `?cycle=` is the FE's primary filter: fetching all step links for a
+        # cycle once and bucketing client-side avoids the N+1 network round-
+        # trips that would happen if every step rendered its own request.
+        cycle = self.request.query_params.get("cycle")
+        if cycle:
+            try:
+                uuid.UUID(cycle)
+            except (ValueError, AttributeError, TypeError) as exc:
+                raise ValidationError({"cycle": "Invalid cycle UUID."}) from exc
+            qs = qs.filter(step__cycle_id=cycle)
         return qs
 
     def create(self, request, *args, **kwargs):

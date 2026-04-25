@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useParams } from "react-router";
 import { InterviewStepResumesSection } from "../components/InterviewStepResumesSection";
+import { useCycleStepResumes } from "../lib/interviewStepResumesHooks";
 import {
   STEP_KINDS,
   STEP_KIND_LABEL,
@@ -77,6 +78,10 @@ export function InterviewCycleDetail() {
   const query = useInterviewCycle(cycleId);
   const stepsQuery = useInterviewSteps(cycleId);
   const addStep = useAddInterviewStep(cycleId ?? "");
+  // Drive a single per-cycle fetch for step↔resume links so each step
+  // section can read from the shared cache instead of issuing its own
+  // request — avoids the N+1 network pattern Copilot flagged.
+  useCycleStepResumes(cycleId);
 
   const [composing, setComposing] = useState(false);
   const [stepKind, setStepKind] = useState<InterviewStepKind>("phone");
