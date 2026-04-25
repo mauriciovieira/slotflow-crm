@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useParams } from "react-router";
+import { InterviewStepResumesSection } from "../components/InterviewStepResumesSection";
+import { useCycleStepResumes } from "../lib/interviewStepResumesHooks";
 import {
   STEP_KINDS,
   STEP_KIND_LABEL,
@@ -76,6 +78,10 @@ export function InterviewCycleDetail() {
   const query = useInterviewCycle(cycleId);
   const stepsQuery = useInterviewSteps(cycleId);
   const addStep = useAddInterviewStep(cycleId ?? "");
+  // Drive a single per-cycle fetch for step↔resume links so each step
+  // section can read from the shared cache instead of issuing its own
+  // request — avoids the N+1 network pattern Copilot flagged.
+  useCycleStepResumes(cycleId);
 
   const [composing, setComposing] = useState(false);
   const [stepKind, setStepKind] = useState<InterviewStepKind>("phone");
@@ -288,17 +294,23 @@ export function InterviewCycleDetail() {
               <li
                 key={step.id}
                 data-testid={`${TestIds.INTERVIEW_CYCLE_STEP_ROW}-${step.id}`}
-                className="py-3 flex items-center justify-between gap-3"
+                className="py-3"
               >
-                <div>
-                  <p className="text-ink font-medium">
-                    {step.sequence}. {STEP_KIND_LABEL[step.kind]}
-                  </p>
-                  {step.interviewer && (
-                    <p className="text-sm text-ink-secondary">{step.interviewer}</p>
-                  )}
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-ink font-medium">
+                      {step.sequence}. {STEP_KIND_LABEL[step.kind]}
+                    </p>
+                    {step.interviewer && (
+                      <p className="text-sm text-ink-secondary">{step.interviewer}</p>
+                    )}
+                  </div>
+                  <StepStatusSelect cycleId={cycleId ?? ""} step={step} />
                 </div>
-                <StepStatusSelect cycleId={cycleId ?? ""} step={step} />
+                <InterviewStepResumesSection
+                  stepId={step.id}
+                  cycleId={cycleId ?? ""}
+                />
               </li>
             ))}
           </ul>

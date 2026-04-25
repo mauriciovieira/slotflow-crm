@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django.contrib import admin
 
-from .models import InterviewCycle, InterviewStep
+from .models import InterviewCycle, InterviewStep, InterviewStepResume
 
 
 class InterviewStepInline(admin.TabularInline):
@@ -49,3 +49,15 @@ class InterviewStepAdmin(admin.ModelAdmin):
         if obj is not None:
             return self.readonly_fields + ("sequence",)
         return self.readonly_fields
+
+
+@admin.register(InterviewStepResume)
+class InterviewStepResumeAdmin(admin.ModelAdmin):
+    list_display = ("step", "resume_version", "created_by", "created_at")
+    list_filter = ("step__cycle__opportunity__workspace",)
+    search_fields = (
+        "step__cycle__name",
+        "resume_version__base_resume__name",
+        "note",
+    )
+    readonly_fields = ("created_at", "updated_at", "created_by")

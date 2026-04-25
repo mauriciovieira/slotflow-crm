@@ -14,6 +14,7 @@ from .models import (
     InterviewCycle,
     InterviewStep,
     InterviewStepKind,
+    InterviewStepResume,
     InterviewStepStatus,
 )
 
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser
 
     from opportunities.models import Opportunity
+    from resumes.models import ResumeVersion
 
 
 WRITE_ROLES = frozenset({MembershipRole.OWNER, MembershipRole.MEMBER})
@@ -34,6 +36,10 @@ class WorkspaceMembershipRequired(PermissionError):
 
 class WorkspaceWriteForbidden(PermissionError):
     """Raised when an actor has a membership but the role is read-only (viewer)."""
+
+
+class CrossWorkspaceLinkForbidden(ValueError):
+    """Raised when a resume version's workspace differs from the step's."""
 
 
 def _enforce_write_role(actor, workspace) -> None:
@@ -159,3 +165,71 @@ def update_step_status(
     # match the persisted row, not just the ones we explicitly assigned.
     step.refresh_from_db()
     return step
+
+
+@transaction.atomic
+def link_resume_to_step(
+    *,
+    actor: AbstractBaseUser,
+    step: InterviewStep,
+    resume_version: ResumeVersion,
+    note: str = "",
+) -> InterviewStepResume:
+    """Attach `resume_version` to `step`.
+
+    Cross-workspace links are rejected: the resume version must live in the
+    same workspace as the step's parent opportunity. Duplicate (step,
+    resume_version) attempts trip the DB unique constraint and surface as
+    `IntegrityError`; the view catches that and returns 400.
+    """
+    workspace = step.cycle.opportunity.workspace
+    _enforce_write_role(actor, workspace)
+    if resume_version.base_resume.workspace_id != workspace.pk:
+        raise CrossWorkspaceLinkForbidden(
+            "Resume version belongs to a different workspace than the step."
+        )
+    link = InterviewStepResume.objects.create(
+        step=step,
+        resume_version=resume_version,
+        note=note,
+        created_by=actor,
+    )
+    write_audit_event(
+        actor=actor,
+        action="interview_step_resume.linked",
+        entity=link,
+        workspace=workspace,
+        metadata={
+            "step_id": str(step.pk),
+            "cycle_id": str(step.cycle_id),
+            "resume_version_id": str(resume_version.pk),
+            "base_resume_id": str(resume_version.base_resume_id),
+        },
+    )
+    return link
+
+
+@transaction.atomic
+def unlink_step_resume(
+    *, actor: AbstractBaseUser, link: InterviewStepResume
+) -> InterviewStepResume:
+    """Hard-delete an `InterviewStepResume` row. Audit is the durable trail."""
+    workspace = link.step.cycle.opportunity.workspace
+    _enforce_write_role(actor, workspace)
+    # Freeze metadata BEFORE the delete so the audit row keeps the FK ids
+    # even after the row is gone.
+    metadata = {
+        "step_id": str(link.step_id),
+        "cycle_id": str(link.step.cycle_id),
+        "resume_version_id": str(link.resume_version_id),
+        "base_resume_id": str(link.resume_version.base_resume_id),
+    }
+    write_audit_event(
+        actor=actor,
+        action="interview_step_resume.unlinked",
+        entity=link,
+        workspace=workspace,
+        metadata=metadata,
+    )
+    link.delete()
+    return link
