@@ -92,6 +92,46 @@ describe("apiFetch", () => {
     });
   });
 
+  it("extracts non_field_errors from a DRF validation 400", async () => {
+    respond(400, {
+      non_field_errors: ["This resume version is already linked to the opportunity with that role."],
+    });
+    await expect(apiFetch("/api/opportunity-resumes/", { method: "POST", body: "{}" }))
+      .rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+        message: "This resume version is already linked to the opportunity with that role.",
+      });
+  });
+
+  it("extracts a field error from a DRF validation 400 with a field-keyed list", async () => {
+    respond(400, {
+      resume_version: ["Resume version belongs to a different workspace than the opportunity."],
+    });
+    await expect(apiFetch("/api/opportunity-resumes/", { method: "POST", body: "{}" }))
+      .rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+        message:
+          "resume_version: Resume version belongs to a different workspace than the opportunity.",
+      });
+  });
+
+  it("falls back to statusText when error body has no recognised shape", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ unexpected: 42 }), {
+        status: 400,
+        statusText: "Bad Request",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(apiFetch("/api/x/")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 400,
+      message: "Bad Request",
+    });
+  });
+
   it("falls back to text when Content-Type claims JSON but body is not JSON", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response("not { json", {

@@ -13,20 +13,12 @@ def _render_user(user) -> dict | None:
     return {"id": user.pk, "username": user.username}
 
 
-class ResumeVersionSummarySerializer(serializers.Serializer):
-    """Minimal, denormalised summary of a ResumeVersion for the link list.
-
-    Avoids dragging the full version document/hash through the link payload —
-    callers needing the full row hit `/api/resumes/<base>/versions/`.
-    """
-
-    id = serializers.UUIDField()
-    version_number = serializers.IntegerField()
-    base_resume_id = serializers.UUIDField()
-    base_resume_name = serializers.CharField()
-
-
 class OpportunityResumeSerializer(serializers.ModelSerializer):
+    # `resume_version_summary` is a hand-built dict rather than a nested
+    # serializer because the shape is tiny, fully denormalised from
+    # `select_related("resume_version__base_resume")`, and never deserialised
+    # from input — keeping it as a method field avoids carrying an unused
+    # `Serializer` class around.
     resume_version_summary = serializers.SerializerMethodField()
     created_by = serializers.SerializerMethodField()
 

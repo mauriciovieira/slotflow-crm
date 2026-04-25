@@ -30,18 +30,34 @@ class OpportunityResumeRole(models.TextChoices):
 
 
 class OpportunityResume(TimeStampedModel):
-    id = UUIDField(primary, default=uuid.uuid4)
-    opportunity = ForeignKey(Opportunity, on_delete=CASCADE, related_name="resume_links")
-    resume_version = ForeignKey("resumes.ResumeVersion", on_delete=PROTECT, related_name="opportunity_links")
-    role = CharField(choices=OpportunityResumeRole.choices, max_length=32)
-    note = TextField(blank=True, default="")
-    created_by = ForeignKey(AUTH_USER_MODEL, on_delete=SET_NULL, null=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    opportunity = models.ForeignKey(
+        Opportunity,
+        on_delete=models.CASCADE,
+        related_name="resume_links",
+    )
+    resume_version = models.ForeignKey(
+        "resumes.ResumeVersion",
+        on_delete=models.PROTECT,
+        related_name="opportunity_links",
+    )
+    role = models.CharField(max_length=32, choices=OpportunityResumeRole.choices)
+    note = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_opportunity_resume_links",
+    )
 
     class Meta:
         ordering = ("-created_at",)
         constraints = [
-            UniqueConstraint(fields=("opportunity", "resume_version", "role"),
-                             name="uniq_opp_resume_role"),
+            models.UniqueConstraint(
+                fields=("opportunity", "resume_version", "role"),
+                name="uniq_opp_resume_role",
+            ),
         ]
 ```
 
