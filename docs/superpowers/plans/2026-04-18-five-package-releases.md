@@ -542,7 +542,7 @@ const { shouldIncludeCommit } = require("./filter-commits.cjs");
 
 test("commits entirely under backend/ are excluded", () => {
   assert.equal(shouldIncludeCommit(["backend/config/settings/base.py"]), false);
-  assert.equal(shouldIncludeCommit(["backend/tests/test_healthz.py", "backend/pyproject.toml"]), false);
+  assert.equal(shouldIncludeCommit(["backend/core/tests/views/healthz_test.py", "backend/pyproject.toml"]), false);
 });
 
 test("commits entirely under frontend/ are excluded", () => {

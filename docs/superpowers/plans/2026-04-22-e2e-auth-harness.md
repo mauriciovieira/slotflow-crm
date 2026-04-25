@@ -23,8 +23,8 @@
 **Create (backend):**
 - `backend/core/management/commands/seed_e2e_user.py` — idempotent non-admin user seed.
 - `backend/core/api_test_reset.py` — `POST /api/test/_reset/` view + urlpatterns list.
-- `backend/tests/test_seed_e2e_user.py`
-- `backend/tests/test_api_test_reset.py`
+- `backend/core/tests/services/seed_e2e_user_test.py`
+- `backend/core/tests/api/test_reset_test.py`
 
 **Modify (backend):**
 - `backend/core/middleware/require_2fa.py` — allowlist `/api/test/`.
@@ -62,11 +62,11 @@
 
 **Files:**
 - Create: `backend/core/management/commands/seed_e2e_user.py`
-- Create: `backend/tests/test_seed_e2e_user.py`
+- Create: `backend/core/tests/services/seed_e2e_user_test.py`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `backend/tests/test_seed_e2e_user.py`:
+Create `backend/core/tests/services/seed_e2e_user_test.py`:
 
 ```python
 from __future__ import annotations
@@ -129,7 +129,7 @@ def test_refuses_when_debug_off(settings):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `backend/.venv/bin/python -m pytest backend/tests/test_seed_e2e_user.py -v`
+Run: `backend/.venv/bin/python -m pytest backend/core/tests/services/seed_e2e_user_test.py -v`
 Expected: FAIL — `Unknown command: 'seed_e2e_user'` (or equivalent).
 
 - [ ] **Step 3: Write the command**
@@ -190,13 +190,13 @@ class Command(BaseCommand):
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `backend/.venv/bin/python -m pytest backend/tests/test_seed_e2e_user.py -v`
+Run: `backend/.venv/bin/python -m pytest backend/core/tests/services/seed_e2e_user_test.py -v`
 Expected: 4 passed.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backend/core/management/commands/seed_e2e_user.py backend/tests/test_seed_e2e_user.py
+git add backend/core/management/commands/seed_e2e_user.py backend/core/tests/services/seed_e2e_user_test.py
 git commit -m "feat(backend): add seed_e2e_user management command (DEBUG-gated)"
 ```
 
@@ -206,13 +206,13 @@ git commit -m "feat(backend): add seed_e2e_user management command (DEBUG-gated)
 
 **Files:**
 - Create: `backend/core/api_test_reset.py`
-- Create: `backend/tests/test_api_test_reset.py`
+- Create: `backend/core/tests/api/test_reset_test.py`
 - Modify: `backend/core/middleware/require_2fa.py`
 - Modify: `backend/config/urls.py`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `backend/tests/test_api_test_reset.py`:
+Create `backend/core/tests/api/test_reset_test.py`:
 
 ```python
 from __future__ import annotations
@@ -272,7 +272,7 @@ def test_csrf_exempt(bypass_on):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `backend/.venv/bin/python -m pytest backend/tests/test_api_test_reset.py -v`
+Run: `backend/.venv/bin/python -m pytest backend/core/tests/api/test_reset_test.py -v`
 Expected: FAIL — 404s from the URL not existing (or the monkeypatch target not importable).
 
 - [ ] **Step 3: Write the view**
@@ -356,7 +356,7 @@ In `urlpatterns`, after the `/api/auth/` include, add:
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `backend/.venv/bin/python -m pytest backend/tests/test_api_test_reset.py -v`
+Run: `backend/.venv/bin/python -m pytest backend/core/tests/api/test_reset_test.py -v`
 Expected: 4 passed.
 
 - [ ] **Step 7: Run the full backend test suite**
@@ -370,7 +370,7 @@ Expected: all previously passing tests still pass; 4 new tests pass.
 git add backend/core/api_test_reset.py \
         backend/core/middleware/require_2fa.py \
         backend/config/urls.py \
-        backend/tests/test_api_test_reset.py
+        backend/core/tests/api/test_reset_test.py
 git commit -m "feat(backend): add bypass-gated POST /api/test/_reset/ endpoint"
 ```
 

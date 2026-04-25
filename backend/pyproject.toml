@@ -14,15 +14,23 @@ extend-exclude = ["**/migrations/**"]
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
-# Per-project convention: each app keeps its tests under `<app>/tests/`,
-# named `<topic>_tests.py`. The repo-wide `tests/` directory holds
-# cross-cutting suites (auth flow, healthz, mcp, etc.) that don't belong
-# to a single app.
-testpaths = [
-    "tests",
-    "opportunities/tests",
+# Per-app, per-category test layout: `<app>/tests/<category>/<thing>_test.py`
+# (categories: models, admin, views, api, services). Cross-cutting suites
+# that don't belong to a single app stay under the repo-wide
+# `backend/tests/`. Discovery walks the whole backend tree; `norecursedirs`
+# keeps virtualenvs and tooling caches off the path.
+testpaths = ["."]
+python_files = ["*_test.py"]
+norecursedirs = [
+    ".venv",
+    "migrations",
+    "__pycache__",
+    ".ruff_cache",
+    ".pytest_cache",
+    "node_modules",
+    "dist",
+    "build",
 ]
-python_files = ["test_*.py", "*_tests.py"]
 addopts = "-q --ds=config.settings.local"
 
 # Release automation (GitHub Actions: python-semantic-release). Commits must follow

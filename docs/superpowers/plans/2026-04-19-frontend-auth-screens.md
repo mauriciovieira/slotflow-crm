@@ -33,8 +33,8 @@ If `backend/.venv` does not exist yet: `(cd backend && python3.14 -m venv .venv)
 **Create (backend):**
 - `backend/core/api_auth.py` — DRF function-based views for `login`, `logout`, `me`, `totp_setup`, `totp_confirm`, `totp_verify`; shared `_me_payload(user)` helper.
 - `backend/core/auth_bypass.py` — `is_2fa_bypass_active()` helper, hard-gated on `DEBUG`, reads `SLOTFLOW_BYPASS_2FA` env var; used by middleware + `_me_payload`.
-- `backend/tests/test_api_auth.py` — integration tests using Django test client; one test per happy path and the main failure path for each endpoint, plus middleware allowlist assertion.
-- `backend/tests/test_auth_bypass.py` — bypass helper truth table + middleware integration + `_me_payload` integration.
+- `backend/core/tests/api/auth_test.py` — integration tests using Django test client; one test per happy path and the main failure path for each endpoint, plus middleware allowlist assertion.
+- `backend/core/tests/services/auth_bypass_test.py` — bypass helper truth table + middleware integration + `_me_payload` integration.
 
 **Modify (backend):**
 - `backend/core/middleware/require_2fa.py` — add `/api/auth/` to the path allowlist; consult `is_2fa_bypass_active()` before redirecting.
@@ -329,7 +329,7 @@ if settings.DEBUG and "debug_toolbar" in settings.INSTALLED_APPS:
 ### Task 1.4: Write tests for `me` / `login` / `logout`
 
 **Files:**
-- Create: `backend/tests/test_api_auth.py`
+- Create: `backend/core/tests/api/auth_test.py`
 
 - [ ] **Step 1: Write the file**
 
@@ -453,7 +453,7 @@ If something fails, read the traceback and fix the cause (do not weaken the asse
 - [ ] **Step 1: Commit**
 
 ```bash
-git add backend/core/api_auth.py backend/core/middleware/require_2fa.py backend/config/urls.py backend/tests/test_api_auth.py
+git add backend/core/api_auth.py backend/core/middleware/require_2fa.py backend/config/urls.py backend/core/tests/api/auth_test.py
 git commit -m "feat(backend): /api/auth/ REST endpoints for login, logout, me
 
 Adds CSRF-aware DRF function-based views at /api/auth/login/, /logout/,
@@ -478,7 +478,7 @@ tested in the next commit."
 ### Task 2.1: Append 2FA endpoint tests
 
 **Files:**
-- Modify: `backend/tests/test_api_auth.py` (append)
+- Modify: `backend/core/tests/api/auth_test.py` (append)
 
 - [ ] **Step 1: Append the following tests at the end of the file**
 
@@ -583,7 +583,7 @@ Expected: the suite grows to ~33 tests, all passing. The `test_totp_confirm_vali
 - [ ] **Step 1: Commit**
 
 ```bash
-git add backend/tests/test_api_auth.py
+git add backend/core/tests/api/auth_test.py
 git commit -m "test(backend): cover /api/auth/2fa/{setup,confirm,verify} endpoints
 
 Idempotent device creation, invalid-token rejection, auth requirement.
@@ -643,7 +643,7 @@ def is_2fa_bypass_active() -> bool:
 ### Task 2.5.2: Write the failing bypass tests
 
 **Files:**
-- Create: `backend/tests/test_auth_bypass.py`
+- Create: `backend/core/tests/services/auth_bypass_test.py`
 
 - [ ] **Step 1: Write the file**
 
@@ -865,7 +865,7 @@ For local development only, setting `SLOTFLOW_BYPASS_2FA=1` in `.env` tells `Req
 - [ ] **Step 1: Commit**
 
 ```bash
-git add backend/core/auth_bypass.py backend/core/middleware/require_2fa.py backend/core/api_auth.py backend/tests/test_auth_bypass.py .env.example CLAUDE.md
+git add backend/core/auth_bypass.py backend/core/middleware/require_2fa.py backend/core/api_auth.py backend/core/tests/services/auth_bypass_test.py .env.example CLAUDE.md
 git commit -m "feat(backend): dev-only SLOTFLOW_BYPASS_2FA for e2e
 
 New core/auth_bypass.py centralises the opt-in. Hard-gated on

@@ -35,7 +35,7 @@ From a subdirectory, `make -C backend test`, `make -C frontend lint`, etc., keep
 Raw commands are only appropriate for things `make` doesn't cover — typically single-test runs:
 
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/test_healthz.py::test_healthz_returns_ok
+backend/.venv/bin/python -m pytest backend/core/tests/views/healthz_test.py::test_healthz_returns_ok
 (cd frontend && npx vitest run src/screens/Landing.test.tsx)
 (cd e2e && npx playwright test tests/name.spec.ts)
 ```
@@ -59,7 +59,7 @@ Project config is `config/`; each domain is a first-class app. When adding a new
 - `core/` — shared models (`TimeStampedModel`, `SoftDeleteModel`), views (`HealthzView`, `HomeView`, 2FA flow), `Require2FAMiddleware`, placeholder Celery tasks wired to named queues (`imports`, `render`, `insights`, `fx`), `ensure_superuser` management command.
 - `identity/` — custom `User` model (`AUTH_USER_MODEL = "identity.User"`) and admin side-effects (OTP admin site).
 - `tenancy/` — multi-tenant primitives: `Workspace`, `Membership` with `MembershipRole` (owner/member/viewer). `tenancy/permissions.py` exposes `get_membership`, `user_has_workspace_role`, `require_membership` — use these for any workspace-scoped authz.
-- `opportunities/`, `resumes/`, `interviews/`, `insights/`, `fx/`, `audit/` — domain apps, mostly scaffolds. Add models/views here as each track lands. New tests for an app live under `<app>/tests/<topic>_tests.py` (e.g. `opportunities/tests/opportunity_tests.py`); the repo-wide `backend/tests/` directory is reserved for cross-cutting suites (healthz, auth flow, mcp, tenancy permissions). Pytest discovery accepts both `test_*.py` and `*_tests.py` — see `backend/pyproject.toml::tool.pytest.ini_options`.
+- `opportunities/`, `resumes/`, `interviews/`, `insights/`, `fx/`, `audit/` — domain apps, mostly scaffolds. Add models/views here as each track lands. Tests live under `<app>/tests/<category>/<thing>_test.py` where `<category>` is one of `models`, `admin`, `views`, `api`, `services` (intent-based: a DRF endpoint test goes under `api/`, a Django-view test under `views/`, a management command or helper under `services/`). The repo-wide `backend/tests/` directory is reserved for cross-cutting suites that don't belong to a single app. Pytest discovery walks the whole backend tree for `*_test.py` files — see `backend/pyproject.toml::tool.pytest.ini_options`.
 - `mcp/` — MCP (Model Context Protocol) integration. `mcp/auth.py` holds session-freshness enforcement for MCP endpoints.
 
 ### 2FA is mandatory
