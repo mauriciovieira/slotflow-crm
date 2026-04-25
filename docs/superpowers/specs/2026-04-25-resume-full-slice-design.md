@@ -35,7 +35,7 @@ Replace the `/dashboard/resumes` stub with a real product surface: list workspac
 
 - `ResumeVersionSerializer` — read-only on `id, version_number, document_hash, created_at, updated_at, created_by`; renders `created_by` via the same `get_created_by` shape as opportunities.
 - `ResumeVersionCreateSerializer` — accepts `document` (JSON object) and optional `notes`.
-- `BaseResumeSerializer` — full read shape including `latest_version: ResumeVersionSerializer | null` (computed via the model's `versions.first()` thanks to `Meta.ordering = ("-version_number",)`). Workspace is write-once on create.
+- `BaseResumeSerializer` — full read shape including `latest_version: { version_number: int } | null`. Backed by a `Max("versions__version_number")` annotation on the viewset queryset so list endpoints stay flat in both query count and memory regardless of version-history depth. Detail consumers needing the full version object hit `/api/resumes/<id>/versions/`. Workspace is write-once on create.
 
 **Views (`resumes/views.py`):**
 

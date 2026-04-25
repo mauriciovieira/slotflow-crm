@@ -7,6 +7,13 @@ from tenancy.permissions import get_membership
 
 from .models import BaseResume, ResumeVersion
 
+# Sentinel used by `BaseResumeSerializer.get_latest_version` to distinguish
+# "annotation absent on the instance" from "annotation present but NULL".
+# Plain `None` cannot serve here because `Max(...)` returns NULL for resumes
+# with zero versions, and that NULL must short-circuit to `None` without
+# triggering a fallback DB query.
+_MISSING = object()
+
 
 def _render_user(user) -> dict | None:
     if user is None:
@@ -95,16 +102,21 @@ class BaseResumeSerializer(serializers.ModelSerializer):
         # The viewset annotates `_latest_version_number` (a single integer
         # column) onto each row to avoid loading version objects on list
         # endpoints — version histories can grow long, so we never prefetch
-        # the whole set just to render the number. Service-layer / non-API
-        # callers without the annotation fall back to a single `.first()`
-        # against the prefetch ordering.
-        annotated_number = getattr(obj, "_latest_version_number", None)
-        if annotated_number is not None:
-            return {"version_number": annotated_number}
-        latest = obj.versions.first()
-        if latest is None:
+        # the whole set just to render the number. The annotation is
+        # `Max(...)`, which is `None` when the resume has zero versions, so
+        # we need a sentinel to distinguish "annotation missing" (no
+        # queryset annotation, e.g. service-layer test) from "annotation
+        # present but NULL" (no versions exist) — otherwise we'd issue an
+        # unnecessary follow-up query in the latter case.
+        annotated_number = getattr(obj, "_latest_version_number", _MISSING)
+        if annotated_number is _MISSING:
+            latest = obj.versions.first()
+            if latest is None:
+                return None
+            return {"version_number": latest.version_number}
+        if annotated_number is None:
             return None
-        return {"version_number": latest.version_number}
+        return {"version_number": annotated_number}
 
     def validate_workspace(self, workspace: Workspace | None) -> Workspace | None:
         if workspace is None:

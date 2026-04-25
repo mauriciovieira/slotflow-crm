@@ -297,8 +297,9 @@ def test_versions_create_forbidden_for_viewer():
 
 
 def test_list_does_not_n_plus_one_on_latest_version():
-    """`get_latest_version` reads from the prefetch cache, so the query count
-    must stay flat as more resumes (each with versions) are added."""
+    """The list queryset folds `Max(versions__version_number)` into a single
+    aggregate column so `get_latest_version` reads it off the row directly —
+    query count must stay flat as more resumes (each with versions) are added."""
     from django.db import connection
     from django.test.utils import CaptureQueriesContext
 
@@ -358,6 +359,52 @@ def test_list_does_not_load_full_version_history_into_memory():
     instance = view.get_queryset().get(pk=r.pk)
     assert getattr(instance, "_latest_version_number", None) == 5
     assert getattr(instance, "_prefetched_objects_cache", {}) == {}
+
+
+def test_list_with_no_versions_does_not_fall_back_to_extra_query():
+    """When a resume has no versions, the `Max(...)` annotation is NULL on
+    the row. The serializer must distinguish that from 'annotation missing'
+    so it returns `None` directly instead of issuing a follow-up
+    `obj.versions.first()` query — keeping list queries flat."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    for i in range(3):
+        BaseResume.objects.create(workspace=ws, name=f"R{i}")
+
+    client = _client(alice)
+    with CaptureQueriesContext(connection) as ctx:
+        response = client.get("/api/resumes/")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 3
+    for row in body:
+        assert row["latest_version"] is None
+    assert len(ctx) <= 8, [q["sql"] for q in ctx]
+
+
+def test_serializer_falls_back_to_versions_first_when_annotation_absent():
+    """Direct serializer use (no viewset queryset) must still produce a
+    correct `latest_version` via `obj.versions.first()` — covers
+    service-layer / admin-side callers."""
+    from resumes.serializers import BaseResumeSerializer
+
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    r = BaseResume.objects.create(workspace=ws, name="x")
+    ResumeVersion.objects.create(
+        base_resume=r, version_number=2, document={"a": 2}, document_hash="y" * 64
+    )
+
+    # Plain `BaseResume.objects.get(...)` → no annotation attribute.
+    instance = BaseResume.objects.get(pk=r.pk)
+    assert not hasattr(instance, "_latest_version_number")
+    rendered = BaseResumeSerializer(instance).data
+    assert rendered["latest_version"] == {"version_number": 2}
 
 
 def test_latest_version_field_renders_when_a_version_exists():
