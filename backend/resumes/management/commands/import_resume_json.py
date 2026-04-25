@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 
 from resumes.models import BaseResume
@@ -33,12 +34,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Match the API surface: archived base resumes are invisible to
         # the dashboard, so the command shouldn't quietly land new
-        # versions on them either.
+        # versions on them either. `ValidationError` covers the
+        # malformed-UUID case (Django's UUIDField raises that, not ValueError),
+        # which would otherwise surface as a stack trace.
         try:
             base_resume = BaseResume.objects.get(
                 pk=options["base_resume_uuid"], archived_at__isnull=True
             )
-        except BaseResume.DoesNotExist as exc:
+        except (BaseResume.DoesNotExist, ValidationError) as exc:
             raise CommandError(
                 f"BaseResume {options['base_resume_uuid']} not found (or has been archived)."
             ) from exc

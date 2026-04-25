@@ -244,14 +244,24 @@ class ResumeVersionViewSet(
                 notes = notes_raw
             return document, notes
 
-        data = request.data if isinstance(request.data, dict) else {}
+        # JSON body path: reject non-object root explicitly so the user
+        # gets "must be a JSON object" instead of the unhelpful
+        # "provide a document" cascade triggered by a list/scalar root.
+        if not isinstance(request.data, dict):
+            raise ValidationError({"non_field_errors": ["Request body must be a JSON object."]})
+        data = request.data
         if "document" not in data:
             raise ValidationError(
                 {"document": "Provide a `document` JSON object or a `file` upload."}
             )
         document = data.get("document")
-        notes_raw = data.get("notes", "")
-        if isinstance(notes_raw, str):
+        if "notes" in data:
+            notes_raw = data.get("notes")
+            # Don't silently drop a non-string `notes` — surface a 400 so the
+            # caller knows their payload was malformed instead of finding the
+            # field empty after the fact.
+            if not isinstance(notes_raw, str):
+                raise ValidationError({"notes": "Notes must be a string."})
             notes = notes_raw
         if not isinstance(document, dict):
             raise ValidationError({"document": "Document must be a JSON object."})

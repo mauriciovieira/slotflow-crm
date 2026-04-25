@@ -177,6 +177,38 @@ def test_other_workspace_base_returns_404():
     assert response.status_code == 404
 
 
+def test_json_body_top_level_array_returns_400_with_clear_message():
+    """A non-object request body shouldn't fall through to the
+    'Provide `document`...' cascade — it gets a clear top-level error."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    base = _base(ws)
+    response = _client(alice).post(
+        _import_url(base.pk),
+        data=[1, 2, 3],
+        format="json",
+    )
+    assert response.status_code == 400
+    assert "non_field_errors" in response.json()
+
+
+def test_json_body_non_string_notes_returns_400():
+    """A non-string `notes` should fail loudly instead of being silently
+    dropped — otherwise debugging a malformed payload is harder."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    base = _base(ws)
+    response = _client(alice).post(
+        _import_url(base.pk),
+        data={"document": {"a": 1}, "notes": 123},
+        format="json",
+    )
+    assert response.status_code == 400
+    assert "notes" in response.json()
+
+
 def test_audit_records_imported_action():
     from audit.models import AuditEvent
 

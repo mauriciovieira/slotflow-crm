@@ -66,6 +66,16 @@ def test_command_rejects_non_object_document(tmp_path):
         call_command("import_resume_json", str(base.pk), str(path))
 
 
+def test_command_rejects_invalid_uuid(tmp_path):
+    """A malformed UUID would otherwise raise ValidationError as a
+    stack trace; the command turns that into a clean CommandError."""
+    path = tmp_path / "x.json"
+    path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(CommandError, match="not found"):
+        call_command("import_resume_json", "not-a-uuid", str(path))
+
+
 def test_command_rejects_archived_base_resume(tmp_path):
     """The command must not silently land a new version on an archived
     base resume — the API/UI hide archived rows, the command should too."""
