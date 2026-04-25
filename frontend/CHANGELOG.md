@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.8.0...frontend-v1.9.0) (2026-04-25)
+
+
+### Features
+
+* **backend, frontend:** workspace switcher API + dashboard dropdown ([ac010cb](https://github.com/mauriciovieira/slotflow-crm/commit/ac010cbd33a41891bdcc281dba872c3cf9c6c02e))
+
 # [1.8.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.7.0...frontend-v1.8.0) (2026-04-25)
 
 
