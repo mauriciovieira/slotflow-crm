@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-25 — Frontend 1.18.0
+
+- [Release notes](frontend/CHANGELOG.md)
+
 ## 2026-04-25 — Docs 1.20.0
 
 - [Release notes](docs/CHANGELOG.md)
