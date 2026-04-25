@@ -20,6 +20,7 @@ from .serializers import (
     ResumeVersionSerializer,
 )
 from .services import (
+    WorkspaceMembershipRequired,
     WorkspaceWriteForbidden,
     archive_resume,
     create_resume,
@@ -99,13 +100,20 @@ class BaseResumeViewSet(viewsets.ModelViewSet):
                 workspace=workspace,
                 name=serializer.validated_data["name"],
             )
-        except WorkspaceWriteForbidden as exc:
+        except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
+            # Either the membership disappeared between the serializer's
+            # workspace-validation step and the service call, or the role
+            # is read-only. Both surface as 403 (matches the role gate
+            # already returned by `IsWorkspaceMember` for PATCH/DELETE).
             raise PermissionDenied(str(exc)) from exc
         out = self.get_serializer(resume)
         return Response(out.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
-        archive_resume(actor=self.request.user, base_resume=instance)
+        try:
+            archive_resume(actor=self.request.user, base_resume=instance)
+        except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
+            raise PermissionDenied(str(exc)) from exc
 
 
 class ResumeVersionViewSet(
@@ -159,7 +167,7 @@ class ResumeVersionViewSet(
                 document=serializer.validated_data["document"],
                 notes=serializer.validated_data.get("notes", ""),
             )
-        except WorkspaceWriteForbidden as exc:
+        except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
             raise PermissionDenied(str(exc)) from exc
         out = ResumeVersionSerializer(version, context={"request": request})
         return Response(out.data, status=status.HTTP_201_CREATED)

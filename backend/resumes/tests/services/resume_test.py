@@ -146,6 +146,43 @@ def test_create_resume_version_rejects_viewer():
         create_resume_version(actor=viewer, base_resume=resume, document={})
 
 
+def test_document_hash_does_not_silently_coerce_non_json_types():
+    """`_document_hash` must NOT use `default=str` — a non-JSON-serializable
+    document needs to fail loudly so the digest matches what `JSONField`
+    will store. Coercion would let through values that the DB would reject
+    or store with a different shape than the hash represents."""
+    import datetime
+
+    user = _user()
+    ws = _workspace()
+    _join(user, ws)
+    resume = create_resume(actor=user, workspace=ws, name="x")
+
+    # `datetime` is the canonical "looks JSON-ish but isn't" value.
+    with pytest.raises(TypeError):
+        create_resume_version(
+            actor=user,
+            base_resume=resume,
+            document={"when": datetime.datetime(2026, 1, 1)},
+        )
+
+
+def test_archive_resume_returns_fresh_instance_state():
+    """`archive_resume` must return the caller's instance fully refreshed,
+    not just `archived_at`. Other fields (e.g. `updated_at`) get bumped by
+    the lock+save and the caller would otherwise see a stale row."""
+    user = _user()
+    ws = _workspace()
+    _join(user, ws)
+    resume = create_resume(actor=user, workspace=ws, name="x")
+    initial_updated_at = resume.updated_at
+
+    archived = archive_resume(actor=user, base_resume=resume)
+    assert archived is resume  # identity preserved (caller's reference)
+    assert archived.archived_at is not None
+    assert archived.updated_at >= initial_updated_at
+
+
 def test_create_resume_writes_audit_event():
     from audit.models import AuditEvent
 

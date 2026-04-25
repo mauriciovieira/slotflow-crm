@@ -32,7 +32,11 @@ class WorkspaceWriteForbidden(PermissionError):
 
 
 def _document_hash(document: Any) -> str:
-    payload = json.dumps(document, sort_keys=True, default=str).encode("utf-8")
+    # `default=str` is intentionally NOT used: a non-JSON-serializable
+    # `document` should fail loudly here rather than produce a digest that
+    # silently differs from what `JSONField` will store. The spec contract
+    # is `sha256(json.dumps(document, sort_keys=True))`.
+    payload = json.dumps(document, sort_keys=True).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -88,7 +92,12 @@ def archive_resume(*, actor: AbstractBaseUser, base_resume: BaseResume) -> BaseR
             "already_archived": already_archived,
         },
     )
-    base_resume.archived_at = locked.archived_at
+    # Refresh the caller-supplied instance from the DB so all fields
+    # (`updated_at`, plus anything an app layer above might have raced with)
+    # match what was just persisted — not just `archived_at`. This preserves
+    # Python-identity for callers holding a reference while still handing
+    # back fresh row state.
+    base_resume.refresh_from_db()
     return base_resume
 
 

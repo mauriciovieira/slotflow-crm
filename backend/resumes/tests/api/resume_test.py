@@ -134,6 +134,31 @@ def test_create_falls_back_to_sole_membership():
     assert response.json()["workspace"] == str(ws.pk)
 
 
+def test_create_membership_disappears_between_validation_and_service_returns_403(
+    monkeypatch,
+):
+    """If membership is removed in the gap between serializer validation and
+    the service call, the service raises `WorkspaceMembershipRequired`. The
+    view must catch that and surface 403, not bubble as an unhandled 500."""
+    from resumes.services import WorkspaceMembershipRequired
+
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+
+    def raising_create_resume(**kwargs):
+        raise WorkspaceMembershipRequired("simulated race")
+
+    monkeypatch.setattr("resumes.views.create_resume", raising_create_resume)
+
+    response = _client(alice).post(
+        "/api/resumes/",
+        data={"workspace": str(ws.pk), "name": "x"},
+        format="json",
+    )
+    assert response.status_code == 403
+
+
 def test_create_forbidden_for_viewer_membership():
     alice = _user()
     ws = _workspace()
