@@ -8,6 +8,9 @@ import { Login } from "./screens/Login";
 import { OpportunitiesList } from "./screens/OpportunitiesList";
 import { OpportunityCreate } from "./screens/OpportunityCreate";
 import { OpportunityDetail } from "./screens/OpportunityDetail";
+import { InterviewCycleCreate } from "./screens/InterviewCycleCreate";
+import { InterviewCycleDetail } from "./screens/InterviewCycleDetail";
+import { InterviewsList } from "./screens/InterviewsList";
 import { ResumeCreate } from "./screens/ResumeCreate";
 import { ResumeDetail } from "./screens/ResumeDetail";
 import { ResumesList } from "./screens/ResumesList";
@@ -48,6 +51,8 @@ export const routes: RouteObject[] = [
       { path: "opportunities/:opportunityId", element: <OpportunityDetail /> },
       { path: "resumes/new", element: <ResumeCreate /> },
       { path: "resumes/:resumeId", element: <ResumeDetail /> },
+      { path: "interviews/new", element: <InterviewCycleCreate /> },
+      { path: "interviews/:cycleId", element: <InterviewCycleDetail /> },
       ...DASHBOARD_NAV.map((item) => ({
         path: item.slug,
         element:
@@ -55,7 +60,9 @@ export const routes: RouteObject[] = [
             ? <OpportunitiesList />
             : item.slug === "resumes"
               ? <ResumesList />
-              : <StubPanel />,
+              : item.slug === "interviews"
+                ? <InterviewsList />
+                : <StubPanel />,
       })),
     ],
   },
