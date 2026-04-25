@@ -70,7 +70,7 @@ Cache invalidations follow the opportunities pattern.
 **Screens:**
 
 - `screens/ResumesList.tsx` — workspace's resumes (loading/error/empty/populated). "New resume" CTA links to `/dashboard/resumes/new`.
-- `screens/ResumeCreate.tsx` — single-field form (`name`). On success → list.
+- `screens/ResumeCreate.tsx` — single-field form (`name`). On success → detail (`/dashboard/resumes/:resumeId`) so the user lands directly on the new-version composer.
 - `screens/ResumeDetail.tsx` — shows the base resume name + a list of versions (newest first) + "New version" button + "Archive" inline confirm. The new-version flow shows a `<textarea>` accepting raw JSON; on submit the form parses + posts. Parse errors display inline.
 
 **Routing:** swap the `resumes` slug from `<StubPanel />` to `<ResumesList />`. Add `resumes/new` and `resumes/:resumeId` siblings.

@@ -59,6 +59,8 @@ export const TestIds = {
   RESUME_DETAIL_BACK: "resume-detail-back",
   RESUME_DETAIL_VERSIONS_LIST: "resume-detail-versions-list",
   RESUME_DETAIL_VERSIONS_EMPTY: "resume-detail-versions-empty",
+  RESUME_DETAIL_VERSIONS_LOADING: "resume-detail-versions-loading",
+  RESUME_DETAIL_VERSIONS_ERROR: "resume-detail-versions-error",
   RESUME_DETAIL_VERSION_ROW: "resume-detail-version-row",
   RESUME_DETAIL_NEW_VERSION_TOGGLE: "resume-detail-new-version-toggle",
   RESUME_DETAIL_NEW_VERSION_FORM: "resume-detail-new-version-form",

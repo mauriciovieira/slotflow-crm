@@ -146,6 +146,28 @@ describe("ResumeDetail", () => {
     expect(screen.getByTestId(TestIds.RESUME_DETAIL_NOT_FOUND)).toBeVisible();
   });
 
+  it("renders the versions loading branch", () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({ isLoading: true, status: "pending" });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    renderDetail();
+    expect(screen.getByTestId(TestIds.RESUME_DETAIL_VERSIONS_LOADING)).toBeVisible();
+  });
+
+  it("renders the versions error branch with retry", () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({
+      error: new Error("network down"),
+      isError: true,
+      status: "error",
+    });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    renderDetail();
+    expect(screen.getByTestId(TestIds.RESUME_DETAIL_VERSIONS_ERROR)).toBeVisible();
+  });
+
   it("renders heading + empty versions placeholder", () => {
     setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
     setVersionsQuery({ data: [], isSuccess: true, status: "success" });

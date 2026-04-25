@@ -296,6 +296,35 @@ def test_versions_create_forbidden_for_viewer():
     assert response.status_code == 403
 
 
+def test_list_does_not_n_plus_one_on_latest_version():
+    """`get_latest_version` reads from the prefetch cache, so the query count
+    must stay flat as more resumes (each with versions) are added."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    for i in range(5):
+        r = BaseResume.objects.create(workspace=ws, name=f"R{i}")
+        ResumeVersion.objects.create(
+            base_resume=r,
+            version_number=1,
+            document={"i": i},
+            document_hash=f"{i:0>64}",
+        )
+
+    client = _client(alice)
+    with CaptureQueriesContext(connection) as ctx:
+        response = client.get("/api/resumes/")
+    assert response.status_code == 200
+    assert len(response.json()) == 5
+    # Tight upper bound: even with auth/session middleware queries the count
+    # must not scale with the number of rows. 5 rows + N+1 would be ~6+;
+    # with prefetch it stays in the small-constant range.
+    assert len(ctx) <= 8, [q["sql"] for q in ctx]
+
+
 def test_latest_version_field_renders_when_a_version_exists():
     alice = _user()
     ws = _workspace()

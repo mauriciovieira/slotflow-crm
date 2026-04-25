@@ -85,6 +85,8 @@ export function ResumeDetail() {
   if (!resume) return null;
 
   const versions = versionsQuery.data ?? [];
+  const versionsLoading = versionsQuery.isLoading;
+  const versionsError = versionsQuery.error;
 
   async function handleVersionSubmit(event: FormEvent) {
     event.preventDefault();
@@ -224,7 +226,28 @@ export function ResumeDetail() {
           </form>
         )}
 
-        {versions.length === 0 ? (
+        {versionsLoading ? (
+          <p
+            data-testid={TestIds.RESUME_DETAIL_VERSIONS_LOADING}
+            className="text-sm text-ink-secondary"
+          >
+            Loading versions…
+          </p>
+        ) : versionsError ? (
+          <div
+            data-testid={TestIds.RESUME_DETAIL_VERSIONS_ERROR}
+            className="text-sm text-ink-secondary"
+          >
+            <p className="mb-2">Could not load versions.</p>
+            <button
+              type="button"
+              onClick={() => versionsQuery.refetch()}
+              className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card"
+            >
+              Try again
+            </button>
+          </div>
+        ) : versions.length === 0 ? (
           <p
             data-testid={TestIds.RESUME_DETAIL_VERSIONS_EMPTY}
             className="text-sm text-ink-secondary"

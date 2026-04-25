@@ -92,7 +92,15 @@ class BaseResumeSerializer(serializers.ModelSerializer):
         return _render_user(obj.created_by)
 
     def get_latest_version(self, obj: BaseResume):
-        latest = obj.versions.first()
+        # Prefer the prefetched cache so list endpoints stay O(1) queries (the
+        # viewset prefetches `versions` ordered by Meta.ordering = -version_number,
+        # so element 0 is the newest). Fall back to a row fetch when the
+        # serializer is used outside the viewset (e.g. service-layer tests).
+        prefetched = getattr(obj, "_prefetched_objects_cache", {}).get("versions")
+        if prefetched is not None:
+            latest = prefetched[0] if prefetched else None
+        else:
+            latest = obj.versions.first()
         if latest is None:
             return None
         return ResumeVersionSerializer(latest, context=self.context).data
