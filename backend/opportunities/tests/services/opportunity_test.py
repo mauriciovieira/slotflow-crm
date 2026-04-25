@@ -52,9 +52,7 @@ def test_create_opportunity_rejects_non_member_workspace():
     ws = _workspace("ws-other")
 
     with pytest.raises(WorkspaceMembershipRequired):
-        create_opportunity(
-            actor=user, workspace=ws, payload={"title": "x", "company": "y"}
-        )
+        create_opportunity(actor=user, workspace=ws, payload={"title": "x", "company": "y"})
 
     assert Opportunity.objects.count() == 0
 
@@ -63,9 +61,7 @@ def test_archive_opportunity_sets_archived_at_and_is_idempotent():
     user = _user()
     ws = _workspace()
     _join(user, ws)
-    opp = create_opportunity(
-        actor=user, workspace=ws, payload={"title": "x", "company": "y"}
-    )
+    opp = create_opportunity(actor=user, workspace=ws, payload={"title": "x", "company": "y"})
     assert opp.archived_at is None
 
     archived = archive_opportunity(actor=user, opportunity=opp)

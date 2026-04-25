@@ -16,7 +16,11 @@ class _CreatedBySerializer(serializers.Serializer):
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
-    workspace = serializers.PrimaryKeyRelatedField(queryset=Workspace.objects.all())
+    workspace = serializers.PrimaryKeyRelatedField(
+        queryset=Workspace.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     created_by = _CreatedBySerializer(read_only=True)
 
     class Meta:
@@ -41,7 +45,5 @@ class OpportunitySerializer(serializers.ModelSerializer):
         if actor is None or not actor.is_authenticated:
             raise serializers.ValidationError("Authentication required.")
         if get_membership(actor, workspace) is None:
-            raise serializers.ValidationError(
-                "You do not have a membership in that workspace."
-            )
+            raise serializers.ValidationError("You do not have a membership in that workspace.")
         return workspace

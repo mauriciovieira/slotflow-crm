@@ -21,7 +21,7 @@ class WorkspaceMembershipRequired(PermissionError):
 
 @transaction.atomic
 def create_opportunity(
-    *, actor: "AbstractBaseUser", workspace: "Workspace", payload: dict
+    *, actor: AbstractBaseUser, workspace: Workspace, payload: dict
 ) -> Opportunity:
     """Create an Opportunity inside `workspace`, stamping `created_by=actor`.
 
@@ -43,7 +43,7 @@ def create_opportunity(
 
 
 @transaction.atomic
-def archive_opportunity(*, actor: "AbstractBaseUser", opportunity: Opportunity) -> Opportunity:
+def archive_opportunity(*, actor: AbstractBaseUser, opportunity: Opportunity) -> Opportunity:
     """Soft-delete: set `archived_at` to now if not already set; idempotent."""
     if get_membership(actor, opportunity.workspace) is None:
         raise WorkspaceMembershipRequired(
