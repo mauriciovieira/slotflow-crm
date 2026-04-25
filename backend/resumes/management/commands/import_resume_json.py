@@ -31,10 +31,17 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # Match the API surface: archived base resumes are invisible to
+        # the dashboard, so the command shouldn't quietly land new
+        # versions on them either.
         try:
-            base_resume = BaseResume.objects.get(pk=options["base_resume_uuid"])
+            base_resume = BaseResume.objects.get(
+                pk=options["base_resume_uuid"], archived_at__isnull=True
+            )
         except BaseResume.DoesNotExist as exc:
-            raise CommandError(f"BaseResume {options['base_resume_uuid']} not found.") from exc
+            raise CommandError(
+                f"BaseResume {options['base_resume_uuid']} not found (or has been archived)."
+            ) from exc
 
         path = options["path"]
         if path == "-":

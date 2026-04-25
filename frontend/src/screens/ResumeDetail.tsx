@@ -282,7 +282,11 @@ export function ResumeDetail() {
               <input
                 type="file"
                 accept="application/json,.json"
-                required
+                // No `required` here on purpose: native constraint validation
+                // blocks `onSubmit` from running when the field is empty,
+                // which would short-circuit the JSX-level "Pick a JSON file."
+                // friendly inline error. The submit handler is the single
+                // source of truth for this guard.
                 onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
                 data-testid={TestIds.RESUME_DETAIL_IMPORT_FILE}
                 className="w-full text-sm"

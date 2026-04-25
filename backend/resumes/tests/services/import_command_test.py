@@ -66,6 +66,22 @@ def test_command_rejects_non_object_document(tmp_path):
         call_command("import_resume_json", str(base.pk), str(path))
 
 
+def test_command_rejects_archived_base_resume(tmp_path):
+    """The command must not silently land a new version on an archived
+    base resume — the API/UI hide archived rows, the command should too."""
+    from django.utils import timezone
+
+    ws = _ws()
+    base = _base(ws)
+    base.archived_at = timezone.now()
+    base.save(update_fields=["archived_at"])
+    path = tmp_path / "x.json"
+    path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(CommandError, match="not found"):
+        call_command("import_resume_json", str(base.pk), str(path))
+
+
 def test_command_rejects_unknown_base_resume(tmp_path):
     path = tmp_path / "x.json"
     path.write_text("{}", encoding="utf-8")
