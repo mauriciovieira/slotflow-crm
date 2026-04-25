@@ -4,8 +4,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from audit.models import AuditEvent
 from audit.services import write_audit_event
+from opportunities.models import Opportunity
 from tenancy.models import Membership, MembershipRole, Workspace
 
 pytestmark = pytest.mark.django_db
@@ -117,30 +117,22 @@ def test_filter_by_entity_type_and_id():
     ws = _ws()
     _join(owner, ws, role=MembershipRole.OWNER)
 
-    AuditEvent.objects.create(
-        actor=owner,
-        actor_repr="alice",
-        action="opportunity.archived",
-        entity_type="opportunities.Opportunity",
-        entity_id="111",
-        workspace=ws,
-    )
-    AuditEvent.objects.create(
-        actor=owner,
-        actor_repr="alice",
-        action="opportunity.archived",
-        entity_type="opportunities.Opportunity",
-        entity_id="222",
-        workspace=ws,
-    )
+    # Use the real `write_audit_event` write path with real Opportunity
+    # instances so the test exercises the same `_entity_descriptor`
+    # logic the production callers do (app_label + class name + pk).
+    opp_a = Opportunity.objects.create(workspace=ws, title="A", company="C")
+    opp_b = Opportunity.objects.create(workspace=ws, title="B", company="C")
+    write_audit_event(actor=owner, action="opportunity.archived", entity=opp_a, workspace=ws)
+    write_audit_event(actor=owner, action="opportunity.archived", entity=opp_b, workspace=ws)
 
     response = _client(owner).get(
-        f"/api/audit-events/?workspace={ws.id}&entity_type=opportunities.Opportunity&entity_id=111"
+        f"/api/audit-events/?workspace={ws.id}"
+        f"&entity_type=opportunities.Opportunity&entity_id={opp_a.pk}"
     )
     assert response.status_code == 200
     body = response.json()
     assert body["count"] == 1
-    assert body["results"][0]["entity_id"] == "111"
+    assert body["results"][0]["entity_id"] == str(opp_a.pk)
 
 
 def test_results_are_newest_first():

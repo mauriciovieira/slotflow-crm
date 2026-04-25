@@ -38,10 +38,17 @@ export const auditEventsKey = (args: AuditEventsArgs) =>
   ] as const;
 
 function buildPath(args: AuditEventsArgs, pageParam: string | null): string {
-  // The DRF `next` URL is fully qualified; honor it verbatim so server-side
-  // pagination drives the cursor. On the first page, build the query from
-  // the active filters.
-  if (pageParam) return pageParam;
+  // DRF emits `next` as a fully-qualified URL. Normalize it to a relative
+  // `pathname + search` so pagination keeps working behind same-origin
+  // proxies (and avoids mixed-content blocks if the backend builds an
+  // http:// next URL while the SPA is served over https://). The first
+  // page builds its query from the active filters.
+  if (pageParam) {
+    const base =
+      typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    const url = new URL(pageParam, base);
+    return `${url.pathname}${url.search}`;
+  }
   const params = new URLSearchParams({ workspace: args.workspaceId ?? "" });
   if (args.action) params.set("action", args.action);
   if (args.entityType) params.set("entity_type", args.entityType);

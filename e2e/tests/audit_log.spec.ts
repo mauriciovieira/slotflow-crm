@@ -26,6 +26,11 @@ test.describe("Audit log", () => {
       created_at: string;
     };
 
+    // Match the real API shape: BE rows always carry a non-null workspace
+    // matching the request, since the queryset filters
+    // `workspace_id=<workspace>`.
+    const stubWorkspaceId = "00000000-0000-4000-8000-000000000000";
+
     const allRows: Row[] = [
       {
         id: "evt-1",
@@ -33,7 +38,7 @@ test.describe("Audit log", () => {
         action: "mcp_token.issued",
         entity_type: "mcp.McpToken",
         entity_id: "tok-1",
-        workspace: null,
+        workspace: stubWorkspaceId,
         correlation_id: "corr-1",
         metadata: { name: "demo" },
         created_at: "2026-04-25T10:00:00Z",
@@ -44,7 +49,7 @@ test.describe("Audit log", () => {
         action: "mcp_token.revoked",
         entity_type: "mcp.McpToken",
         entity_id: "tok-2",
-        workspace: null,
+        workspace: stubWorkspaceId,
         correlation_id: "corr-2",
         metadata: {},
         created_at: "2026-04-25T09:00:00Z",
@@ -57,7 +62,7 @@ test.describe("Audit log", () => {
       action: "opportunity.archived",
       entity_type: "opportunities.Opportunity",
       entity_id: "42",
-      workspace: null,
+      workspace: stubWorkspaceId,
       correlation_id: "corr-3",
       metadata: {},
       created_at: "2026-04-25T08:00:00Z",
@@ -66,7 +71,9 @@ test.describe("Audit log", () => {
     await page.route(/\/api\/audit-events\/\?.*$/, async (route) => {
       const url = new URL(route.request().url());
       const action = url.searchParams.get("action");
-      const isPage2 = url.searchParams.get("cursor") === "p2";
+      // Mirror DRF PageNumberPagination's `?page=2` shape rather than a
+      // hand-rolled cursor — keeps the FE/BE/e2e contract honest.
+      const isPage2 = url.searchParams.get("page") === "2";
 
       if (isPage2) {
         await route.fulfill({
@@ -87,7 +94,7 @@ test.describe("Audit log", () => {
         ? null
         : `${url.origin}/api/audit-events/?workspace=${url.searchParams.get(
             "workspace",
-          )}&cursor=p2`;
+          )}&page=2`;
       await route.fulfill({
         status: 200,
         contentType: "application/json",

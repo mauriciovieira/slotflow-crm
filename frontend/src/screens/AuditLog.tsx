@@ -41,6 +41,11 @@ function MetadataCell({ row }: { row: AuditEvent }) {
 
 export function AuditLog() {
   const activeQuery = useActiveWorkspace();
+  // Distinguish "still loading the active workspace" from "no workspace
+  // selected" — without this split the empty-state branch flashes
+  // during initial load and "No audit events yet." reads as a stale
+  // truth instead of a transient placeholder.
+  const activeLoading = activeQuery.isLoading;
   const workspaceId = activeQuery.data?.active?.id ?? "";
   const [action, setAction] = useState("");
   const [entityType, setEntityType] = useState("");
@@ -76,6 +81,52 @@ export function AuditLog() {
         </p>
       </header>
 
+      {activeLoading ? (
+        <p className="text-sm text-ink-secondary">Loading workspace…</p>
+      ) : !workspaceId ? (
+        <p className="text-sm text-ink-secondary">
+          Pick an active workspace to view its audit log.
+        </p>
+      ) : (
+        <AuditBody
+          action={action}
+          setAction={setAction}
+          entityType={entityType}
+          setEntityType={setEntityType}
+          entityId={entityId}
+          setEntityId={setEntityId}
+          clearFilters={clearFilters}
+          query={query}
+          rows={rows}
+        />
+      )}
+    </section>
+  );
+}
+
+function AuditBody({
+  action,
+  setAction,
+  entityType,
+  setEntityType,
+  entityId,
+  setEntityId,
+  clearFilters,
+  query,
+  rows,
+}: {
+  action: string;
+  setAction: (v: string) => void;
+  entityType: string;
+  setEntityType: (v: string) => void;
+  entityId: string;
+  setEntityId: (v: string) => void;
+  clearFilters: () => void;
+  query: ReturnType<typeof useAuditEvents>;
+  rows: AuditEvent[];
+}) {
+  return (
+    <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <label className="block">
           <span className="text-xs text-ink-secondary mb-1 block">Action</span>
@@ -207,6 +258,6 @@ export function AuditLog() {
           )}
         </>
       )}
-    </section>
+    </>
   );
 }
