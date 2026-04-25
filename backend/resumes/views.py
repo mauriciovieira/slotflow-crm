@@ -158,7 +158,12 @@ class ResumeVersionViewSet(
 
     def create(self, request, *args, **kwargs):
         base_resume = self._get_base_resume()
-        serializer = ResumeVersionCreateSerializer(data=request.data)
+        # `self.get_serializer(...)` resolves to `ResumeVersionCreateSerializer`
+        # via `get_serializer_class` for the create action, and threads the
+        # standard DRF context (request/format/view) automatically — which
+        # `ResumeVersionCreateSerializer` may grow to need without us
+        # remembering to pass it here.
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             version = create_resume_version(
@@ -169,5 +174,7 @@ class ResumeVersionViewSet(
             )
         except (WorkspaceMembershipRequired, WorkspaceWriteForbidden) as exc:
             raise PermissionDenied(str(exc)) from exc
-        out = ResumeVersionSerializer(version, context={"request": request})
+        # Use the standard DRF context for the response serializer too, so
+        # `request`, `format`, and `view` stay consistent.
+        out = ResumeVersionSerializer(version, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
