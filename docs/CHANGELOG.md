@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.1.0...docs-v1.2.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** add Opportunity model ([#16](https://github.com/mauriciovieira/slotflow-crm/issues/16)) ([e3582f1](https://github.com/mauriciovieira/slotflow-crm/commit/e3582f1b0b2a9d05fa518c61d10688aae0f7cd75))
+
 # [1.1.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.0.0...docs-v1.1.0) (2026-04-25)
 
 
