@@ -177,7 +177,11 @@ describe("McpTokensSection", () => {
     renderSection();
 
     await user.click(screen.getByTestId(TestIds.SETTINGS_MCP_ISSUE_TOGGLE));
-    fireEvent.submit(screen.getByTestId(TestIds.SETTINGS_MCP_ISSUE_FORM));
+    // Click the submit button (rather than `fireEvent.submit`) so we go
+    // through the same path a real user would. The form sets
+    // `noValidate`, so the custom inline error is the empty-name guard
+    // in both jsdom and a real browser.
+    await user.click(screen.getByTestId(TestIds.SETTINGS_MCP_ISSUE_SUBMIT));
     expect(
       await screen.findByTestId(TestIds.SETTINGS_MCP_ISSUE_ERROR),
     ).toHaveTextContent(/name is required/i);

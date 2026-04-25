@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   type McpToken,
   type McpTokenIssued,
@@ -29,12 +29,29 @@ function PlaintextPanel({
   onDismiss: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  // Track the "Copied" flash timer so we can cancel it on unmount or on
+  // a follow-up copy. Without this, dismissing the panel between copy
+  // and timeout fires `setCopied(false)` after the component is gone.
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimer.current !== null) {
+        clearTimeout(copyTimer.current);
+        copyTimer.current = null;
+      }
+    };
+  }, []);
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(issued.plaintext);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => {
+        setCopied(false);
+        copyTimer.current = null;
+      }, 2000);
     } catch {
       // Clipboard API can fail (e.g., insecure context); the input is
       // selectable so the user can copy by hand.
@@ -109,13 +126,17 @@ function IssueForm({
     <form
       onSubmit={handleSubmit}
       data-testid={TestIds.SETTINGS_MCP_ISSUE_FORM}
+      // `noValidate` lets the custom inline error path (`Name is
+      // required.`) run consistently in real browsers. With native
+      // constraint validation the empty-input submit is silently
+      // suppressed, so the inline error never renders.
+      noValidate
       className="border border-border-subtle rounded-lg p-3 mb-4 space-y-2 bg-surface"
     >
       <label className="block">
         <span className="text-xs text-ink-secondary mb-1 block">Token name</span>
         <input
           type="text"
-          required
           value={name}
           onChange={(e) => setName(e.target.value)}
           data-testid={TestIds.SETTINGS_MCP_ISSUE_NAME}
