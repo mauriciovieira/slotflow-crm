@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-25 — Docs 1.2.0
+
+- [Release notes](docs/CHANGELOG.md)
+
 ## 2026-04-25 — Backend 0.6.0
 
 - [Release notes](backend/CHANGELOG.md)
