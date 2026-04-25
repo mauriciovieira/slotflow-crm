@@ -57,14 +57,57 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
 
   if (!response.ok) {
-    const detail =
-      body && typeof body === "object" && "detail" in body && typeof (body as { detail?: unknown }).detail === "string"
-        ? (body as { detail: string }).detail
-        : typeof body === "string" && body
-          ? body
-          : response.statusText;
-    throw new ApiError(response.status, detail);
+    throw new ApiError(response.status, extractErrorMessage(body, response.statusText));
   }
 
   return body as T;
+}
+
+function flattenToString(value: unknown): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const s = flattenToString(item);
+      if (s) return s;
+    }
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Pull a human-readable error message out of a DRF response body.
+ *
+ * DRF surfaces errors in three common shapes:
+ *   - `{ "detail": "..." }` for permission/auth/throttle errors
+ *   - `{ "non_field_errors": ["..."] }` from custom raise paths
+ *   - `{ "<field>": ["..."], ... }` from `ValidationError` on individual fields
+ *
+ * Without this fan-out, validation errors fell back to `response.statusText`
+ * (e.g. "Bad Request"), which is useless to the user. Prefer `detail`, then
+ * `non_field_errors`, then the first field error; finally fall back to the
+ * raw text body or HTTP status text.
+ */
+function extractErrorMessage(body: unknown, statusText: string): string {
+  if (typeof body === "string") {
+    const trimmed = body.trim();
+    if (trimmed) return trimmed;
+  }
+
+  if (body && typeof body === "object") {
+    const obj = body as Record<string, unknown>;
+    const detail = flattenToString(obj.detail);
+    if (detail) return detail;
+    const nonField = flattenToString(obj.non_field_errors);
+    if (nonField) return nonField;
+    for (const [key, value] of Object.entries(obj)) {
+      const flat = flattenToString(value);
+      if (flat) return `${key}: ${flat}`;
+    }
+  }
+
+  return statusText;
 }
