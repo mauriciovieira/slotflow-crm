@@ -233,6 +233,31 @@ def test_create_forbidden_for_viewer():
     assert response.status_code == 403
 
 
+def test_create_duplicate_link_returns_400_not_500():
+    """Two link attempts with the same (opportunity, version, role) trip
+    the DB unique constraint. The view must catch IntegrityError and
+    surface 400 with a friendly message, not bubble as 500."""
+    alice = _user()
+    ws = _ws()
+    _join(alice, ws)
+    opp = _opp(ws)
+    version = _resume_version(ws)
+
+    payload = {
+        "opportunity": str(opp.pk),
+        "resume_version": str(version.pk),
+        "role": OpportunityResumeRole.SUBMITTED,
+    }
+    first = _client(alice).post("/api/opportunity-resumes/", data=payload, format="json")
+    assert first.status_code == 201
+
+    second = _client(alice).post("/api/opportunity-resumes/", data=payload, format="json")
+    assert second.status_code == 400
+    body = second.json()
+    assert "non_field_errors" in body
+    assert "already linked" in body["non_field_errors"][0].lower()
+
+
 def test_create_rejects_invalid_role():
     alice = _user()
     ws = _ws()

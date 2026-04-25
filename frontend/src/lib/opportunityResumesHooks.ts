@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./api";
+import { opportunityKey } from "./opportunitiesHooks";
 
 export type OpportunityResumeRole = "submitted" | "used_internally";
 
@@ -61,8 +62,13 @@ export function useLinkResumeToOpportunity(opportunityId: string) {
         method: "POST",
         body: JSON.stringify(payload),
       }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: opportunityResumesKey(opportunityId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: opportunityResumesKey(opportunityId) });
+      // Also bust the opportunity detail cache: future revisions will likely
+      // surface link counts on the opportunity payload, and even today an
+      // open detail view shouldn't hold stale state after a link mutation.
+      return qc.invalidateQueries({ queryKey: opportunityKey(opportunityId) });
+    },
   });
 }
 
@@ -73,8 +79,10 @@ export function useUnlinkOpportunityResume(opportunityId: string, linkId: string
       apiFetch<null>(`/api/opportunity-resumes/${linkId}/`, {
         method: "DELETE",
       }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: opportunityResumesKey(opportunityId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: opportunityResumesKey(opportunityId) });
+      return qc.invalidateQueries({ queryKey: opportunityKey(opportunityId) });
+    },
   });
 }
 

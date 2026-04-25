@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from django.db import IntegrityError
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
@@ -82,6 +83,17 @@ class OpportunityResumeViewSet(
             raise PermissionDenied(str(exc)) from exc
         except CrossWorkspaceLinkForbidden as exc:
             raise ValidationError({"resume_version": str(exc)}) from exc
+        except IntegrityError as exc:
+            # The (opportunity, resume_version, role) unique constraint
+            # can fire on duplicate links. Surface as a 400 so the FE can
+            # render a sensible message instead of a 500.
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        "This resume version is already linked to the opportunity with that role."
+                    ]
+                }
+            ) from exc
         out = OpportunityResumeSerializer(link, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
 
