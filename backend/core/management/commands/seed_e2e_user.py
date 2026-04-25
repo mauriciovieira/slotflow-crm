@@ -57,21 +57,26 @@ class Command(BaseCommand):
         user.set_password(password)
         user.save()
 
-        workspace, ws_created = Workspace.objects.get_or_create(
+        # Use update_or_create so the workspace name re-syncs with the
+        # constant if someone has renamed the row (e.g. via /admin/) — keeps
+        # the e2e baseline deterministic across reruns.
+        workspace, ws_created = Workspace.objects.update_or_create(
             slug=E2E_WORKSPACE_SLUG,
             defaults={"name": E2E_WORKSPACE_NAME},
         )
-        Membership.objects.update_or_create(
+        _, membership_created = Membership.objects.update_or_create(
             user=user,
             workspace=workspace,
             defaults={"role": MembershipRole.OWNER},
         )
 
         user_action = "Created" if user_created else "Updated"
-        ws_action = "created" if ws_created else "reused"
+        ws_action = "created" if ws_created else "updated"
+        membership_action = "created" if membership_created else "updated"
         self.stdout.write(
             self.style.SUCCESS(
                 f"{user_action} e2e user {E2E_USERNAME!r}; "
-                f"{ws_action} workspace {E2E_WORKSPACE_SLUG!r} (OWNER membership)."
+                f"{ws_action} workspace {E2E_WORKSPACE_SLUG!r}; "
+                f"{membership_action} OWNER membership."
             )
         )

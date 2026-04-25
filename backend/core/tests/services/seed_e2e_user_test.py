@@ -83,7 +83,9 @@ def test_workspace_seeding_is_idempotent(settings):
     _run()
 
     assert Workspace.objects.filter(slug="e2e").count() == 1
-    assert Membership.objects.filter(workspace__slug="e2e").count() == 1
+    # Scope the membership assertion to the seeded user so future fixtures
+    # that join other users to the e2e workspace don't break this test.
+    assert Membership.objects.filter(workspace__slug="e2e", user__username="e2e").count() == 1
 
 
 def test_password_env_is_stripped_and_empty_falls_back(monkeypatch, settings):
