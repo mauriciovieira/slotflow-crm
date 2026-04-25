@@ -15,7 +15,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
       data-testid={TestIds.DASHBOARD_HEADER}
       className="h-14 flex items-center justify-between px-6 border-b border-border-subtle bg-surface"
     >
-      <h2 className="text-base font-semibold text-ink">{title}</h2>
+      <h1 className="text-base font-semibold text-ink">{title}</h1>
       <div className="flex items-center gap-4">
         <span
           data-testid={TestIds.SIGNED_IN_HEADER}

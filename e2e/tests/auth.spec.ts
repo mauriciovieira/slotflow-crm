@@ -40,7 +40,8 @@ test.describe("auth flow", () => {
     // the outlet.
     await expect(page).toHaveURL("/dashboard/opportunities");
     await expect(page.getByTestId(TestIds.SIGNED_IN_HEADER)).toBeVisible();
-    await expect(page.getByTestId(TestIds.STUB_PANEL_TITLE)).toHaveText("Opportunities");
+    await expect(page.getByTestId(TestIds.DASHBOARD_HEADER)).toContainText("Opportunities");
+    await expect(page.getByTestId(TestIds.STUB_PANEL)).toBeVisible();
 
     // Sign out from the dashboard header. AuthGuard sees the session is gone
     // and navigates to /login; the primary submit button is our proxy for "the

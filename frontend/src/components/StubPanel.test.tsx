@@ -4,15 +4,15 @@ import { StubPanel } from "./StubPanel";
 import { TestIds } from "../testIds";
 
 describe("StubPanel", () => {
-  it("renders the title prop inside the titled element", () => {
-    render(<StubPanel title="Opportunities" />);
-    const title = screen.getByTestId(TestIds.STUB_PANEL_TITLE);
-    expect(title).toHaveTextContent("Opportunities");
+  it("renders the coming-soon placeholder inside a tagged section", () => {
+    render(<StubPanel />);
+    const panel = screen.getByTestId(TestIds.STUB_PANEL);
+    expect(panel).toHaveTextContent(/coming soon/i);
+    expect(panel).toHaveTextContent(/lands in a later PR/i);
   });
 
-  it("renders an accessible heading", () => {
-    render(<StubPanel title="Resumes" />);
-    const heading = screen.getByRole("heading", { name: "Resumes" });
-    expect(heading).toBeVisible();
+  it("does not emit its own heading so the dashboard header stays the page h1", () => {
+    render(<StubPanel />);
+    expect(screen.queryByRole("heading")).toBeNull();
   });
 });

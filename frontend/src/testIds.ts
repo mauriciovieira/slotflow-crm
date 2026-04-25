@@ -13,7 +13,7 @@ export const TestIds = {
   NAV_RESUMES: "nav-resumes",
   NAV_INTERVIEWS: "nav-interviews",
   NAV_SETTINGS: "nav-settings",
-  STUB_PANEL_TITLE: "stub-panel-title",
+  STUB_PANEL: "stub-panel",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

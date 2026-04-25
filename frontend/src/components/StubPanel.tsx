@@ -1,22 +1,15 @@
 import { TestIds } from "../testIds";
 
-export interface StubPanelProps {
-  title: string;
-}
-
-export function StubPanel({ title }: StubPanelProps) {
+export function StubPanel() {
   return (
-    <section className="px-8 py-20 max-w-3xl mx-auto text-center">
+    <section
+      data-testid={TestIds.STUB_PANEL}
+      className="px-8 py-20 max-w-3xl mx-auto text-center"
+    >
       <p className="font-mono text-xs uppercase tracking-wider text-ink-muted mb-3">
         Coming soon
       </p>
-      <h1
-        className="text-display-hero text-ink"
-        data-testid={TestIds.STUB_PANEL_TITLE}
-      >
-        {title}
-      </h1>
-      <p className="mt-4 text-body-lg text-ink-secondary">
+      <p className="text-body-lg text-ink-secondary">
         This surface is wired up; the screen itself lands in a later PR.
       </p>
     </section>
