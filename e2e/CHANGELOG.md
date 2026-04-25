@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.14.0...e2e-v1.15.0) (2026-04-25)
+
+
+### Features
+
+* audit log viewer — full-stack slice (BE + FE + e2e) ([#40](https://github.com/mauriciovieira/slotflow-crm/issues/40)) ([0ae584c](https://github.com/mauriciovieira/slotflow-crm/commit/0ae584ca203174dda4212e2b7a2959859c08d15c))
+
 # [1.14.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.13.0...e2e-v1.14.0) (2026-04-25)
 
 
