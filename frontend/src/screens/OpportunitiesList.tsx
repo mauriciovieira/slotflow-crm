@@ -1,5 +1,11 @@
+import { Link } from "react-router";
 import { type Opportunity, type OpportunityStage, useOpportunities } from "../lib/opportunitiesHooks";
 import { TestIds } from "../testIds";
+
+const NEW_OPPORTUNITY_HREF = "/dashboard/opportunities/new";
+
+const NEW_BUTTON_PRIMARY =
+  "inline-flex items-center rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep";
 
 const STAGE_LABEL: Record<OpportunityStage, string> = {
   applied: "Applied",
@@ -79,15 +85,31 @@ export function OpportunitiesList() {
           No opportunities yet
         </p>
         <h2 className="text-page-title text-ink mb-2">Track your next move.</h2>
-        <p className="text-body-lg text-ink-secondary">
-          Opportunities you log will land here. Creation lands in a follow-up PR.
+        <p className="text-body-lg text-ink-secondary mb-6">
+          Log the first role you&apos;re chasing — title, company, and any notes.
         </p>
+        <Link
+          to={NEW_OPPORTUNITY_HREF}
+          data-testid={TestIds.OPPORTUNITIES_NEW_BUTTON}
+          className={NEW_BUTTON_PRIMARY}
+        >
+          New opportunity
+        </Link>
       </div>
     );
   }
 
   return (
     <section className="px-6 py-6">
+      <div className="flex items-center justify-end mb-4">
+        <Link
+          to={NEW_OPPORTUNITY_HREF}
+          data-testid={TestIds.OPPORTUNITIES_NEW_BUTTON}
+          className={NEW_BUTTON_PRIMARY}
+        >
+          New opportunity
+        </Link>
+      </div>
       <table
         data-testid={TestIds.OPPORTUNITIES_LIST}
         className="w-full border border-border-subtle rounded-lg overflow-hidden text-sm"

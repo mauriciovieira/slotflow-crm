@@ -19,6 +19,14 @@ export const TestIds = {
   OPPORTUNITIES_ERROR: "opportunities-error",
   OPPORTUNITIES_LOADING: "opportunities-loading",
   OPPORTUNITIES_ROW: "opportunities-row",
+  OPPORTUNITIES_NEW_BUTTON: "opportunities-new-button",
+  OPPORTUNITY_CREATE_FORM: "opportunity-create-form",
+  OPPORTUNITY_CREATE_TITLE: "opportunity-create-title",
+  OPPORTUNITY_CREATE_COMPANY: "opportunity-create-company",
+  OPPORTUNITY_CREATE_NOTES: "opportunity-create-notes",
+  OPPORTUNITY_CREATE_SUBMIT: "opportunity-create-submit",
+  OPPORTUNITY_CREATE_CANCEL: "opportunity-create-cancel",
+  OPPORTUNITY_CREATE_ERROR: "opportunity-create-error",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

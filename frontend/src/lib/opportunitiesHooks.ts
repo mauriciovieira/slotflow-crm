@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "./api";
 
 export type OpportunityStage =
@@ -22,11 +22,29 @@ export interface Opportunity {
   archived_at: string | null;
 }
 
+export interface OpportunityCreatePayload {
+  title: string;
+  company: string;
+  notes?: string;
+}
+
 export const OPPORTUNITIES_KEY = ["opportunities", "list"] as const;
 
 export function useOpportunities() {
   return useQuery({
     queryKey: OPPORTUNITIES_KEY,
     queryFn: () => apiFetch<Opportunity[]>("/api/opportunities/"),
+  });
+}
+
+export function useCreateOpportunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: OpportunityCreatePayload) =>
+      apiFetch<Opportunity>("/api/opportunities/", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),
   });
 }
