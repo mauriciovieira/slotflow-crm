@@ -107,8 +107,10 @@ function PlaintextPanel({
 
 function IssueForm({
   onIssued,
+  onClose,
 }: {
   onIssued: (issued: McpTokenIssued) => void;
+  onClose: () => void;
 }) {
   const issue = useIssueMcpToken();
   const [name, setName] = useState("");
@@ -162,7 +164,22 @@ function IssueForm({
           {error}
         </p>
       )}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          // Close lives inside the form so we can keep it disabled while
+          // the POST is in flight. Otherwise the user could close the
+          // form mid-request, the section would unmount this child, and
+          // the still-pending mutation could resolve into nowhere — at
+          // best a state-after-unmount warning, at worst the user never
+          // sees the one-time plaintext.
+          disabled={issue.isPending}
+          onClick={onClose}
+          data-testid={TestIds.SETTINGS_MCP_ISSUE_CANCEL}
+          className="text-sm text-ink-secondary hover:text-ink disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          Close
+        </button>
         <button
           type="submit"
           disabled={issue.isPending}
@@ -220,12 +237,17 @@ function RevokeButton({ token }: { token: McpToken }) {
         </button>
         <button
           type="button"
+          // Cancel is disabled while the DELETE is in flight so the user
+          // can't switch the row UI back into "active" state mid-request
+          // (which would let a still-resolving promise call `setError`
+          // or `setConfirming(false)` into a no-longer-relevant state).
+          disabled={revoke.isPending}
           onClick={() => {
             setConfirming(false);
             setError(null);
           }}
           data-testid={`${TestIds.SETTINGS_MCP_REVOKE_CANCEL}-${token.id}`}
-          className="rounded-md border border-border-subtle px-2 py-1 text-xs font-medium text-ink hover:bg-surface-card"
+          className="rounded-md border border-border-subtle px-2 py-1 text-xs font-medium text-ink hover:bg-surface-card disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Cancel
         </button>
@@ -274,24 +296,13 @@ export function McpTokensSection() {
       )}
 
       {composing && (
-        <>
-          <IssueForm
-            onIssued={(payload) => {
-              setIssued(payload);
-              setComposing(false);
-            }}
-          />
-          <div className="flex items-center justify-end mb-4">
-            <button
-              type="button"
-              onClick={() => setComposing(false)}
-              data-testid={TestIds.SETTINGS_MCP_ISSUE_CANCEL}
-              className="text-sm text-ink-secondary hover:text-ink"
-            >
-              Close
-            </button>
-          </div>
-        </>
+        <IssueForm
+          onIssued={(payload) => {
+            setIssued(payload);
+            setComposing(false);
+          }}
+          onClose={() => setComposing(false)}
+        />
       )}
 
       {query.isLoading ? (
