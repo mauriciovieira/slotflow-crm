@@ -26,7 +26,7 @@ Run `backend/.venv/bin/python backend/manage.py makemigrations opportunities` fr
 
 ## Task 3 — Model tests (TDD-style: written alongside, kept in one commit for brevity)
 
-**File:** `backend/tests/test_opportunity_model.py` — six tests per the spec:
+**File:** `backend/opportunities/tests/opportunity_tests.py` — per-app test layout (`<app>/tests/<topic>_tests.py`). Six tests per the spec:
 
 1. `test_create_with_minimum_fields_uses_defaults`
 2. `test_str_format`
