@@ -38,6 +38,8 @@ function cycleFixture(overrides: Partial<InterviewCycle> = {}): InterviewCycle {
   return {
     id: FIXED_ID,
     opportunity: "op-1",
+    opportunity_title: "Staff Eng",
+    opportunity_company: "Acme",
     name: "Onsite loop",
     started_at: "2026-04-25T00:00:00Z",
     closed_at: null,
@@ -217,7 +219,39 @@ describe("InterviewCycleDetail", () => {
       screen.getByTestId(`${TestIds.INTERVIEW_CYCLE_STEP_STATUS_SELECT}-s1`),
       "completed",
     );
-    expect(mutate).toHaveBeenCalledWith({ status: "completed" });
+    expect(mutate).toHaveBeenCalledWith(
+      { status: "completed" },
+      expect.objectContaining({ onSettled: expect.any(Function) }),
+    );
+  });
+
+  it("shows the in-flight selection while mutation is pending instead of snapping back", async () => {
+    setCycleQuery({ data: cycleFixture(), isSuccess: true, status: "success" });
+    setStepsQuery({
+      data: [stepFixture({ status: "scheduled" })],
+      isSuccess: true,
+      status: "success",
+    });
+    setAddStep(vi.fn());
+    // Simulate "mutation fired but not yet settled" — `mutate` records the
+    // call but never calls `onSettled`. The select must visually hold the
+    // user's pick instead of falling back to `step.status`.
+    const mutate = vi.fn();
+    setUpdateStatus(mutate);
+    const user = userEvent.setup();
+    renderDetail();
+
+    const select = screen.getByTestId(
+      `${TestIds.INTERVIEW_CYCLE_STEP_STATUS_SELECT}-s1`,
+    ) as HTMLSelectElement;
+    await user.selectOptions(select, "completed");
+    expect(mutate).toHaveBeenCalledWith(
+      { status: "completed" },
+      expect.objectContaining({ onSettled: expect.any(Function) }),
+    );
+    // Re-render under the same in-flight state — value must still be
+    // "completed", not "scheduled".
+    expect(select.value).toBe("completed");
   });
 
   it("does not fire status mutation when value matches current status", async () => {

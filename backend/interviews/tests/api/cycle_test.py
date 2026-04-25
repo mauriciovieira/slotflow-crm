@@ -120,6 +120,74 @@ def test_list_renders_steps_count_and_last_step_status():
     assert len(body) == 1
     assert body[0]["steps_count"] == 2
     assert body[0]["last_step_status"] == InterviewStepStatus.SCHEDULED
+    assert body[0]["opportunity_title"] == "Staff Eng"
+    assert body[0]["opportunity_company"] == "Acme"
+
+
+def test_list_with_no_steps_does_not_fall_back_to_extra_query():
+    """The Subquery annotation is NULL when a cycle has no steps. The
+    serializer must distinguish that from 'annotation missing' so it
+    returns `None` directly instead of issuing a fallback `obj.steps`
+    query — keeping list queries flat for step-less cycles."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    for i in range(3):
+        InterviewCycle.objects.create(opportunity=_opportunity(ws, f"O{i}"), name=f"L{i}")
+
+    client = _client(alice)
+    with CaptureQueriesContext(connection) as ctx:
+        response = client.get("/api/interview-cycles/")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 3
+    for row in body:
+        assert row["steps_count"] == 0
+        assert row["last_step_status"] is None
+    assert len(ctx) <= 8, [q["sql"] for q in ctx]
+
+
+def test_list_renders_opportunity_title_and_company():
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    InterviewCycle.objects.create(
+        opportunity=_opportunity(ws, "Staff Eng", "Acme"),
+        name="loop",
+    )
+
+    response = _client(alice).get("/api/interview-cycles/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body[0]["opportunity_title"] == "Staff Eng"
+    assert body[0]["opportunity_company"] == "Acme"
+
+
+def test_serializer_falls_back_when_annotations_absent():
+    """Direct serializer use (no viewset queryset) must still produce
+    correct `steps_count` / `last_step_status` via the related manager —
+    covers service-layer / admin-side callers."""
+    from interviews.serializers import InterviewCycleSerializer
+
+    alice = _user()
+    ws = _workspace()
+    _join(alice, ws)
+    cycle = InterviewCycle.objects.create(opportunity=_opportunity(ws), name="loop")
+    InterviewStep.objects.create(
+        cycle=cycle,
+        sequence=1,
+        kind=InterviewStepKind.PHONE,
+        status=InterviewStepStatus.COMPLETED,
+    )
+
+    instance = InterviewCycle.objects.get(pk=cycle.pk)
+    assert not hasattr(instance, "_steps_count")
+    rendered = InterviewCycleSerializer(instance).data
+    assert rendered["steps_count"] == 1
+    assert rendered["last_step_status"] == InterviewStepStatus.COMPLETED
 
 
 def test_list_query_count_does_not_scale_with_cycle_count():

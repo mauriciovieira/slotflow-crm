@@ -66,6 +66,11 @@ export interface InterviewStep {
 export interface InterviewCycle {
   id: string;
   opportunity: string;
+  // Read-only summary fields the API embeds so list rows can render the
+  // parent opportunity without a second query. Backed by a select_related
+  // on the viewset queryset.
+  opportunity_title: string | null;
+  opportunity_company: string | null;
   name: string;
   started_at: string | null;
   closed_at: string | null;

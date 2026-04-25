@@ -46,6 +46,8 @@ function makeCycle(overrides: Partial<InterviewCycle> = {}): InterviewCycle {
   return {
     id: "11111111-1111-1111-1111-111111111111",
     opportunity: "op-1",
+    opportunity_title: "Staff Eng",
+    opportunity_company: "Acme",
     name: "Onsite loop",
     started_at: "2026-04-25T00:00:00Z",
     closed_at: null,
@@ -123,6 +125,28 @@ describe("InterviewsList", () => {
     expect(
       screen.getByTestId("interviews-row-bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
     ).toHaveTextContent("—");
+  });
+
+  it("renders opportunity title and company in each row", () => {
+    setQuery({
+      data: [
+        makeCycle({
+          id: "11111111-1111-1111-1111-111111111111",
+          name: "Onsite loop",
+          opportunity_title: "Staff Engineer",
+          opportunity_company: "Acme",
+        }),
+      ],
+      isSuccess: true,
+      status: "success",
+    });
+    render(
+      <Providers>
+        <InterviewsList />
+      </Providers>,
+    );
+    const row = screen.getByTestId("interviews-row-11111111-1111-1111-1111-111111111111");
+    expect(row).toHaveTextContent(/Staff Engineer — Acme/);
   });
 
   it("links each row to its detail page", () => {

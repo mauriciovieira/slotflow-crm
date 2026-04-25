@@ -104,6 +104,7 @@ export function InterviewsList() {
         <thead className="bg-surface-card text-ink-secondary text-left">
           <tr>
             <th className="px-4 py-3 font-medium">Cycle</th>
+            <th className="px-4 py-3 font-medium">Opportunity</th>
             <th className="px-4 py-3 font-medium">Steps</th>
             <th className="px-4 py-3 font-medium">Last status</th>
             <th className="px-4 py-3 font-medium">Started</th>
@@ -123,6 +124,11 @@ export function InterviewsList() {
                 >
                   {c.name}
                 </Link>
+              </td>
+              <td className="px-4 py-3 text-ink-secondary">
+                {c.opportunity_title && c.opportunity_company
+                  ? `${c.opportunity_title} — ${c.opportunity_company}`
+                  : c.opportunity_title ?? "—"}
               </td>
               <td className="px-4 py-3 text-ink-secondary">{c.steps_count}</td>
               <td className="px-4 py-3">

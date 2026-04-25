@@ -12,9 +12,19 @@ from .models import (
     InterviewStepStatus,
 )
 
+# Sentinel used by `get_last_step_status` to distinguish
+# "annotation absent on the instance" (service-layer / admin path) from
+# "annotation present but NULL" (cycle has no steps). Plain `None` cannot
+# serve here because the Subquery annotation legitimately returns NULL for
+# step-less cycles, and that NULL must short-circuit to `None` without
+# triggering a fallback DB query.
+_MISSING = object()
+
 
 class InterviewCycleSerializer(serializers.ModelSerializer):
     opportunity = serializers.PrimaryKeyRelatedField(queryset=Opportunity.objects.all())
+    opportunity_title = serializers.SerializerMethodField()
+    opportunity_company = serializers.SerializerMethodField()
     steps_count = serializers.SerializerMethodField()
     last_step_status = serializers.SerializerMethodField()
 
@@ -23,6 +33,8 @@ class InterviewCycleSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "opportunity",
+            "opportunity_title",
+            "opportunity_company",
             "name",
             "started_at",
             "closed_at",
@@ -34,6 +46,8 @@ class InterviewCycleSerializer(serializers.ModelSerializer):
         )
         read_only_fields = (
             "id",
+            "opportunity_title",
+            "opportunity_company",
             "started_at",
             "closed_at",
             "steps_count",
@@ -50,18 +64,28 @@ class InterviewCycleSerializer(serializers.ModelSerializer):
         if self.instance is not None:
             self.fields["opportunity"].read_only = True
 
+    def get_opportunity_title(self, obj: InterviewCycle):
+        return obj.opportunity.title if obj.opportunity_id else None
+
+    def get_opportunity_company(self, obj: InterviewCycle):
+        return obj.opportunity.company if obj.opportunity_id else None
+
     def get_steps_count(self, obj: InterviewCycle):
-        annotated = getattr(obj, "_steps_count", None)
-        if annotated is not None:
-            return annotated
-        return obj.steps.count()
+        annotated = getattr(obj, "_steps_count", _MISSING)
+        if annotated is _MISSING:
+            return obj.steps.count()
+        return annotated
 
     def get_last_step_status(self, obj: InterviewCycle):
-        annotated = getattr(obj, "_last_step_status", None)
-        if annotated is not None:
-            return annotated
-        last = obj.steps.order_by("-sequence").first()
-        return last.status if last else None
+        # Subquery annotation: NULL when the cycle has no steps. Use a
+        # sentinel to distinguish that legitimate NULL from "annotation
+        # absent on the instance" (service-layer / admin path) so the
+        # NULL short-circuits to None without an extra DB round-trip.
+        annotated = getattr(obj, "_last_step_status", _MISSING)
+        if annotated is _MISSING:
+            last = obj.steps.order_by("-sequence").first()
+            return last.status if last else None
+        return annotated
 
     def validate_opportunity(self, opportunity: Opportunity) -> Opportunity:
         request = self.context.get("request")

@@ -39,13 +39,23 @@ function StepStatusSelect({
   step: InterviewStep;
 }) {
   const update = useUpdateStepStatus(cycleId, step.id);
+  // Hold the user's selection in local state so the controlled `<select>`
+  // reflects the in-flight value while the mutation runs. Without this,
+  // React would re-render with `step.status` (still the old value) before
+  // the cache invalidation lands and the select would visually snap back.
+  const [pending, setPending] = useState<InterviewStepStatus | null>(null);
+  const value = pending ?? step.status;
   return (
     <select
-      value={step.status}
+      value={value}
       onChange={(e) => {
         const next = e.target.value as InterviewStepStatus;
         if (next !== step.status) {
-          update.mutate({ status: next });
+          setPending(next);
+          update.mutate(
+            { status: next },
+            { onSettled: () => setPending(null) },
+          );
         }
       }}
       disabled={update.isPending}
