@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-25 — E2E 1.3.0
+
+- [Release notes](e2e/CHANGELOG.md)
+
 ## 2026-04-25 — Frontend 1.7.0
 
 - [Release notes](frontend/CHANGELOG.md)
