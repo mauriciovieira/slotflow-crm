@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.6.0...docs-v1.7.0) (2026-04-25)
+
+
+### Features
+
+* **backend:** MCP token model + issue/revoke API ([#23](https://github.com/mauriciovieira/slotflow-crm/issues/23)) ([7bc6fab](https://github.com/mauriciovieira/slotflow-crm/commit/7bc6fab9cb7608eee0c3134953db6b04026d6f25)), closes [#17](https://github.com/mauriciovieira/slotflow-crm/issues/17)
+
 # [1.6.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.5.0...docs-v1.6.0) (2026-04-25)
 
 
