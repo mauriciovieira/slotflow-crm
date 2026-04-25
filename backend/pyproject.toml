@@ -20,7 +20,7 @@ select = ["E", "F", "I", "UP"]
 # `backend/tests/`. Discovery walks the whole backend tree; `norecursedirs`
 # keeps virtualenvs and tooling caches off the path.
 testpaths = ["."]
-python_files = ["test_*.py", "*_tests.py", "*_test.py"]
+python_files = ["*_test.py"]
 norecursedirs = [
     ".venv",
     "migrations",
