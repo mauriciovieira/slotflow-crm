@@ -96,7 +96,7 @@ describe("router — /dashboard branch", () => {
     expect(screen.queryByTestId(TestIds.STUB_PANEL)).toBeNull();
   });
 
-  it("mounts the Settings stub at /dashboard/settings", async () => {
+  it("mounts the Settings screen at /dashboard/settings with a matching header title", async () => {
     seedVerified();
     const { router } = renderAt("/dashboard/settings");
     const rtl = await import("@testing-library/react");
@@ -105,7 +105,8 @@ describe("router — /dashboard branch", () => {
         <RouterProvider router={router} />
       </Providers>,
     );
-    expect(screen.getByTestId(TestIds.STUB_PANEL)).toBeVisible();
-    expect(screen.getByTestId(TestIds.DASHBOARD_HEADER)).toHaveTextContent("Settings");
+    const header = await rtl.screen.findByTestId(TestIds.DASHBOARD_HEADER);
+    expect(header).toHaveTextContent("Settings");
+    expect(screen.queryByTestId(TestIds.STUB_PANEL)).toBeNull();
   });
 });

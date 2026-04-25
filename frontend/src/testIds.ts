@@ -147,6 +147,22 @@ export const TestIds = {
   INTERVIEW_STEP_RESUMES_UNLINK_CONFIRM: "interview-step-resumes-unlink-confirm",
   INTERVIEW_STEP_RESUMES_UNLINK_CANCEL: "interview-step-resumes-unlink-cancel",
   INTERVIEW_STEP_RESUMES_UNLINK_ERROR: "interview-step-resumes-unlink-error",
+  SETTINGS_FX_SECTION: "settings-fx-section",
+  SETTINGS_FX_LIST: "settings-fx-list",
+  SETTINGS_FX_EMPTY: "settings-fx-empty",
+  SETTINGS_FX_LOADING: "settings-fx-loading",
+  SETTINGS_FX_ERROR: "settings-fx-error",
+  SETTINGS_FX_ROW: "settings-fx-row",
+  SETTINGS_FX_FORM: "settings-fx-form",
+  SETTINGS_FX_FORM_CURRENCY: "settings-fx-form-currency",
+  SETTINGS_FX_FORM_BASE: "settings-fx-form-base",
+  SETTINGS_FX_FORM_RATE: "settings-fx-form-rate",
+  SETTINGS_FX_FORM_DATE: "settings-fx-form-date",
+  SETTINGS_FX_FORM_SUBMIT: "settings-fx-form-submit",
+  SETTINGS_FX_FORM_ERROR: "settings-fx-form-error",
+  SETTINGS_FX_DELETE: "settings-fx-delete",
+  SETTINGS_FX_DELETE_CONFIRM: "settings-fx-delete-confirm",
+  SETTINGS_FX_DELETE_CANCEL: "settings-fx-delete-cancel",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];
