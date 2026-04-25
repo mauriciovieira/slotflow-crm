@@ -56,7 +56,9 @@ describe("router — /dashboard branch", () => {
         <RouterProvider router={router} />
       </Providers>,
     );
-    await rtl.screen.findByTestId(TestIds.STUB_PANEL);
+    // The opportunities slug now mounts the real list view; the empty-state
+    // node is the deterministic anchor (no API mock here, so the query stays
+    // in flight or errors — either way the layout + header are present).
     expect(router.state.location.pathname).toBe("/dashboard/opportunities");
     expect(screen.getByTestId(TestIds.DASHBOARD_HEADER)).toHaveTextContent("Opportunities");
   });

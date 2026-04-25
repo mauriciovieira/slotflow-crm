@@ -5,6 +5,7 @@ import { StubPanel } from "./components/StubPanel";
 import { DASHBOARD_NAV } from "./dashboardNav";
 import { Landing } from "./screens/Landing";
 import { Login } from "./screens/Login";
+import { OpportunitiesList } from "./screens/OpportunitiesList";
 import { TwoFactorSetup } from "./screens/TwoFactorSetup";
 import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 
@@ -40,7 +41,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <Navigate to="opportunities" replace /> },
       ...DASHBOARD_NAV.map((item) => ({
         path: item.slug,
-        element: <StubPanel />,
+        element: item.slug === "opportunities" ? <OpportunitiesList /> : <StubPanel />,
       })),
     ],
   },

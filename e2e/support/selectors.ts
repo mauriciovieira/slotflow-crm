@@ -14,4 +14,9 @@ export const TestIds = {
   NAV_INTERVIEWS: "nav-interviews",
   NAV_SETTINGS: "nav-settings",
   STUB_PANEL: "stub-panel",
+  OPPORTUNITIES_LIST: "opportunities-list",
+  OPPORTUNITIES_EMPTY: "opportunities-empty",
+  OPPORTUNITIES_ERROR: "opportunities-error",
+  OPPORTUNITIES_LOADING: "opportunities-loading",
+  OPPORTUNITIES_ROW: "opportunities-row",
 } as const;
