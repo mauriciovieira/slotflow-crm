@@ -81,3 +81,10 @@ def test_unserialisable_extra_is_coerced_to_string():
 def test_levelname_round_trips(level):
     payload = _format(_record(level=level))
     assert payload["level"] == logging.getLevelName(level)
+
+
+def test_extra_does_not_overwrite_core_payload_keys():
+    """An evil/buggy `extra={"level": "X"}` must not replace the real level."""
+    payload = _format(_record(level=logging.WARNING, extra={"level": "fake"}))
+    assert payload["level"] == "WARNING"
+    assert payload["extra__level"] == "fake"

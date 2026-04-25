@@ -6,7 +6,7 @@
 
 ## Goal
 
-Stop the production logs from being unstructured strings. Every log line in the request path gets a stable JSON envelope with `timestamp`, `level`, `logger`, `message`, plus `request_id` (from middleware), and — when applicable — `user_id`, `path`, `method`, `status`. Future Track 08 work (audit events, metrics, error tracker) plugs in on top of this foundation.
+Stop the production logs from being unstructured strings. Every log line in the request path gets a stable JSON envelope with `timestamp`, `level`, `logger`, `message`, `module`, `func`, `line`, plus a request-scoped `correlation_id` injected by the new middleware. Future Track 08 work (audit events, metrics, error tracker) plugs in on top of this foundation. The MVP also leaves room for a `RequestContextFilter` that would attach `user_id`, `method`, `path`, `status` to each record from the active request — wired in a later PR; see "Out of scope" below.
 
 ## Non-goals
 
@@ -25,7 +25,7 @@ Stop the production logs from being unstructured strings. Every log line in the 
 `backend/core/middleware/correlation_id.py` (new). Sits early in `MIDDLEWARE` (right after `SecurityMiddleware`) so every other layer can read it.
 
 Behavior:
-- On request: read the incoming `X-Request-ID` header. If missing or malformed (not a UUID-shaped string up to 64 chars), mint `uuid.uuid4().hex`. Store on `request.correlation_id` and on a `contextvars.ContextVar[str]` so the log filter can pick it up without passing the request around.
+- On request: read the incoming `X-Request-ID` header. If missing or malformed (does not match the safe charset/length whitelist `^[A-Za-z0-9-]{8,64}$`), mint `uuid.uuid4().hex`. Store on `request.correlation_id` and on a `contextvars.ContextVar[str]` so the log filter can pick it up without passing the request around.
 - On response: set the `X-Request-ID` response header to the same value.
 - On exception: re-raise unchanged. The cleanup path resets the contextvar so it doesn't leak between threads.
 
@@ -36,15 +36,16 @@ A `get_correlation_id() -> str | None` helper exposes the contextvar to anything
 `backend/core/logging.py` (new). Custom `logging.Formatter` subclass `JsonFormatter`:
 
 - Emits a single JSON object per record, fields:
-  - `timestamp` (ISO 8601, UTC with `Z`)
+  - `timestamp` (ISO 8601, UTC; `datetime(..., tz=UTC).isoformat()` → trailing `+00:00`)
   - `level` (`record.levelname`)
   - `logger` (`record.name`)
   - `message` (formatted message — `record.getMessage()`)
   - `correlation_id` (from `get_correlation_id()`, omitted when None)
   - `module`, `func`, `line` (cheap source-locating)
   - `exc_info` (full traceback string when present)
-  - any `extra=` kwargs passed to the call (typed values only — `int`, `str`, `float`, `bool`, `None`, lists/dicts of those).
-- One `RequestContextFilter` (logging filter) attaches `request_id`, `user_id`, `method`, `path`, `status` when `request` is on the record. Wired by Django's request logging when configured.
+  - any `extra=` kwargs passed to the call. A reserved-attribute set keeps stdlib `LogRecord` internals out of the payload; a key-collision check redirects any `extra={"level": ...}`-style overlap onto `extra__<key>` so core fields stay trustworthy.
+
+A `RequestContextFilter` that attaches `user_id`, `method`, `path`, `status` to each record is **out of scope for this PR** — the JSON envelope already passes through unknown attributes, so adding the filter later is purely additive.
 
 ### Settings wiring
 
@@ -84,7 +85,7 @@ A `get_correlation_id() -> str | None` helper exposes the contextvar to anything
 4. `correlation_id` flows in from a manually-set contextvar.
 5. Non-serializable extra values are coerced to `str(...)` so the formatter never crashes the app.
 
-Total +10 tests. Backend pytest: 126 → 136.
+Total +13 tests (5 middleware + 5 formatter cases + a `parametrize` over three log levels + the `extra__<key>` collision case added during review). Backend pytest: 126 → 139.
 
 ### CLAUDE.md update
 

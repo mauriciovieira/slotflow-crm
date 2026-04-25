@@ -30,3 +30,7 @@ try:
     INTERNAL_IPS = ["127.0.0.1", "::1"]
 except ImportError:
     pass
+
+# Drop the slotflow logger to DEBUG in local — Track 08's design says
+# staging/production stay at INFO; only dev should see the chatty stuff.
+LOGGING["loggers"]["slotflow"]["level"] = "DEBUG"  # noqa: F405

@@ -74,7 +74,13 @@ class JsonFormatter(logging.Formatter):
         for key, value in record.__dict__.items():
             if key in _RESERVED_LOGRECORD_ATTRS or key.startswith("_"):
                 continue
-            payload[key] = _safe(value)
+            # Don't let an `extra={"level": "foo"}` clobber the real `level`
+            # we just wrote — log metadata has to stay trustworthy. Collisions
+            # land under an `extra__<key>` namespace.
+            if key in payload:
+                payload[f"extra__{key}"] = _safe(value)
+            else:
+                payload[key] = _safe(value)
 
         if record.exc_info:
             payload["exc_info"] = self.formatException(record.exc_info)
