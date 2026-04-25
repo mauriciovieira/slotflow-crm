@@ -10,7 +10,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from tenancy.models import Membership
@@ -183,12 +182,15 @@ class ResumeVersionViewSet(
         out = ResumeVersionSerializer(version, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
 
-    @action(
-        detail=False,
-        methods=["post"],
-        url_path="import",
-        parser_classes=[JSONParser, MultiPartParser],
-    )
+    # NOTE: no `parser_classes=[...]` here. DRF's default parsers
+    # (JSONParser + FormParser + MultiPartParser) already cover both the
+    # JSON body and multipart file paths we need. Setting it on `@action`
+    # would also be a no-op: `resumes/urls.py` mounts this action via an
+    # explicit `path(..., ResumeVersionViewSet.as_view({"post": "import_version"}))`
+    # rather than the DRF router, and only router-generated routes read
+    # action-level metadata. Subclass / set on the viewset class if a
+    # tighter parser allowlist is ever needed.
+    @action(detail=False, methods=["post"], url_path="import")
     def import_version(self, request, base_resume_id=None):
         """Create a new ResumeVersion from a JSON document.
 
