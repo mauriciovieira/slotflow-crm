@@ -55,12 +55,18 @@ def create_opportunity(
     `WorkspaceMembershipRequired` is raised before any DB write.
     """
     _enforce_write_role(actor, workspace)
+    # `expected_total_compensation` / `compensation_currency` are optional
+    # and threaded straight through. Empty string for the currency is the
+    # null-equivalent on the model side; the snapshot service skips rows
+    # missing either field, so callers don't need to coordinate the pair.
     opportunity = Opportunity.objects.create(
         workspace=workspace,
         title=payload["title"],
         company=payload["company"],
         stage=payload.get("stage", Opportunity._meta.get_field("stage").default),
         notes=payload.get("notes", ""),
+        expected_total_compensation=payload.get("expected_total_compensation"),
+        compensation_currency=payload.get("compensation_currency", ""),
         created_by=actor,
     )
     write_audit_event(

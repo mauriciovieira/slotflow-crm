@@ -9,12 +9,23 @@ export function OpportunityCreate() {
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
   const [notes, setNotes] = useState("");
+  const [compAmount, setCompAmount] = useState("");
+  const [compCurrency, setCompCurrency] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSubmitError(null);
     const trimmedNotes = notes.trim();
+    const trimmedAmount = compAmount.trim();
+    const trimmedCurrency = compCurrency.trim().toUpperCase();
+    // Comp is optional; both fields go together. If only one is filled,
+    // reject client-side rather than letting the BE silently drop the
+    // pair — they're meaningless apart.
+    if ((trimmedAmount === "") !== (trimmedCurrency === "")) {
+      setSubmitError("Provide both compensation amount and currency, or neither.");
+      return;
+    }
     try {
       await create.mutateAsync({
         title: title.trim(),
@@ -22,6 +33,12 @@ export function OpportunityCreate() {
         // Omit `notes` when empty so the wire payload matches the optional
         // type and we don't send a useless empty string.
         ...(trimmedNotes ? { notes: trimmedNotes } : {}),
+        ...(trimmedAmount && trimmedCurrency
+          ? {
+              expected_total_compensation: trimmedAmount,
+              compensation_currency: trimmedCurrency,
+            }
+          : {}),
       });
       navigate("/dashboard/opportunities", { replace: true });
     } catch (err) {
@@ -80,6 +97,38 @@ export function OpportunityCreate() {
             placeholder="Recruiter intro call on Friday"
           />
         </label>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-sm text-ink-secondary mb-1 block">
+              Expected total comp (optional)
+            </span>
+            <input
+              type="number"
+              step="any"
+              min="0"
+              value={compAmount}
+              onChange={(e) => setCompAmount(e.target.value)}
+              data-testid={TestIds.OPPORTUNITY_CREATE_COMP_AMOUNT}
+              className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
+              placeholder="200000"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-ink-secondary mb-1 block">
+              Currency (e.g. USD)
+            </span>
+            <input
+              type="text"
+              maxLength={8}
+              value={compCurrency}
+              onChange={(e) => setCompCurrency(e.target.value.toUpperCase())}
+              data-testid={TestIds.OPPORTUNITY_CREATE_COMP_CURRENCY}
+              className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
+              placeholder="USD"
+            />
+          </label>
+        </div>
 
         {submitError && (
           <p

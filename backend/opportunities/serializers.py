@@ -24,6 +24,8 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "company",
             "stage",
             "notes",
+            "expected_total_compensation",
+            "compensation_currency",
             "created_by",
             "created_at",
             "updated_at",

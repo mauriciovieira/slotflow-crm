@@ -25,6 +25,8 @@ export function OpportunityDetail() {
   const [company, setCompany] = useState("");
   const [stage, setStage] = useState<OpportunityStage>("applied");
   const [notes, setNotes] = useState("");
+  const [compAmount, setCompAmount] = useState("");
+  const [compCurrency, setCompCurrency] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmingArchive, setConfirmingArchive] = useState(false);
 
@@ -34,6 +36,8 @@ export function OpportunityDetail() {
     setCompany(query.data.company);
     setStage(query.data.stage);
     setNotes(query.data.notes);
+    setCompAmount(query.data.expected_total_compensation ?? "");
+    setCompCurrency(query.data.compensation_currency ?? "");
   }, [query.data]);
 
   if (query.isLoading) {
@@ -88,12 +92,24 @@ export function OpportunityDetail() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSubmitError(null);
+    const trimmedAmount = compAmount.trim();
+    const trimmedCurrency = compCurrency.trim().toUpperCase();
+    if ((trimmedAmount === "") !== (trimmedCurrency === "")) {
+      // Same paired-fields rule as OpportunityCreate.
+      setSubmitError("Provide both compensation amount and currency, or neither.");
+      return;
+    }
     try {
       await update.mutateAsync({
         title: title.trim(),
         company: company.trim(),
         stage,
         notes: notes.trim(),
+        // PATCH semantics: when comp is fully cleared, send `null` +
+        // empty string so the BE drops both — leaving the previous
+        // values would silently retain stale data.
+        expected_total_compensation: trimmedAmount === "" ? null : trimmedAmount,
+        compensation_currency: trimmedCurrency,
       });
       navigate(BACK_HREF, { replace: true });
     } catch (err) {
@@ -169,6 +185,38 @@ export function OpportunityDetail() {
             ))}
           </select>
         </label>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-sm text-ink-secondary mb-1 block">
+              Expected total comp (optional)
+            </span>
+            <input
+              type="number"
+              step="any"
+              min="0"
+              value={compAmount}
+              onChange={(e) => setCompAmount(e.target.value)}
+              data-testid={TestIds.OPPORTUNITY_DETAIL_COMP_AMOUNT}
+              className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
+              placeholder="200000"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-ink-secondary mb-1 block">
+              Currency (e.g. USD)
+            </span>
+            <input
+              type="text"
+              maxLength={8}
+              value={compCurrency}
+              onChange={(e) => setCompCurrency(e.target.value.toUpperCase())}
+              data-testid={TestIds.OPPORTUNITY_DETAIL_COMP_CURRENCY}
+              className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
+              placeholder="USD"
+            />
+          </label>
+        </div>
 
         <label className="block">
           <span className="text-sm text-ink-secondary mb-1 block">Notes</span>

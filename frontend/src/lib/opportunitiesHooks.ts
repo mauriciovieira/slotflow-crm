@@ -34,6 +34,11 @@ export interface Opportunity {
   company: string;
   stage: OpportunityStage;
   notes: string;
+  // Optional comp fields powering Insights / FX. `null` for the
+  // amount and "" for the currency mean "not tracked"; the snapshot
+  // service skips rows missing either.
+  expected_total_compensation: string | null;
+  compensation_currency: string;
   created_by: { id: number; username: string } | null;
   created_at: string;
   updated_at: string;
@@ -44,6 +49,8 @@ export interface OpportunityCreatePayload {
   title: string;
   company: string;
   notes?: string;
+  expected_total_compensation?: string | null;
+  compensation_currency?: string;
 }
 
 export interface OpportunityUpdatePayload {
@@ -51,6 +58,8 @@ export interface OpportunityUpdatePayload {
   company?: string;
   stage?: OpportunityStage;
   notes?: string;
+  expected_total_compensation?: string | null;
+  compensation_currency?: string;
 }
 
 export const OPPORTUNITIES_KEY = ["opportunities", "list"] as const;
