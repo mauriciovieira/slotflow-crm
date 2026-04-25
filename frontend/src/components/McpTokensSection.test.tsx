@@ -94,6 +94,32 @@ function renderSection() {
 }
 
 describe("McpTokensSection", () => {
+  it("renders the loading branch", () => {
+    setTokens({ isLoading: true, status: "pending" });
+    setIssue(vi.fn());
+    setRevoke(vi.fn());
+    renderSection();
+    expect(screen.getByTestId(TestIds.SETTINGS_MCP_LOADING)).toBeVisible();
+    expect(screen.queryByTestId(TestIds.SETTINGS_MCP_LIST)).toBeNull();
+  });
+
+  it("renders the error branch and the Try again button calls refetch", async () => {
+    const refetch = vi.fn();
+    setTokens({
+      error: new Error("boom"),
+      isError: true,
+      status: "error",
+      refetch,
+    });
+    setIssue(vi.fn());
+    setRevoke(vi.fn());
+    const user = userEvent.setup();
+    renderSection();
+    expect(screen.getByTestId(TestIds.SETTINGS_MCP_ERROR)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it("renders empty state with the issue toggle", () => {
     setTokens({ data: [], isSuccess: true, status: "success" });
     setIssue(vi.fn());

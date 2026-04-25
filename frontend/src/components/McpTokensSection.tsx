@@ -72,6 +72,14 @@ function PlaintextPanel({
           readOnly
           value={issued.plaintext}
           onFocus={(e) => e.currentTarget.select()}
+          // The plaintext value is a one-shot secret. Opt out of every
+          // browser-side capture path that could surface it later
+          // (autocomplete history, password managers, autocorrect /
+          // spellcheck dictionaries, mobile auto-capitalization).
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
           data-testid={TestIds.SETTINGS_MCP_PLAINTEXT_VALUE}
           className="flex-1 font-mono text-xs border border-border-subtle rounded-md px-2 py-1 bg-surface focus:outline-none focus:border-brand"
         />
@@ -222,12 +230,13 @@ function RevokeButton({ token }: { token: McpToken }) {
         </button>
       </div>
       {error && (
-        <span
+        <p
+          role="alert"
           data-testid={`${TestIds.SETTINGS_MCP_REVOKE_ERROR}-${token.id}`}
           className="text-xs text-danger"
         >
           {error}
-        </span>
+        </p>
       )}
     </div>
   );
