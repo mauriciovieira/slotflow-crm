@@ -66,6 +66,19 @@ def test_command_rejects_non_object_document(tmp_path):
         call_command("import_resume_json", str(base.pk), str(path))
 
 
+def test_command_rejects_non_utf8_file(tmp_path):
+    """A non-UTF-8 file (e.g. UTF-16 export) must surface as a clean
+    CommandError, not a UnicodeDecodeError stack trace."""
+    ws = _ws()
+    base = _base(ws)
+    path = tmp_path / "binary.json"
+    # Random bytes that are not valid UTF-8.
+    path.write_bytes(b"\xff\xfe\x00not utf8")
+
+    with pytest.raises(CommandError, match="not valid UTF-8"):
+        call_command("import_resume_json", str(base.pk), str(path))
+
+
 def test_command_rejects_invalid_uuid(tmp_path):
     """A malformed UUID would otherwise raise ValidationError as a
     stack trace; the command turns that into a clean CommandError."""

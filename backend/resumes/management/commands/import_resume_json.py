@@ -55,6 +55,10 @@ class Command(BaseCommand):
                     raw = fh.read()
             except OSError as exc:
                 raise CommandError(f"Could not read {path}: {exc}") from exc
+            except UnicodeDecodeError as exc:
+                # Non-UTF-8 input (e.g. UTF-16 export, binary garbage)
+                # would otherwise crash the command with a stack trace.
+                raise CommandError(f"{path} is not valid UTF-8 text: {exc}.") from exc
 
         try:
             document = json.loads(raw)

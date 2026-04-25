@@ -330,6 +330,23 @@ describe("ResumeDetail", () => {
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
+  it("import form disables Cancel while the mutation is pending", async () => {
+    setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
+    setVersionsQuery({ data: [], isSuccess: true, status: "success" });
+    setCreateVersion(vi.fn());
+    setArchive(vi.fn());
+    // Mark the import as pending so we can assert Cancel is locked.
+    setImportVersion(vi.fn(), true);
+    const user = userEvent.setup();
+    renderDetail();
+
+    await user.click(screen.getByTestId(TestIds.RESUME_DETAIL_IMPORT_TOGGLE));
+    const cancel = screen.getByTestId(
+      TestIds.RESUME_DETAIL_IMPORT_CANCEL,
+    ) as HTMLButtonElement;
+    expect(cancel.disabled).toBe(true);
+  });
+
   it("import form renders inline error when API rejects", async () => {
     setResumeQuery({ data: fixture(), isSuccess: true, status: "success" });
     setVersionsQuery({ data: [], isSuccess: true, status: "success" });

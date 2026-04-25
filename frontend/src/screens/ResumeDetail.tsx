@@ -321,8 +321,13 @@ export function ResumeDetail() {
                   setImportNotes("");
                   setImportError(null);
                 }}
+                // Disabled while the request is in flight: canceling here
+                // can't actually abort the network call, so allowing the
+                // click would let a successful response land a new
+                // version after the user thought they'd cancelled.
+                disabled={importVersion.isPending}
                 data-testid={TestIds.RESUME_DETAIL_IMPORT_CANCEL}
-                className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card"
+                className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card disabled:opacity-60"
               >
                 Cancel
               </button>
