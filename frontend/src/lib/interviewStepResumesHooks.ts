@@ -68,7 +68,10 @@ export function useInterviewStepResumes(
   };
 }
 
-export function useLinkResumeToStep(stepId: string, cycleId: string) {
+// Mutations key invalidation off `cycleId` only — there's no per-step cache
+// any more, so `stepId` would be dead weight on these hook signatures. The
+// step id still travels in the payload to the API.
+export function useLinkResumeToStep(cycleId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: InterviewStepResumeCreatePayload) =>
@@ -86,7 +89,7 @@ export function useLinkResumeToStep(stepId: string, cycleId: string) {
   });
 }
 
-export function useUnlinkStepResume(stepId: string, cycleId: string, linkId: string) {
+export function useUnlinkStepResume(cycleId: string, linkId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>

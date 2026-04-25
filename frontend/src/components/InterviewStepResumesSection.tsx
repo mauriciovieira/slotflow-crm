@@ -9,15 +9,13 @@ import { useResumes, useResumeVersions } from "../lib/resumesHooks";
 import { TestIds } from "../testIds";
 
 function UnlinkButton({
-  stepId,
   cycleId,
   link,
 }: {
-  stepId: string;
   cycleId: string;
   link: InterviewStepResume;
 }) {
-  const unlink = useUnlinkStepResume(stepId, cycleId, link.id);
+  const unlink = useUnlinkStepResume(cycleId, link.id);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,7 +87,7 @@ function LinkForm({
   cycleId: string;
   onClose: () => void;
 }) {
-  const link = useLinkResumeToStep(stepId, cycleId);
+  const link = useLinkResumeToStep(cycleId);
   const resumesQuery = useResumes();
   const resumes = resumesQuery.data ?? [];
 
@@ -315,7 +313,7 @@ export function InterviewStepResumesSection({
                   <p className="text-xs text-ink-secondary truncate">{linkRow.note}</p>
                 )}
               </div>
-              <UnlinkButton stepId={stepId} cycleId={cycleId} link={linkRow} />
+              <UnlinkButton cycleId={cycleId} link={linkRow} />
             </li>
           ))}
         </ul>
