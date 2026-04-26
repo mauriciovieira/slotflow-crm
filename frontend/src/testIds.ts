@@ -229,6 +229,27 @@ export const TestIds = {
   // Distinct prefix so the e2e's `^="opportunities-board-card-"`
   // selector for cards doesn't also match the move-stage <select>.
   OPPORTUNITIES_BOARD_MOVE_SELECT: "opportunities-board-move-select",
+  ACCEPT_INVITE_PAGE: "accept-invite-page",
+  ACCEPT_INVITE_EMAIL: "accept-invite-email",
+  ACCEPT_INVITE_WORKSPACE: "accept-invite-workspace",
+  ACCEPT_INVITE_PASSWORD: "accept-invite-password",
+  ACCEPT_INVITE_TOS_BODY: "accept-invite-tos-body",
+  ACCEPT_INVITE_TOS_SCROLL: "accept-invite-tos-scroll",
+  ACCEPT_INVITE_TOS_CHECKBOX: "accept-invite-tos-checkbox",
+  ACCEPT_INVITE_TOS_CAPTION: "accept-invite-tos-caption",
+  ACCEPT_INVITE_SUBMIT: "accept-invite-submit",
+  ACCEPT_INVITE_GOOGLE: "accept-invite-google",
+  ACCEPT_INVITE_GITHUB: "accept-invite-github",
+  ACCEPT_INVITE_ERROR_BANNER: "accept-invite-error-banner",
+  ACCEPT_INVITE_FIELD_ERROR: "accept-invite-field-error",
+  ACCEPT_INVITE_INVALID: "accept-invite-invalid",
+  ACCEPT_INVITE_EXPIRED: "accept-invite-expired",
+  ACCEPT_INVITE_REVOKED: "accept-invite-revoked",
+  ACCEPT_INVITE_ALREADY_USED: "accept-invite-already-used",
+  LOGIN_GOOGLE: "login-google",
+  LOGIN_GITHUB: "login-github",
+  LOGIN_NO_ACCOUNT_BANNER: "login-no-account-banner",
+  LANDING_REQUEST_INVITE: "landing-request-invite",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];
