@@ -44,6 +44,11 @@ INSTALLED_APPS = [
     "fx",
     "mcp",
     "audit",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.github",
     "invites",
 ]
 
@@ -54,6 +59,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django_otp.middleware.OTPMiddleware",
     "core.middleware.require_2fa.Require2FAMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -121,6 +127,28 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+}
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# --- allauth ---------------------------------------------------------------
+ACCOUNT_ADAPTER = "invites.adapters.SlotflowAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "invites.adapters.SlotflowSocialAccountAdapter"
+ACCOUNT_EMAIL_VERIFICATION = "none"  # invite + OAuth email act as proof
+SOCIALACCOUNT_AUTO_SIGNUP = False
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["openid", "email", "profile"],
+        "AUTH_PARAMS": {"prompt": "select_account"},
+    },
+    "github": {
+        "SCOPE": ["user:email", "read:user"],
+    },
 }
 
 OTP_TOTP_ISSUER = os.environ.get("OTP_TOTP_ISSUER", "Slotflow CRM")
