@@ -54,6 +54,6 @@ test.describe("auth flow", () => {
 
     // Sanity: the anonymous marketing CTA still loads when we navigate back to /.
     await page.goto("/");
-    await expect(page.getByTestId(TestIds.LANDING_CTA_PRIMARY)).toBeVisible();
+    await expect(page.getByTestId(TestIds.LANDING_REQUEST_INVITE)).toBeVisible();
   });
 });

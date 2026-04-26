@@ -6,7 +6,6 @@ export const TestIds = {
   LOGIN_SUBMIT: "login-submit",
   SIGNED_IN_HEADER: "signed-in-header",
   SIGN_OUT_BUTTON: "sign-out-button",
-  LANDING_CTA_PRIMARY: "landing-cta-primary",
   DASHBOARD_SIDEBAR: "dashboard-sidebar",
   DASHBOARD_HEADER: "dashboard-header",
   NAV_OPPORTUNITIES: "nav-opportunities",
