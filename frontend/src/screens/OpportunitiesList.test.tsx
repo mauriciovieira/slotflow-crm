@@ -126,6 +126,31 @@ describe("OpportunitiesList", () => {
     ).toHaveTextContent(/Senior Designer/);
   });
 
+  it("renders the Table/Board view toggle with the active link marked", () => {
+    setQuery({
+      data: [
+        makeOpportunity({
+          id: "11111111-1111-1111-1111-111111111111",
+          title: "Staff Engineer",
+          company: "Acme",
+        }),
+      ],
+      isSuccess: true,
+      status: "success",
+    });
+    render(
+      <Providers>
+        <OpportunitiesList />
+      </Providers>,
+    );
+    const tableLink = screen.getByTestId(TestIds.OPPORTUNITIES_VIEW_TOGGLE_TABLE);
+    const boardLink = screen.getByTestId(TestIds.OPPORTUNITIES_VIEW_TOGGLE_BOARD);
+    expect(tableLink).toHaveAttribute("href", "/dashboard/opportunities");
+    expect(tableLink).toHaveAttribute("aria-current", "page");
+    expect(boardLink).toHaveAttribute("href", "/dashboard/opportunities/board");
+    expect(boardLink).not.toHaveAttribute("aria-current");
+  });
+
   it("links the title cell of each row to the detail page", () => {
     setQuery({
       data: [

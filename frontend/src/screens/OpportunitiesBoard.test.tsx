@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -91,6 +91,15 @@ function renderBoard() {
 }
 
 describe("OpportunitiesBoard", () => {
+  // Vitest config doesn't enable `clearMocks`, so per-test isolation is
+  // explicit here. Without this an earlier test's `apiFetch` call would
+  // leak into the next test's `toHaveBeenCalledTimes(1)` assertion and
+  // make ordering-dependent failures.
+  beforeEach(() => {
+    apiFetchMock.mockReset();
+    useOpportunitiesMock.mockReset();
+  });
+
   it("renders the loading branch", () => {
     setOpps({ isLoading: true, status: "pending" });
     renderBoard();
