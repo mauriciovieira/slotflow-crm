@@ -35,6 +35,7 @@ def test_me_anonymous(client: Client) -> None:
         "username": None,
         "has_totp_device": False,
         "is_verified": False,
+        "mfa_via_oauth": False,
     }
 
 
