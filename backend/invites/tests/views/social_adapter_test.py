@@ -31,7 +31,9 @@ def _stub_sociallogin(*, email, provider="google", amr=None, is_existing=False):
 @pytest.fixture
 def admin(db):
     return get_user_model().objects.create_user(
-        username="admin", email="admin@x.com", is_superuser=True,
+        username="admin",
+        email="admin@x.com",
+        is_superuser=True,
     )
 
 
@@ -96,7 +98,9 @@ def test_pre_social_login_redirects_on_email_mismatch(invite_in_session):
 def test_pre_social_login_redirects_when_user_with_email_already_exists(invite_in_session):
     raw, hashed, _ = invite_in_session
     get_user_model().objects.create_user(
-        username="alice@x.com", email="alice@x.com", password="x",
+        username="alice@x.com",
+        email="alice@x.com",
+        password="x",
     )
     rf = RequestFactory()
     request = rf.get("/")
@@ -173,7 +177,9 @@ def _save_user_request(invite_in_session, terms):
 def test_save_user_creates_user_workspace_membership_and_audit(invite_in_session):
     TermsVersion.objects.all().delete()
     terms = TermsVersion.objects.create(
-        version="1.0", body="t", effective_at=timezone.now(),
+        version="1.0",
+        body="t",
+        effective_at=timezone.now(),
     )
     request, raw, hashed = _save_user_request(invite_in_session, terms)
 
@@ -205,9 +211,7 @@ def test_save_user_creates_user_workspace_membership_and_audit(invite_in_session
 
     ws = Workspace.objects.get(pk=inv.workspace_id)
     assert ws.name == "Alice's WS"
-    assert Membership.objects.filter(
-        user=saved, workspace=ws, role=MembershipRole.OWNER
-    ).exists()
+    assert Membership.objects.filter(user=saved, workspace=ws, role=MembershipRole.OWNER).exists()
 
     actions = set(AuditEvent.objects.values_list("action", flat=True))
     assert {"invite.accepted", "user.created", "terms.accepted"}.issubset(actions)
@@ -218,7 +222,9 @@ def test_save_user_creates_user_workspace_membership_and_audit(invite_in_session
 def test_save_user_sets_oauth_mfa_when_amr_includes_mfa(invite_in_session):
     TermsVersion.objects.all().delete()
     terms = TermsVersion.objects.create(
-        version="1.0", body="t", effective_at=timezone.now(),
+        version="1.0",
+        body="t",
+        effective_at=timezone.now(),
     )
     request, _, _ = _save_user_request(invite_in_session, terms)
 
@@ -240,7 +246,9 @@ def test_save_user_sets_oauth_mfa_when_amr_includes_mfa(invite_in_session):
 def test_save_user_skips_mfa_session_flag_when_amr_missing(invite_in_session):
     TermsVersion.objects.all().delete()
     terms = TermsVersion.objects.create(
-        version="1.0", body="t", effective_at=timezone.now(),
+        version="1.0",
+        body="t",
+        effective_at=timezone.now(),
     )
     request, _, _ = _save_user_request(invite_in_session, terms)
 
@@ -262,7 +270,9 @@ def test_save_user_skips_mfa_session_flag_when_amr_missing(invite_in_session):
 def test_save_user_pops_session_keys(invite_in_session):
     TermsVersion.objects.all().delete()
     terms = TermsVersion.objects.create(
-        version="1.0", body="t", effective_at=timezone.now(),
+        version="1.0",
+        body="t",
+        effective_at=timezone.now(),
     )
     request, _, _ = _save_user_request(invite_in_session, terms)
 
@@ -296,7 +306,11 @@ def test_authentication_error_redirects_to_accept_invite_when_token_in_session()
     adapter = SlotflowSocialAccountAdapter()
 
     response = adapter.authentication_error(
-        request, provider_id="google", error=None, exception=None, extra_context=None,
+        request,
+        provider_id="google",
+        error=None,
+        exception=None,
+        extra_context=None,
     )
     assert response.status_code in (301, 302)
     assert "/accept-invite/raw-tok/?error=oauth_failed" in response["Location"]
@@ -310,7 +324,11 @@ def test_authentication_error_redirects_to_login_when_no_invite():
     adapter = SlotflowSocialAccountAdapter()
 
     response = adapter.authentication_error(
-        request, provider_id="google", error=None, exception=None, extra_context=None,
+        request,
+        provider_id="google",
+        error=None,
+        exception=None,
+        extra_context=None,
     )
     assert response.status_code in (301, 302)
     assert "/login?error=oauth_failed" in response["Location"]

@@ -17,7 +17,9 @@ class Invite(TimeStampedModel):
     token_hash = models.CharField(max_length=64, unique=True)
     expires_at = models.DateTimeField()
     status = models.CharField(
-        max_length=16, choices=Status.choices, default=Status.PENDING,
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

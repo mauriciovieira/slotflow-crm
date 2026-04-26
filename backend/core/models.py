@@ -33,9 +33,7 @@ class TermsVersion(TimeStampedModel):
         return self.version
 
     @classmethod
-    def current(cls) -> "TermsVersion | None":
+    def current(cls) -> TermsVersion | None:
         return (
-            cls.objects.filter(effective_at__lte=timezone.now())
-            .order_by("-effective_at")
-            .first()
+            cls.objects.filter(effective_at__lte=timezone.now()).order_by("-effective_at").first()
         )

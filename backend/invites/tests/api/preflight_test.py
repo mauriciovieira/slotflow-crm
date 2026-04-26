@@ -26,7 +26,9 @@ def admin(db):
 def terms(db):
     TermsVersion.objects.all().delete()
     return TermsVersion.objects.create(
-        version="1.0", body="ToS body", effective_at=timezone.now(),
+        version="1.0",
+        body="ToS body",
+        effective_at=timezone.now(),
     )
 
 

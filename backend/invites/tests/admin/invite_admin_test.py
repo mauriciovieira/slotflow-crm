@@ -25,7 +25,9 @@ def _otp_login(client, user):
     """
     client.force_login(user, backend="django.contrib.auth.backends.ModelBackend")
     device, _ = TOTPDevice.objects.get_or_create(
-        user=user, name="default", defaults={"confirmed": True},
+        user=user,
+        name="default",
+        defaults={"confirmed": True},
     )
     if not device.confirmed:
         device.confirmed = True
@@ -43,7 +45,9 @@ def _otp_login(client, user):
 @pytest.fixture
 def superuser(db):
     return get_user_model().objects.create_superuser(
-        username="root", email="root@x.com", password="x",
+        username="root",
+        email="root@x.com",
+        password="x",
     )
 
 
@@ -116,9 +120,7 @@ def test_add_view_creates_invite_with_hashed_token_and_flash(client, superuser):
 
     messages = [str(m) for m in response.context["messages"]]
     assert any("/accept-invite/" in m for m in messages)
-    assert any(
-        "copy now" in m.lower() or "will not be shown again" in m.lower() for m in messages
-    )
+    assert any("copy now" in m.lower() or "will not be shown again" in m.lower() for m in messages)
 
     assert AuditEvent.objects.filter(action="invite.issued").count() == 1
 

@@ -6,7 +6,6 @@ from django.utils.text import slugify
 
 from tenancy.models import Workspace
 
-
 _LOCAL_PART_RE = re.compile(r"[^a-z0-9-]+")
 
 

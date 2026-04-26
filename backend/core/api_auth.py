@@ -46,9 +46,7 @@ def _me_payload(user, request=None) -> dict:
         "authenticated": True,
         "username": user.username,
         "has_totp_device": has_device,
-        "is_verified": (
-            _user_is_verified(user) or is_2fa_bypass_active() or mfa_via_oauth
-        ),
+        "is_verified": (_user_is_verified(user) or is_2fa_bypass_active() or mfa_via_oauth),
         "mfa_via_oauth": mfa_via_oauth,
     }
 
@@ -84,7 +82,9 @@ def login_view(request: Request) -> Response:
         return Response({"detail": "Invalid credentials."}, status=400)
 
     django_login(
-        request._request, user, backend="django.contrib.auth.backends.ModelBackend",
+        request._request,
+        user,
+        backend="django.contrib.auth.backends.ModelBackend",
     )
     return Response(_me_payload(user, request._request))
 

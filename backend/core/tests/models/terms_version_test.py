@@ -11,9 +11,7 @@ from core.models import TermsVersion
 @pytest.mark.django_db
 def test_current_returns_latest_active_version():
     now = timezone.now()
-    TermsVersion.objects.create(
-        version="0.0.1", body="old", effective_at=now - timedelta(days=10)
-    )
+    TermsVersion.objects.create(version="0.0.1", body="old", effective_at=now - timedelta(days=10))
     latest = TermsVersion.objects.create(
         version="0.1.0", body="new", effective_at=now - timedelta(days=1)
     )

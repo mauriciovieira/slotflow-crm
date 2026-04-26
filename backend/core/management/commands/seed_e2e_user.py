@@ -13,7 +13,6 @@ scoped POST (e.g. ``/api/opportunities/``) because ``Membership`` is empty.
 from __future__ import annotations
 
 import os
-
 from pathlib import Path
 
 from django.conf import settings
@@ -87,18 +86,10 @@ class Command(BaseCommand):
 
         # Seed the current TermsVersion so /api/test/_reset/ leaves a usable
         # ToS row; AcceptInvite preflight expects one.
-        terms_path = (
-            Path(settings.BASE_DIR).parent / "docs" / "legal" / "terms-v0.1.0.md"
-        )
-        body = (
-            terms_path.read_text(encoding="utf-8")
-            if terms_path.exists()
-            else "Placeholder ToS"
-        )
+        terms_path = Path(settings.BASE_DIR).parent / "docs" / "legal" / "terms-v0.1.0.md"
+        body = terms_path.read_text(encoding="utf-8") if terms_path.exists() else "Placeholder ToS"
         TermsVersion.objects.update_or_create(
             version="0.1.0-draft",
             defaults={"body": body, "effective_at": timezone.now()},
         )
-        self.stdout.write(
-            self.style.SUCCESS("Seeded TermsVersion 0.1.0-draft.")
-        )
+        self.stdout.write(self.style.SUCCESS("Seeded TermsVersion 0.1.0-draft."))

@@ -8,7 +8,9 @@ from rest_framework.test import APIClient
 @pytest.fixture
 def user(db):
     return get_user_model().objects.create_user(
-        username="alice", email="alice@x.com", password="Sup3r-Secret-Pw!",
+        username="alice",
+        email="alice@x.com",
+        password="Sup3r-Secret-Pw!",
     )
 
 

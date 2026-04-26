@@ -31,9 +31,7 @@ def test_user_records_accepted_terms():
 @pytest.mark.django_db
 def test_terms_version_with_acceptances_cannot_be_deleted():
     User = get_user_model()
-    terms = TermsVersion.objects.create(
-        version="0.1.0", body="t", effective_at=timezone.now()
-    )
+    terms = TermsVersion.objects.create(version="0.1.0", body="t", effective_at=timezone.now())
     user = User.objects.create_user(
         username="b@x.com",
         email="b@x.com",

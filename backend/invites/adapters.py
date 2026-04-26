@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+from allauth.account.adapter import DefaultAccountAdapter
+from allauth.core.exceptions import ImmediateHttpResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import redirect
 from django.utils import timezone
-
-from allauth.account.adapter import DefaultAccountAdapter
-from allauth.core.exceptions import ImmediateHttpResponse
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 
 from audit.services import write_audit_event
 from core.models import TermsVersion
@@ -17,7 +16,6 @@ from invites.services.tokens import sha256_email
 from invites.services.workspace_slug import unique_slug_from_email
 from mcp.auth import mark_otp_session_fresh
 from tenancy.models import Membership, MembershipRole, Workspace
-
 
 _SESSION_KEYS = (
     "pending_invite_token_hash",
@@ -120,7 +118,9 @@ class SlotflowSocialAccountAdapter(DefaultSocialAccountAdapter):
                 slug=unique_slug_from_email(invite.email),
             )
             Membership.objects.create(
-                user=user, workspace=workspace, role=MembershipRole.OWNER,
+                user=user,
+                workspace=workspace,
+                role=MembershipRole.OWNER,
             )
             invite.mark_accepted(user=user, workspace=workspace)
 
@@ -135,9 +135,7 @@ class SlotflowSocialAccountAdapter(DefaultSocialAccountAdapter):
                     metadata={
                         "provider": sociallogin.account.provider,
                         "claim_source": (
-                            "amr"
-                            if sociallogin.account.provider == "google"
-                            else "github_api"
+                            "amr" if sociallogin.account.provider == "google" else "github_api"
                         ),
                     },
                 )
@@ -168,7 +166,12 @@ class SlotflowSocialAccountAdapter(DefaultSocialAccountAdapter):
         return user
 
     def authentication_error(
-        self, request, provider_id, error=None, exception=None, extra_context=None,
+        self,
+        request,
+        provider_id,
+        error=None,
+        exception=None,
+        extra_context=None,
     ):
         raw = request.session.get("pending_invite_raw_token")
         _clear_invite_session(request)

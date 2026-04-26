@@ -122,7 +122,9 @@ class InviteAdmin(admin.ModelAdmin):
             invite.status = Invite.Status.REVOKED
             invite.save(update_fields=("status", "updated_at"))
             write_audit_event(
-                actor=request.user, action="invite.revoked", entity=invite,
+                actor=request.user,
+                action="invite.revoked",
+                entity=invite,
             )
             revoked += 1
         skipped = queryset.exclude(status=Invite.Status.PENDING).count()

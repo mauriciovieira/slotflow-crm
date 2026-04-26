@@ -18,7 +18,9 @@ def bypass_active(settings, monkeypatch):
 def test_seed_invite_creates_pending_by_default(bypass_active):
     client = APIClient()
     resp = client.post(
-        "/api/test/_seed_invite/", {"email": "alice@x.com"}, format="json",
+        "/api/test/_seed_invite/",
+        {"email": "alice@x.com"},
+        format="json",
     )
     assert resp.status_code == 200, resp.content
     body = resp.json()
@@ -62,6 +64,8 @@ def test_seed_invite_404_when_bypass_inactive(settings, monkeypatch):
     monkeypatch.delenv("SLOTFLOW_BYPASS_2FA", raising=False)
     client = APIClient()
     resp = client.post(
-        "/api/test/_seed_invite/", {"email": "x@x.com"}, format="json",
+        "/api/test/_seed_invite/",
+        {"email": "x@x.com"},
+        format="json",
     )
     assert resp.status_code == 404

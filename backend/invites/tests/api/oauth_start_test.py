@@ -15,7 +15,9 @@ from invites.services.tokens import issue_token
 @pytest.fixture
 def admin(db):
     return get_user_model().objects.create_user(
-        username="admin", email="admin@x.com", is_superuser=True,
+        username="admin",
+        email="admin@x.com",
+        is_superuser=True,
     )
 
 
@@ -23,7 +25,9 @@ def admin(db):
 def terms(db):
     TermsVersion.objects.all().delete()
     return TermsVersion.objects.create(
-        version="1.0", body="t", effective_at=timezone.now(),
+        version="1.0",
+        body="t",
+        effective_at=timezone.now(),
     )
 
 

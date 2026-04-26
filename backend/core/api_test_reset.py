@@ -77,9 +77,7 @@ def seed_invite_view(request: Request) -> Response:
         },
     )
     raw, hashed = issue_token()
-    expires_at = timezone.now() + (
-        timedelta(seconds=-1) if expired else timedelta(days=7)
-    )
+    expires_at = timezone.now() + (timedelta(seconds=-1) if expired else timedelta(days=7))
     inv = Invite.objects.create(
         email=email,
         token_hash=hashed,

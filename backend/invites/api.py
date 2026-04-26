@@ -20,7 +20,6 @@ from invites.services.tokens import hash_token
 from invites.services.workspace_slug import unique_slug_from_email
 from tenancy.models import Membership, MembershipRole, Workspace
 
-
 WORKSPACE_NAME_RE = re.compile(r"^[A-Za-z0-9 '\-]{2,80}$")
 ALLOWED_PROVIDERS = {"google", "github"}
 
@@ -165,28 +164,36 @@ def accept_password_view(request: Request, token: str) -> Response:
             slug=unique_slug_from_email(invite.email),
         )
         Membership.objects.create(
-            user=user, workspace=workspace, role=MembershipRole.OWNER,
+            user=user,
+            workspace=workspace,
+            role=MembershipRole.OWNER,
         )
 
         invite.mark_accepted(user=user, workspace=workspace)
 
         write_audit_event(
-            actor=user, action="invite.accepted",
-            entity=invite, metadata={"path": "password"},
+            actor=user,
+            action="invite.accepted",
+            entity=invite,
+            metadata={"path": "password"},
         )
         write_audit_event(
-            actor=user, action="user.created",
+            actor=user,
+            action="user.created",
             entity=user,
             metadata={"path": "password", "workspace_id": str(workspace.id)},
         )
         write_audit_event(
-            actor=user, action="terms.accepted",
+            actor=user,
+            action="terms.accepted",
             entity=user,
             metadata={"terms_version_id": terms.id, "version": terms.version},
         )
 
     django_login(
-        request._request, user, backend="django.contrib.auth.backends.ModelBackend",
+        request._request,
+        user,
+        backend="django.contrib.auth.backends.ModelBackend",
     )
     return Response({"next": "/2fa/setup"})
 

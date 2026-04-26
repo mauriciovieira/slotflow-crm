@@ -27,7 +27,9 @@ def admin(db):
 def terms(db):
     TermsVersion.objects.all().delete()
     return TermsVersion.objects.create(
-        version="1.0", body="t", effective_at=timezone.now(),
+        version="1.0",
+        body="t",
+        effective_at=timezone.now(),
     )
 
 
@@ -89,7 +91,9 @@ def test_accept_password_creates_user_workspace_membership(client, admin, terms)
     ws = Workspace.objects.get(pk=inv.workspace_id)
     assert ws.name == "Alice's Workspace"
     assert Membership.objects.filter(
-        user=user, workspace=ws, role=MembershipRole.OWNER,
+        user=user,
+        workspace=ws,
+        role=MembershipRole.OWNER,
     ).exists()
 
 
@@ -97,7 +101,9 @@ def test_accept_password_creates_user_workspace_membership(client, admin, terms)
 def test_accept_password_logs_user_in(client, admin, terms):
     raw, _ = _create_invite(admin)
     client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
     me = client.get("/api/auth/me/")
     assert me.status_code == 200
@@ -109,13 +115,15 @@ def test_accept_password_logs_user_in(client, admin, terms):
 def test_accept_password_writes_audit_events(client, admin, terms):
     raw, inv = _create_invite(admin)
     client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
 
     actions = list(
-        AuditEvent.objects.filter(
-            entity_type__in=("invites.Invite", "identity.User")
-        ).values_list("action", flat=True)
+        AuditEvent.objects.filter(entity_type__in=("invites.Invite", "identity.User")).values_list(
+            "action", flat=True
+        )
     )
     assert "invite.accepted" in actions
     assert "user.created" in actions
@@ -126,7 +134,9 @@ def test_accept_password_writes_audit_events(client, admin, terms):
 def test_accept_password_410_when_expired(client, admin, terms):
     raw, _ = _create_invite(admin, expires_delta=timedelta(seconds=-1))
     resp = client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
     assert resp.status_code == 410
     assert resp.json()["error"] == "expired"
@@ -136,7 +146,9 @@ def test_accept_password_410_when_expired(client, admin, terms):
 def test_accept_password_410_when_already_accepted(client, admin, terms):
     raw, _ = _create_invite(admin, status=Invite.Status.ACCEPTED)
     resp = client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
     assert resp.status_code == 410
     assert resp.json()["error"] == "already_used"
@@ -146,7 +158,9 @@ def test_accept_password_410_when_already_accepted(client, admin, terms):
 def test_accept_password_410_when_revoked(client, admin, terms):
     raw, _ = _create_invite(admin, status=Invite.Status.REVOKED)
     resp = client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
     assert resp.status_code == 410
     assert resp.json()["error"] == "revoked"
@@ -155,18 +169,22 @@ def test_accept_password_410_when_revoked(client, admin, terms):
 @pytest.mark.django_db
 def test_accept_password_409_when_user_with_email_exists(client, admin, terms):
     get_user_model().objects.create_user(
-        username="alice@x.com", email="alice@x.com", password="x",
+        username="alice@x.com",
+        email="alice@x.com",
+        password="x",
     )
     raw, _ = _create_invite(admin)
     resp = client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
     assert resp.status_code == 409
     assert resp.json()["error"] == "user_exists"
     actions = list(
-        AuditEvent.objects.filter(
-            action="invite.rejected_user_exists"
-        ).values_list("action", flat=True)
+        AuditEvent.objects.filter(action="invite.rejected_user_exists").values_list(
+            "action", flat=True
+        )
     )
     assert actions == ["invite.rejected_user_exists"]
 
@@ -187,10 +205,14 @@ def test_accept_password_422_when_password_too_short(client, admin, terms):
 def test_accept_password_422_when_terms_version_stale(client, admin, terms):
     raw, _ = _create_invite(admin)
     TermsVersion.objects.create(
-        version="2.0", body="newer", effective_at=timezone.now(),
+        version="2.0",
+        body="newer",
+        effective_at=timezone.now(),
     )
     resp = client.post(
-        f"/api/invites/{raw}/accept-password/", _payload(terms.id), format="json",
+        f"/api/invites/{raw}/accept-password/",
+        _payload(terms.id),
+        format="json",
     )
     assert resp.status_code == 422
     assert "terms_version_id" in resp.json()
