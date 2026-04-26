@@ -17,8 +17,8 @@ from audit.services import write_audit_event
 from core.models import TermsVersion
 from invites.models import Invite
 from invites.services.tokens import hash_token
-from invites.services.workspace_slug import unique_slug_from_email
-from tenancy.models import Membership, MembershipRole, Workspace
+from invites.services.workspace_slug import create_unique_workspace
+from tenancy.models import Membership, MembershipRole
 
 WORKSPACE_NAME_RE = re.compile(r"^[A-Za-z0-9 '\-]{2,80}$")
 ALLOWED_PROVIDERS = {"google", "github"}
@@ -173,10 +173,7 @@ def accept_password_view(request: Request, token: str) -> Response:
         user.accepted_terms_at = timezone.now()
         user.save(update_fields=("accepted_terms_version", "accepted_terms_at"))
 
-        workspace = Workspace.objects.create(
-            name=workspace_name,
-            slug=unique_slug_from_email(invite.email),
-        )
+        workspace = create_unique_workspace(name=workspace_name, email=invite.email)
         Membership.objects.create(
             user=user,
             workspace=workspace,

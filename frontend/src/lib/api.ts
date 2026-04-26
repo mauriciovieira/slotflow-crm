@@ -1,8 +1,12 @@
 export class ApiError extends Error {
   readonly name = "ApiError";
+  // `body` carries the parsed JSON response when available; the human-readable
+  // `message` is a flattened summary, not raw JSON. Field-level error
+  // rendering (e.g. DRF 422 with per-field arrays) should use `body`.
   constructor(
     readonly status: number,
     message: string,
+    readonly body: unknown = null,
   ) {
     super(message);
   }
@@ -60,6 +64,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     throw new ApiError(
       response.status,
       extractErrorMessage(body, response.statusText, isJsonResponse),
+      isJsonResponse ? body : null,
     );
   }
 

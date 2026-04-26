@@ -154,14 +154,8 @@ export function AcceptInvite() {
       });
       navigate(result.next, { replace: true });
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        try {
-          const parsed = JSON.parse(err.message);
-          if (parsed && typeof parsed === "object")
-            setFieldErrors(parsed as Record<string, string[]>);
-        } catch {
-          setFieldErrors({ password: [err.message] });
-        }
+      if (err instanceof ApiError && err.status === 422 && err.body && typeof err.body === "object") {
+        setFieldErrors(err.body as Record<string, string[]>);
         return;
       }
       setFieldErrors({

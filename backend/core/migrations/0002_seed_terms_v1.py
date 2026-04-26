@@ -11,6 +11,15 @@ from django.utils import timezone
 VERSION = "0.1.0-draft"
 EFFECTIVE_AT_ISO = "2026-04-25T00:00:00+00:00"
 
+# Embedded fallback so `migrate` succeeds even when the deploy artifact does
+# not include `docs/`. Replace via a follow-up migration once a real ToS lands.
+_FALLBACK_BODY = (
+    f"# Slotflow Terms of Service ({VERSION})\n\n"
+    "**NOT LEGAL ADVICE — placeholder only.**\n\n"
+    "By using Slotflow you agree to the placeholder terms baked into this "
+    "migration. Replace this row with a finalised ToS before public launch."
+)
+
 
 def _terms_path() -> Path:
     # settings.BASE_DIR == backend/. Walk up one to repo root.
@@ -19,7 +28,11 @@ def _terms_path() -> Path:
 
 def seed_terms_v1(apps, schema_editor):
     TermsVersion = apps.get_model("core", "TermsVersion")
-    body = _terms_path().read_text(encoding="utf-8")
+    path = _terms_path()
+    if path.is_file():
+        body = path.read_text(encoding="utf-8")
+    else:
+        body = _FALLBACK_BODY
     TermsVersion.objects.update_or_create(
         version=VERSION,
         defaults={

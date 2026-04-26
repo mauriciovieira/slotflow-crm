@@ -13,9 +13,9 @@ from core.models import TermsVersion
 from invites.models import Invite
 from invites.services.oauth_mfa import check_oauth_mfa
 from invites.services.tokens import sha256_email
-from invites.services.workspace_slug import unique_slug_from_email
+from invites.services.workspace_slug import create_unique_workspace
 from mcp.auth import mark_otp_session_fresh
-from tenancy.models import Membership, MembershipRole, Workspace
+from tenancy.models import Membership, MembershipRole
 
 _SESSION_KEYS = (
     "pending_invite_token_hash",
@@ -116,10 +116,7 @@ class SlotflowSocialAccountAdapter(DefaultSocialAccountAdapter):
 
             sociallogin.connect(request, user)
 
-            workspace = Workspace.objects.create(
-                name=workspace_name,
-                slug=unique_slug_from_email(invite.email),
-            )
+            workspace = create_unique_workspace(name=workspace_name, email=invite.email)
             Membership.objects.create(
                 user=user,
                 workspace=workspace,

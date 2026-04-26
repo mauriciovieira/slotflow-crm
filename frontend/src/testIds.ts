@@ -233,7 +233,6 @@ export const TestIds = {
   ACCEPT_INVITE_EMAIL: "accept-invite-email",
   ACCEPT_INVITE_WORKSPACE: "accept-invite-workspace",
   ACCEPT_INVITE_PASSWORD: "accept-invite-password",
-  ACCEPT_INVITE_TOS_BODY: "accept-invite-tos-body",
   ACCEPT_INVITE_TOS_SCROLL: "accept-invite-tos-scroll",
   ACCEPT_INVITE_TOS_CHECKBOX: "accept-invite-tos-checkbox",
   ACCEPT_INVITE_TOS_CAPTION: "accept-invite-tos-caption",
