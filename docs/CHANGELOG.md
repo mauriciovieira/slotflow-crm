@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.25.0...docs-v1.26.0) (2026-04-26)
+
+
+### Features
+
+* workspace member management — Track 11 (BE + FE + e2e) ([#44](https://github.com/mauriciovieira/slotflow-crm/issues/44)) ([df9996c](https://github.com/mauriciovieira/slotflow-crm/commit/df9996c777f04cc1f677002959af15781b0b4a46))
+
 # [1.25.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.24.0...docs-v1.25.0) (2026-04-26)
 
 
