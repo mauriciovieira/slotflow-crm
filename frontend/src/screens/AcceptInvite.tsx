@@ -188,7 +188,7 @@ export function AcceptInvite() {
       <section className="flex flex-col justify-center px-8 md:px-16 py-12">
         <img src={lockup} alt="Slotflow" height={22} className="mb-12" />
         <h1 className="text-[32px] font-semibold tracking-[-0.64px] text-ink mb-3">
-          You're invited to Slotflow
+          You&apos;re invited to Slotflow
         </h1>
         {banner && (
           <p
