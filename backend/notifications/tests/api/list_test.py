@@ -129,6 +129,22 @@ def test_mark_read_rejects_non_list_payload():
     assert response.status_code == 400
 
 
+def test_mark_read_drops_non_uuid_ids_silently():
+    a = _user()
+    ws = _ws()
+    n = create_notification(recipient=a, kind="x", workspace=ws)
+    response = _client(a).post(
+        "/api/notifications/mark-read/",
+        {"ids": ["not-a-uuid", str(n.id), 12345, None]},
+        format="json",
+    )
+    # The valid id flips; junk values are ignored without 500ing.
+    assert response.status_code == 200
+    assert response.json() == {"marked": 1}
+    n.refresh_from_db()
+    assert n.read_at is not None
+
+
 def test_mark_read_does_not_affect_other_users_rows():
     a = _user("a")
     b = _user("b")

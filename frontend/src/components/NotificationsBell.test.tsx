@@ -229,6 +229,56 @@ describe("NotificationsBell", () => {
     expect(mutate).toHaveBeenCalledTimes(1);
   });
 
+  it("falls back gracefully when stage_changed payload misses from/to", async () => {
+    setCount(1);
+    setList({
+      data: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          rowFixture({
+            id: "n-stage",
+            kind: "opportunity.stage_changed",
+            payload: { actor_repr: "alice", title: "T", company: "C" },
+          }),
+        ],
+      },
+      isSuccess: true,
+      status: "success",
+    });
+    setMarkRead(vi.fn());
+    setMarkAll(vi.fn());
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(screen.getByTestId(TestIds.NOTIFICATIONS_BELL));
+    const item = screen.getByTestId(`${TestIds.NOTIFICATIONS_ITEM}-n-stage`);
+    expect(item).not.toHaveTextContent("undefined");
+    expect(item).not.toHaveTextContent("[object Object]");
+    expect(item).toHaveTextContent("alice moved T @ C");
+  });
+
+  it("only fetches the list when the panel is open", async () => {
+    setCount(0);
+    setList({
+      data: { count: 0, next: null, previous: null, results: [] },
+      isSuccess: true,
+      status: "success",
+    });
+    setMarkRead(vi.fn());
+    setMarkAll(vi.fn());
+    const user = userEvent.setup();
+    renderBell();
+
+    expect(useListMock).toHaveBeenCalled();
+    const initialCall = useListMock.mock.calls.at(-1);
+    expect(initialCall?.[0]).toEqual({ enabled: false });
+
+    await user.click(screen.getByTestId(TestIds.NOTIFICATIONS_BELL));
+    const openCall = useListMock.mock.calls.at(-1);
+    expect(openCall?.[0]).toEqual({ enabled: true });
+  });
+
   it("Mark all read is disabled when nothing is unread", async () => {
     setCount(0);
     setList({

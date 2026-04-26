@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from collections.abc import Iterable
 from typing import Any
 
@@ -63,18 +64,28 @@ def notify_workspace_owners(
     return rows
 
 
-def mark_read(*, recipient: AbstractBaseUser, ids: Iterable[str]) -> int:
+def mark_read(*, recipient: AbstractBaseUser, ids: Iterable[Any]) -> int:
     """Mark the listed notifications as read for `recipient`.
 
     Returns the number of rows actually flipped (excludes already-read
     rows and rows owned by another user). Filters by `recipient` to
     keep the call workspace-isolated even if a malicious caller
-    forwards another user's id.
+    forwards another user's id. Non-UUID values in `ids` are dropped
+    silently — the UUIDField filter would otherwise raise on malformed
+    input and 500 the endpoint.
     """
     from django.utils import timezone
 
+    valid_ids: list[uuid.UUID] = []
+    for raw in ids:
+        try:
+            valid_ids.append(uuid.UUID(str(raw)))
+        except (ValueError, AttributeError, TypeError):
+            continue
+    if not valid_ids:
+        return 0
     return Notification.objects.filter(
-        recipient=recipient, id__in=list(ids), read_at__isnull=True
+        recipient=recipient, id__in=valid_ids, read_at__isnull=True
     ).update(read_at=timezone.now())
 
 

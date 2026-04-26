@@ -26,7 +26,9 @@ class Notification(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="notifications",
     )
-    kind = models.CharField(max_length=64)
+    # Aligned with `audit.AuditEvent.action.max_length` so the audit
+    # fan-out hook can pass `kind=action` without ever truncating.
+    kind = models.CharField(max_length=100)
     payload = models.JSONField(default=dict, blank=True)
     workspace = models.ForeignKey(
         "tenancy.Workspace",

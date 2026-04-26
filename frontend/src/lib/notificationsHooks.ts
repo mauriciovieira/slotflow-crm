@@ -23,10 +23,14 @@ export const NOTIFICATIONS_UNREAD_COUNT_KEY = [
   "unread-count",
 ] as const;
 
-export function useNotifications() {
+export function useNotifications(opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: NOTIFICATIONS_KEY,
     queryFn: () => apiFetch<NotificationListPage>("/api/notifications/"),
+    // Caller-gated so the bell can defer the list fetch until the
+    // panel is opened — steady-state cost stays at the unread-count
+    // poll alone.
+    enabled: opts?.enabled ?? true,
   });
 }
 

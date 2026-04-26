@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ("kind", models.CharField(max_length=64)),
+                ("kind", models.CharField(max_length=100)),
                 ("payload", models.JSONField(blank=True, default=dict)),
                 ("read_at", models.DateTimeField(blank=True, null=True)),
                 (

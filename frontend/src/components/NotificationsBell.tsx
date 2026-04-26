@@ -19,20 +19,32 @@ function formatTimestamp(iso: string): string {
   });
 }
 
+function asString(v: unknown): string {
+  return typeof v === "string" ? v : "";
+}
+
 function describeKind(row: NotificationRow): string {
   // Lightweight kind → human phrasing. Unknown kinds fall through to
   // the raw key so a future BE-added kind doesn't render blank.
-  const actor = (row.payload.actor_repr as string) ?? "Someone";
-  const title = (row.payload.title as string) ?? "";
-  const company = (row.payload.company as string) ?? "";
+  // Each payload field is coerced to a string so a missing or
+  // non-string value never reaches the UI as "undefined" / "[object
+  // Object]".
+  const actor = asString(row.payload.actor_repr) || "Someone";
+  const title = asString(row.payload.title);
+  const company = asString(row.payload.company);
   const target = title && company ? `${title} @ ${company}` : title || row.kind;
   switch (row.kind) {
     case "opportunity.created":
       return `${actor} created ${target}`;
     case "opportunity.archived":
       return `${actor} archived ${target}`;
-    case "opportunity.stage_changed":
-      return `${actor} moved ${target} ${row.payload.from} → ${row.payload.to}`;
+    case "opportunity.stage_changed": {
+      const from = asString(row.payload.from);
+      const to = asString(row.payload.to);
+      if (from && to) return `${actor} moved ${target} ${from} → ${to}`;
+      if (to) return `${actor} moved ${target} → ${to}`;
+      return `${actor} moved ${target}`;
+    }
     case "mcp_token.issued":
       return `${actor} issued an MCP token`;
     case "mcp_token.revoked":
@@ -47,14 +59,16 @@ export function NotificationsBell() {
   const popoverRef = useRef<HTMLDivElement | null>(null);
 
   const countQuery = useUnreadNotificationCount();
-  const listQuery = useNotifications();
+  // List query is gated on `open` so the steady-state cost is the
+  // unread-count poll alone; the list is fetched the first time the
+  // panel opens (and refetched on subsequent opens via cache invalidation).
+  const listQuery = useNotifications({ enabled: open });
   const markRead = useMarkNotificationsRead();
   const markAll = useMarkAllNotificationsRead();
 
   const unread = countQuery.data?.count ?? 0;
 
-  // Close on outside click while the panel is open. Bound at document
-  // capture phase so it fires before any in-panel button handlers.
+  // Close on outside click while the panel is open.
   useEffect(() => {
     if (!open) return;
     function onClick(e: MouseEvent) {

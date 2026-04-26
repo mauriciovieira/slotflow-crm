@@ -102,6 +102,49 @@ def test_audit_write_without_workspace_does_not_fan_out():
     assert Notification.objects.count() == 0
 
 
+def test_audit_write_survives_failing_fanout(monkeypatch, caplog):
+    """A buggy notify_workspace_owners must not take down the audit row."""
+    import audit.services as audit_services
+    from audit.models import AuditEvent
+
+    actor = _user("actor")
+    other = _user("other")
+    ws = _ws()
+    Membership.objects.create(user=actor, workspace=ws, role=MembershipRole.OWNER)
+    Membership.objects.create(user=other, workspace=ws, role=MembershipRole.OWNER)
+
+    def boom(**kwargs):
+        raise RuntimeError("notifications offline")
+
+    monkeypatch.setattr("notifications.services.notify_workspace_owners", boom)
+
+    with caplog.at_level("ERROR", logger=audit_services.logger.name):
+        event = write_audit_event(actor=actor, action="opportunity.archived", workspace=ws)
+
+    # Audit row persisted despite the fan-out failure.
+    assert AuditEvent.objects.filter(pk=event.pk).exists()
+    # No notifications were created (savepoint rolled back).
+    assert Notification.objects.count() == 0
+    # The failure was logged for ops visibility.
+    assert any("notification fan-out failed" in r.message for r in caplog.records)
+
+
+def test_audit_fanout_accepts_action_at_max_audit_length():
+    """`Notification.kind` aligns with `AuditEvent.action.max_length` so the
+    fan-out can pass `kind=action` without ever truncating."""
+    actor = _user("actor")
+    other = _user("other")
+    ws = _ws()
+    Membership.objects.create(user=actor, workspace=ws, role=MembershipRole.OWNER)
+    Membership.objects.create(user=other, workspace=ws, role=MembershipRole.OWNER)
+
+    long_action = "x" * 100  # AuditEvent.action.max_length
+    write_audit_event(actor=actor, action=long_action, workspace=ws)
+
+    n = Notification.objects.get(recipient=other)
+    assert n.kind == long_action
+
+
 def test_mark_read_only_flips_owners_unread_rows():
     a = _user("a")
     b = _user("b")
