@@ -3,6 +3,7 @@ import { AuthGuard } from "./components/AuthGuard";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { StubPanel } from "./components/StubPanel";
 import { DASHBOARD_NAV } from "./dashboardNav";
+import { AcceptInvite } from "./screens/AcceptInvite";
 import { Landing } from "./screens/Landing";
 import { Login } from "./screens/Login";
 import { OpportunitiesBoard } from "./screens/OpportunitiesBoard";
@@ -26,6 +27,7 @@ import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 export const routes: RouteObject[] = [
   { path: "/", element: <Landing /> },
   { path: "/login", element: <Login /> },
+  { path: "/accept-invite/:token", element: <AcceptInvite /> },
   {
     path: "/2fa/setup",
     element: (
