@@ -1,3 +1,24 @@
+# [1.21.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.20.0...frontend-v1.21.0) (2026-04-26)
+
+
+### Bug Fixes
+
+* **frontend:** apply Copilot round-1 feedback on kanban slice ([3082942](https://github.com/mauriciovieira/slotflow-crm/commit/3082942e771be3cb8c915434c12fb015c346fef6))
+* **frontend:** apply Copilot round-2 feedback on kanban slice ([b585cc4](https://github.com/mauriciovieira/slotflow-crm/commit/b585cc4bfd67e106e28e5a3297c46b355d3a1e19))
+* **frontend:** apply Copilot round-3 feedback on kanban slice ([f18c2fc](https://github.com/mauriciovieira/slotflow-crm/commit/f18c2fc847ef61be716bcd830aed3150742ae254))
+* **frontend:** apply Copilot round-4 feedback on kanban slice ([fd153e0](https://github.com/mauriciovieira/slotflow-crm/commit/fd153e0720fbd52b8dee89abc250bf5451964573))
+* **frontend:** apply Copilot round-5 feedback on kanban slice ([b512252](https://github.com/mauriciovieira/slotflow-crm/commit/b512252151a71da363585350464730a450c45592))
+* **frontend:** apply Copilot round-7 nits on kanban slice ([d01bef9](https://github.com/mauriciovieira/slotflow-crm/commit/d01bef995d1c547311093eb90c26fef41d5e851c))
+* **frontend:** apply Copilot round-9 nits on kanban slice ([d51f372](https://github.com/mauriciovieira/slotflow-crm/commit/d51f37239ae2a27d5abe91e8461bc15273332375))
+* **frontend:** derive kanban `byStage` from STAGES, not a literal ([bc59dd2](https://github.com/mauriciovieira/slotflow-crm/commit/bc59dd2497d1b607f9c0b767b8b60c476d9a7544))
+* **frontend:** kanban drop reads text/plain fallback for FF/Safari ([b00fb8d](https://github.com/mauriciovieira/slotflow-crm/commit/b00fb8d91c692386063a10bf2cd91556d5324c79))
+* **frontend:** use distinct testid prefix for the kanban move <select> ([ba11c03](https://github.com/mauriciovieira/slotflow-crm/commit/ba11c03817786f689f5fe9096f91e11a1f82d1c8))
+
+
+### Features
+
+* opportunities kanban board — slice 9b (FE + e2e) ([762c828](https://github.com/mauriciovieira/slotflow-crm/commit/762c828c8b896ccadfa18a3a4147fd75fa7ee750))
+
 # [1.20.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.19.0...frontend-v1.20.0) (2026-04-26)
 
 
