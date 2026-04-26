@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import pytest
 
-
-@pytest.mark.django_db
 def test_production_csp_drops_unsafe_inline_and_unsafe_eval():
     """Construct the production middleware directly and inspect the CSP it
     would emit. We don't override `DEBUG=False` on the test client (that

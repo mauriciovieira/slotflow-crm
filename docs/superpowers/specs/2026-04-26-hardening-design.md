@@ -15,7 +15,7 @@ Tighten the backend before opening up the app to outside users. Three concrete c
 
 ### Rate limits
 
-Two new throttle classes in `core/throttling.py` driven by DRF's existing `SimpleRateThrottle` machinery:
+Three new throttle classes in `core/throttling.py` driven by DRF's existing `SimpleRateThrottle` machinery:
 
 - `LoginRateThrottle` (anon, scope `auth_login`) — caps **per source IP** on `/api/auth/login/`.
 - `LoginUsernameRateThrottle` (scope `auth_login_username`) — caps **per attempted username**, regardless of source IP. This is the bucket that defends against a distributed attack on a single account from N proxies.
@@ -37,7 +37,7 @@ New `core/middleware/security_headers.py::SecurityHeadersMiddleware` mounted rig
 
 - **Content-Security-Policy** — production policy (no `unsafe-eval`, `unsafe-inline` only on `style-src` for Tailwind dynamic-class needs); a relaxed DEBUG variant for the Vite dev server's HMR (`'unsafe-eval'`, `ws:`/`wss:` connect-src).
 - **Permissions-Policy** — explicit `()` denylist for every powerful feature (camera, microphone, geolocation, USB, payment, …). Listing each feature keeps the policy auditable and resists silent permission grants when the browser ships a new feature.
-- **Referrer-Policy** — `strict-origin-when-cross-origin`. Defensively re-asserted; Django's `SecureMiddleware` already sets it via `SECURE_REFERRER_POLICY`, but we set it again so a settings drift can't quietly downgrade.
+- **Referrer-Policy** — `strict-origin-when-cross-origin`. Defensively re-asserted; Django's `SecurityMiddleware` already sets it via `SECURE_REFERRER_POLICY`, but we set it again so a settings drift can't quietly downgrade.
 
 Each header is set with `setdefault` so a downstream view that needs a relaxed policy (admin debug panels, etc.) can still override.
 

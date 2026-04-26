@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.test import override_settings
 from rest_framework.test import APIClient
 
@@ -40,13 +39,9 @@ _2FA_THROTTLE_SETTINGS = {
 }
 
 
-@pytest.fixture(autouse=True)
-def _clear_throttle_cache():
-    """Throttle counters live in the default cache; flush before each test
-    so a previous test can't leak buckets into the next one."""
-    cache.clear()
-    yield
-    cache.clear()
+# Per-test cache clearing is handled globally by the autouse fixture in
+# `backend/conftest.py::_clear_throttle_cache_between_tests`, so we don't
+# repeat it here.
 
 
 def _user(name="alice"):

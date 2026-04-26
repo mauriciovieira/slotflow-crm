@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import pytest
 from rest_framework.test import APIClient
 
 
-@pytest.mark.django_db
 def test_security_headers_present_on_every_response():
     response = APIClient().get("/healthz")
     assert response.status_code == 200
@@ -25,7 +23,6 @@ def test_security_headers_present_on_every_response():
     assert referrer == "strict-origin-when-cross-origin"
 
 
-@pytest.mark.django_db
 def test_xframe_options_header_is_deny():
     response = APIClient().get("/healthz")
     assert response.headers.get("X-Frame-Options") == "DENY"
