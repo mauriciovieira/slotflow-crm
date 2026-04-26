@@ -18,6 +18,7 @@ import { ResumeCreate } from "./screens/ResumeCreate";
 import { ResumeDetail } from "./screens/ResumeDetail";
 import { ResumesList } from "./screens/ResumesList";
 import { Settings } from "./screens/Settings";
+import { AcceptInvite } from "./screens/AcceptInvite";
 import { TwoFactorSetup } from "./screens/TwoFactorSetup";
 import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 
@@ -26,6 +27,14 @@ import { TwoFactorVerify } from "./screens/TwoFactorVerify";
 export const routes: RouteObject[] = [
   { path: "/", element: <Landing /> },
   { path: "/login", element: <Login /> },
+  {
+    path: "/invitations/:token/accept",
+    element: (
+      <AuthGuard>
+        <AcceptInvite />
+      </AuthGuard>
+    ),
+  },
   {
     path: "/2fa/setup",
     element: (
