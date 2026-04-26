@@ -242,6 +242,7 @@ export const TestIds = {
   SETTINGS_MEMBERS_SECTION: "settings-members-section",
   SETTINGS_MEMBERS_LOADING: "settings-members-loading",
   SETTINGS_MEMBERS_ERROR: "settings-members-error",
+  SETTINGS_MEMBERS_ACTION_ERROR: "settings-members-action-error",
   SETTINGS_MEMBERS_TABLE: "settings-members-table",
   SETTINGS_MEMBERS_ROW: "settings-members-row",
   SETTINGS_MEMBERS_ROLE_SELECT: "settings-members-role-select",

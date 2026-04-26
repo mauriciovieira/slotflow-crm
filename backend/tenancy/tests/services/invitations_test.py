@@ -124,6 +124,21 @@ def test_accept_invitation_idempotent_when_already_accepted_by_same_user():
     assert first.pk == again.pk
 
 
+def test_revoke_invitation_rejects_already_accepted():
+    actor = _user("actor")
+    bob = _user("bob")
+    ws = _ws()
+    Membership.objects.create(user=actor, workspace=ws, role=MembershipRole.OWNER)
+    inv = create_invitation(actor=actor, workspace=ws, email="bob@example.com")
+    accept_invitation(user=bob, token=inv.token)
+    inv.refresh_from_db()
+    assert inv.accepted_at is not None
+    with pytest.raises(InvitationStateError):
+        revoke_invitation(actor=actor, invitation=inv)
+    inv.refresh_from_db()
+    assert inv.revoked_at is None
+
+
 def test_accept_invitation_unknown_token_raises():
     bob = _user("bob")
     with pytest.raises(InvitationStateError):

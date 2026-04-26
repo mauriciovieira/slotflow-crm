@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
@@ -154,8 +155,14 @@ def invitations_view(request: Request, workspace_id):
         return _err("Owner role required.", status.HTTP_403_FORBIDDEN)
 
     if request.method == "GET":
+        # Only surface invitations that are still actionable. Expired
+        # rows would otherwise dangle in the UI and conflict with
+        # `create_invitation`'s "expired ⇒ no conflict" rule.
         qs = Invitation.objects.filter(
-            workspace=workspace, accepted_at__isnull=True, revoked_at__isnull=True
+            workspace=workspace,
+            accepted_at__isnull=True,
+            revoked_at__isnull=True,
+            expires_at__gt=timezone.now(),
         ).order_by("-created_at")
         return Response(InvitationSerializer(qs, many=True).data)
 
@@ -185,7 +192,10 @@ def invitation_detail_view(request: Request, workspace_id, invitation_id):
     if not user_has_workspace_role(request.user, workspace, min_role=MembershipRole.OWNER):
         return _err("Owner role required.", status.HTTP_403_FORBIDDEN)
     invitation = get_object_or_404(Invitation, pk=invitation_id, workspace=workspace)
-    revoke_invitation(actor=request.user, invitation=invitation)
+    try:
+        revoke_invitation(actor=request.user, invitation=invitation)
+    except InvitationStateError as exc:
+        return _err(_validation_message(exc), status.HTTP_409_CONFLICT)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 

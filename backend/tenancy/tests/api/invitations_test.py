@@ -122,6 +122,34 @@ def test_accept_invitation_creates_membership_and_returns_role():
     assert Membership.objects.filter(user=bob, workspace=ws).exists()
 
 
+def test_invitations_list_excludes_expired_rows():
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    a = _user("a")
+    ws = _ws()
+    Membership.objects.create(user=a, workspace=ws, role=MembershipRole.OWNER)
+    fresh = create_invitation(actor=a, workspace=ws, email="fresh@example.com")
+    expired = create_invitation(actor=a, workspace=ws, email="expired@example.com")
+    Invitation.objects.filter(pk=expired.pk).update(expires_at=timezone.now() - timedelta(days=1))
+
+    body = _client(a).get(f"/api/workspaces/{ws.id}/invitations/").json()
+    emails = [row["email"] for row in body]
+    assert emails == [fresh.email]
+
+
+def test_revoke_already_accepted_invitation_returns_409():
+    a = _user("a")
+    bob = _user("bob")
+    ws = _ws()
+    Membership.objects.create(user=a, workspace=ws, role=MembershipRole.OWNER)
+    inv = create_invitation(actor=a, workspace=ws, email="bob@example.com")
+    _client(bob).post(f"/api/invitations/{inv.token}/accept/")
+    response = _client(a).delete(f"/api/workspaces/{ws.id}/invitations/{inv.id}/")
+    assert response.status_code == 409
+
+
 def test_accept_invitation_revoked_returns_409():
     a = _user("a")
     bob = _user("bob")

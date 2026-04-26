@@ -57,13 +57,13 @@ Permission enforcement uses `tenancy.permissions.user_has_workspace_role(user, w
 
 New action constants — fire through existing `audit.write_audit_event` so the notifications fan-out hook (added in Track 10) surfaces these to the *other* owners:
 
-- `member.role_changed` — metadata `{from, to, target_user}`.
-- `member.removed` — metadata `{target_user}`.
-- `member.left` — metadata `{}`.
+- `member.role_changed` — metadata `{from, to, target_user_id}`.
+- `member.removed` — metadata `{target_user_id}`.
+- `member.left` — metadata `{target_user_id}` (the leaver, recorded for symmetry with `member.removed`).
 - `invitation.created` — metadata `{email, role}`.
 - `invitation.revoked` — metadata `{email}`.
 - `invitation.accepted` — metadata `{email}`.
-- `workspace.ownership_transferred` — metadata `{from_user, to_user, demoted_self}`.
+- `workspace.ownership_transferred` — metadata `{from_user_id, to_user_id, demoted_self}`.
 
 #### Tests
 

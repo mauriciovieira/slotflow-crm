@@ -38,17 +38,22 @@ interface MembersSectionProps {
 export function MembersSection({ workspaceId }: MembersSectionProps) {
   const me = useMe();
   const membersQuery = useMembers(workspaceId);
-  const invitationsQuery = useInvitations(workspaceId);
+  const myUsername = me.data?.username ?? null;
+  const members = membersQuery.data ?? [];
+  const myMembership = members.find((row) => row.username === myUsername) ?? null;
+  const isOwner = myMembership?.role === "owner";
+
+  // Owner-only endpoints (`/invitations/...`) return 403 for
+  // members/viewers. Gate the queries on `isOwner` so the FE doesn't
+  // generate a guaranteed-failing request on every Settings load for
+  // non-owners.
+  const ownerWorkspaceId = isOwner ? workspaceId : null;
+  const invitationsQuery = useInvitations(ownerWorkspaceId);
   const changeRole = useChangeMemberRole(workspaceId);
   const removeMember = useRemoveMember(workspaceId);
   const transferOwnership = useTransferOwnership(workspaceId);
   const inviteMember = useInviteMember(workspaceId);
   const revokeInvitation = useRevokeInvitation(workspaceId);
-
-  const myUsername = me.data?.username ?? null;
-  const members = membersQuery.data ?? [];
-  const myMembership = members.find((row) => row.username === myUsername) ?? null;
-  const isOwner = myMembership?.role === "owner";
 
   const [transferOpen, setTransferOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -87,7 +92,7 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
       {actionError && (
         <p
           role="alert"
-          data-testid={TestIds.SETTINGS_MEMBERS_ERROR}
+          data-testid={TestIds.SETTINGS_MEMBERS_ACTION_ERROR}
           className="mb-3 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
         >
           {actionError}

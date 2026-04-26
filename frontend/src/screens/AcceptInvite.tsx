@@ -7,9 +7,10 @@ export function AcceptInvite() {
   const { token = "" } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const accept = useAcceptInvitation();
+  const hasToken = token.trim().length > 0;
 
   useEffect(() => {
-    if (!token) return;
+    if (!hasToken) return;
     accept.mutate(token, {
       onSuccess: () => {
         // Redirect into the dashboard once the membership is created.
@@ -22,11 +23,38 @@ export function AcceptInvite() {
   }, [token]);
 
   function retry() {
-    if (!token) return;
+    if (!hasToken) return;
     accept.mutate(token, {
       onSuccess: () =>
         navigate("/dashboard/opportunities", { replace: true }),
     });
+  }
+
+  // No token in the URL → there is nothing to accept and no useful
+  // retry. Render a terminal error rather than the loading placeholder
+  // so the user isn't stuck staring at "Joining workspace…" forever.
+  if (!hasToken) {
+    return (
+      <section
+        data-testid={TestIds.ACCEPT_INVITE_SCREEN}
+        className="px-6 py-10 max-w-md mx-auto text-center"
+      >
+        <p
+          data-testid={TestIds.ACCEPT_INVITE_ERROR}
+          className="mb-3 text-sm text-danger"
+        >
+          This invitation link is missing its token.
+        </p>
+        <button
+          type="button"
+          disabled
+          data-testid={TestIds.ACCEPT_INVITE_RETRY}
+          className="rounded-md border border-border-subtle px-3 py-1.5 text-sm text-ink-secondary opacity-60 cursor-not-allowed"
+        >
+          Try again
+        </button>
+      </section>
+    );
   }
 
   return (

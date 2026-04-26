@@ -186,9 +186,18 @@ def create_invitation(
 
 @transaction.atomic
 def revoke_invitation(*, actor: AbstractBaseUser, invitation: Invitation) -> None:
-    """Mark `invitation` as revoked. Idempotent on already-revoked rows."""
+    """Mark `invitation` as revoked. Idempotent on already-revoked rows.
+
+    Raises `InvitationStateError` if the invitation has already been
+    accepted — once a membership is created the invitation row is
+    historical and revoking it would leave contradictory state
+    (`accepted_at` and `revoked_at` both set) plus a misleading audit
+    trail. Removing the membership is the right path there.
+    """
     if invitation.revoked_at is not None:
         return
+    if invitation.accepted_at is not None:
+        raise InvitationStateError("Accepted invitations cannot be revoked.")
     invitation.revoked_at = timezone.now()
     invitation.save(update_fields=["revoked_at", "updated_at"])
     write_audit_event(

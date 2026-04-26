@@ -237,6 +237,20 @@ describe("MembersSection", () => {
     expect(mutate).toHaveBeenCalledWith("i-1");
   });
 
+  it("non-owner does not subscribe to invitations query", () => {
+    setMe("bob");
+    setMembers([
+      memberRow(),
+      memberRow({ id: "m-2", username: "bob", email: "bob@example.com", role: "member" }),
+    ]);
+    setInvitations([]);
+    renderSection();
+    // The non-owner branch passes `null` for the workspaceId so the
+    // invitations query stays disabled and never fires the
+    // guaranteed-403 request to `/api/workspaces/<id>/invitations/`.
+    expect(useInvitationsMock).toHaveBeenCalledWith(null);
+  });
+
   it("hides invite form for non-owners", () => {
     setMe("bob");
     setMembers([
@@ -280,7 +294,7 @@ describe("MembersSection", () => {
     renderSection();
     await user.click(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE));
     await user.click(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE_CONFIRM));
-    expect(screen.getByTestId(TestIds.SETTINGS_MEMBERS_ERROR)).toHaveTextContent(
+    expect(screen.getByTestId(TestIds.SETTINGS_MEMBERS_ACTION_ERROR)).toHaveTextContent(
       "Cannot remove the last owner.",
     );
     // Dialog stays open so the user understands the action didn't apply.
