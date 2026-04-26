@@ -6,7 +6,7 @@ from django.contrib.auth import logout as django_logout
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django_otp import login as otp_login
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,6 +14,11 @@ from rest_framework.response import Response
 from mcp.auth import mark_otp_session_fresh
 
 from .auth_bypass import is_2fa_bypass_active
+from .throttling import (
+    LoginRateThrottle,
+    LoginUsernameRateThrottle,
+    TwoFactorRateThrottle,
+)
 from .totp_qr import build_totp_qr_svg
 
 
@@ -57,6 +62,7 @@ def me_view(request: Request) -> Response:
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle, LoginUsernameRateThrottle])
 @csrf_protect
 def login_view(request: Request) -> Response:
     """Anonymous login endpoint.
@@ -90,6 +96,7 @@ def logout_view(request: Request) -> Response:
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([TwoFactorRateThrottle])
 def totp_setup_view(request: Request) -> Response:
     device, _created = TOTPDevice.objects.get_or_create(
         user=request.user,
@@ -121,6 +128,7 @@ def totp_setup_view(request: Request) -> Response:
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([TwoFactorRateThrottle])
 def totp_confirm_view(request: Request) -> Response:
     token = "".join(str(request.data.get("token") or "").split())
     if not token:
@@ -143,6 +151,7 @@ def totp_confirm_view(request: Request) -> Response:
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([TwoFactorRateThrottle])
 def totp_verify_view(request: Request) -> Response:
     token = "".join(str(request.data.get("token") or "").split())
     if not token:
