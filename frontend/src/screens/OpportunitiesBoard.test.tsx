@@ -190,7 +190,7 @@ describe("OpportunitiesBoard", () => {
     renderBoard();
 
     await user.selectOptions(
-      screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD_MOVE}-opp-1`),
+      screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_MOVE_SELECT}-opp-1`),
       "interview",
     );
 

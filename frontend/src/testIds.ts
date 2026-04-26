@@ -226,7 +226,9 @@ export const TestIds = {
   OPPORTUNITIES_BOARD_ERROR: "opportunities-board-error",
   OPPORTUNITIES_BOARD_COLUMN: "opportunities-board-column",
   OPPORTUNITIES_BOARD_CARD: "opportunities-board-card",
-  OPPORTUNITIES_BOARD_CARD_MOVE: "opportunities-board-card-move",
+  // Distinct prefix so the e2e's `^="opportunities-board-card-"`
+  // selector for cards doesn't also match the move-stage <select>.
+  OPPORTUNITIES_BOARD_MOVE_SELECT: "opportunities-board-move-select",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

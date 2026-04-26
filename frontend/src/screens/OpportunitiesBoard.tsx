@@ -70,7 +70,7 @@ function Card({
             const next = e.target.value as OpportunityStage;
             if (next !== opp.stage) onMoveToStage(opp.id, next);
           }}
-          data-testid={`${TestIds.OPPORTUNITIES_BOARD_CARD_MOVE}-${opp.id}`}
+          data-testid={`${TestIds.OPPORTUNITIES_BOARD_MOVE_SELECT}-${opp.id}`}
           className="w-full text-xs border border-border-subtle rounded px-1 py-0.5 bg-surface focus:outline-none focus:border-brand"
         >
           {STAGES.map((s) => (
