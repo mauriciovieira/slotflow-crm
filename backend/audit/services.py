@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 from django.db import models, transaction
@@ -7,6 +8,8 @@ from django.db import models, transaction
 from core.middleware.correlation_id import get_correlation_id
 
 from .models import AuditEvent
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser
@@ -70,7 +73,7 @@ def write_audit_event(
     # middleware already enforces `[A-Za-z0-9-]{8,64}`; this guard is defense
     # in depth for service-layer / Celery callers that build the id by hand.
     cid = raw_cid[:64]
-    return AuditEvent.objects.create(
+    event = AuditEvent.objects.create(
         actor=actor,
         actor_repr=_format_actor(actor),
         action=action,
@@ -80,3 +83,42 @@ def write_audit_event(
         correlation_id=cid,
         metadata=metadata or {},
     )
+    # Fan out an in-app notification to every workspace owner except the
+    # actor. Workspace-less audit events (system-only) don't fan out;
+    # the audit log itself is the durable record there. Wrapped in a
+    # nested savepoint + try/except so a notifications failure can never
+    # take down the audit write — the audit row stays committed; the
+    # notification work is best-effort and logged.
+    if workspace is not None:
+        # Local import to break the audit ↔ notifications cycle: the
+        # notifications app imports tenancy, audit doesn't import
+        # notifications at module load.
+        from notifications.services import notify_workspace_owners
+
+        payload = {
+            "actor_repr": event.actor_repr,
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "correlation_id": cid,
+            # Only the small, FE-friendly subset of metadata — avoid
+            # leaking PII / large blobs into the notification payload.
+            **{
+                k: v
+                for k, v in (metadata or {}).items()
+                if k in {"title", "company", "name", "stage", "from", "to"}
+            },
+        }
+        try:
+            with transaction.atomic():
+                notify_workspace_owners(
+                    workspace=workspace,
+                    actor=actor,
+                    kind=action,
+                    payload=payload,
+                )
+        except Exception:
+            logger.exception(
+                "notification fan-out failed for audit event",
+                extra={"audit_event_id": str(event.pk), "action": action},
+            )
+    return event
