@@ -1,3 +1,16 @@
+# [1.24.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.23.0...docs-v1.24.0) (2026-04-26)
+
+
+### Bug Fixes
+
+* **frontend:** apply Copilot round-3 feedback on kanban slice ([f18c2fc](https://github.com/mauriciovieira/slotflow-crm/commit/f18c2fc847ef61be716bcd830aed3150742ae254))
+* **frontend:** apply Copilot round-5 feedback on kanban slice ([b512252](https://github.com/mauriciovieira/slotflow-crm/commit/b512252151a71da363585350464730a450c45592))
+
+
+### Features
+
+* opportunities kanban board — slice 9b (FE + e2e) ([762c828](https://github.com/mauriciovieira/slotflow-crm/commit/762c828c8b896ccadfa18a3a4147fd75fa7ee750))
+
 # [1.23.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.22.0...docs-v1.23.0) (2026-04-26)
 
 
