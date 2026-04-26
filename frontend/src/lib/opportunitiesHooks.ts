@@ -100,15 +100,58 @@ export function useUpdateOpportunity(id: string) {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       qc.setQueryData(opportunityKey(id), data);
       // Bust the stage-history cache after every update so a stage
       // change is reflected on the detail screen without a manual reload.
       // No-op stage updates still bust it; cheap, and beats threading the
-      // before/after stage through the mutation.
-      qc.invalidateQueries({ queryKey: stageHistoryKey(id) });
-      return qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+      // before/after stage through the mutation. Await both so a caller
+      // using `mutateAsync` doesn't observe a resolved promise before
+      // the caches have actually been invalidated.
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: stageHistoryKey(id) }),
+        qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),
+      ]);
     },
+  });
+}
+
+/**
+ * Imperative variant of `useUpdateOpportunity` for callers that don't
+ * have a fixed opportunity id at hook-creation time — e.g. the kanban
+ * board, where the dragged row is whatever the user grabs. Same cache
+ * semantics as `useUpdateOpportunity.onSuccess` so kanban moves and
+ * detail-screen edits stay consistent (per-row cache write +
+ * stage-history invalidation + list invalidation). On error we
+ * invalidate the list so any optimistic write the caller did is
+ * reconciled back to the server's truth.
+ */
+export function useMoveOpportunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: OpportunityUpdatePayload;
+    }) =>
+      apiFetch<Opportunity>(`/api/opportunities/${id}/`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: async (data, { id }) => {
+      qc.setQueryData(opportunityKey(id), data);
+      // Await both invalidations so any caller using `mutateAsync`
+      // doesn't observe a resolved promise before the caches have
+      // actually been invalidated. Matches `useUpdateOpportunity`'s
+      // contract.
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: stageHistoryKey(id) }),
+        qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),
+      ]);
+    },
+    onError: () => qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),
   });
 }
 

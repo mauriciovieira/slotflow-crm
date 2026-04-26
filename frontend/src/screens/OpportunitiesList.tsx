@@ -1,8 +1,7 @@
 import { Link } from "react-router";
+import { OpportunityStagePill } from "../components/OpportunityStagePill";
 import {
-  STAGE_LABEL,
   type Opportunity,
-  type OpportunityStage,
   useOpportunities,
 } from "../lib/opportunitiesHooks";
 import { TestIds } from "../testIds";
@@ -11,25 +10,6 @@ const NEW_OPPORTUNITY_HREF = "/dashboard/opportunities/new";
 
 const NEW_BUTTON_PRIMARY =
   "inline-flex items-center rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep";
-
-const STAGE_PILL: Record<OpportunityStage, string> = {
-  applied: "bg-brand-light text-ink-secondary",
-  screening: "bg-blue-100 text-blue-800",
-  interview: "bg-brand text-white",
-  offer: "bg-brand-deep text-white",
-  rejected: "bg-red-100 text-red-700",
-  withdrawn: "bg-gray-200 text-ink-secondary",
-};
-
-function StagePill({ stage }: { stage: OpportunityStage }) {
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STAGE_PILL[stage]}`}
-    >
-      {STAGE_LABEL[stage]}
-    </span>
-  );
-}
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -97,7 +77,28 @@ export function OpportunitiesList() {
 
   return (
     <section className="px-6 py-6">
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        {/* Both states render as <Link> with `aria-current="page"` on
+            the active route so screen readers announce the current
+            view, and `pointer-events-none` on the active link
+            prevents a redundant self-navigation click. */}
+        <nav className="flex items-center gap-2" aria-label="Opportunities view">
+          <Link
+            to="/dashboard/opportunities"
+            aria-current="page"
+            data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_TABLE}
+            className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium pointer-events-none"
+          >
+            Table
+          </Link>
+          <Link
+            to="/dashboard/opportunities/board"
+            data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_BOARD}
+            className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card"
+          >
+            Board
+          </Link>
+        </nav>
         <Link
           to={NEW_OPPORTUNITY_HREF}
           data-testid={TestIds.OPPORTUNITIES_NEW_BUTTON}
@@ -135,7 +136,7 @@ export function OpportunitiesList() {
               </td>
               <td className="px-4 py-3 text-ink-secondary">{opp.company}</td>
               <td className="px-4 py-3">
-                <StagePill stage={opp.stage} />
+                <OpportunityStagePill stage={opp.stage} />
               </td>
               <td className="px-4 py-3 text-ink-secondary">{formatDate(opp.created_at)}</td>
             </tr>
