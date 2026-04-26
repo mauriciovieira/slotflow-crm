@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.24.0...docs-v1.25.0) (2026-04-26)
+
+
+### Features
+
+* notifications bell — Track 10 (BE + FE + e2e) ([#43](https://github.com/mauriciovieira/slotflow-crm/issues/43)) ([8d8b617](https://github.com/mauriciovieira/slotflow-crm/commit/8d8b6178ea56460c80487958427171137a7f6c19))
+
 # [1.24.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.23.0...docs-v1.24.0) (2026-04-26)
 
 
