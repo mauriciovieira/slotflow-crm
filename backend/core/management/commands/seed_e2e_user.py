@@ -14,10 +14,14 @@ from __future__ import annotations
 
 import os
 
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
+from core.models import TermsVersion
 from tenancy.models import Membership, MembershipRole, Workspace
 
 E2E_USERNAME = "e2e"
@@ -79,4 +83,22 @@ class Command(BaseCommand):
                 f"{ws_action} workspace {E2E_WORKSPACE_SLUG!r}; "
                 f"{membership_action} OWNER membership."
             )
+        )
+
+        # Seed the current TermsVersion so /api/test/_reset/ leaves a usable
+        # ToS row; AcceptInvite preflight expects one.
+        terms_path = (
+            Path(settings.BASE_DIR).parent / "docs" / "legal" / "terms-v0.1.0.md"
+        )
+        body = (
+            terms_path.read_text(encoding="utf-8")
+            if terms_path.exists()
+            else "Placeholder ToS"
+        )
+        TermsVersion.objects.update_or_create(
+            version="0.1.0-draft",
+            defaults={"body": body, "effective_at": timezone.now()},
+        )
+        self.stdout.write(
+            self.style.SUCCESS("Seeded TermsVersion 0.1.0-draft.")
         )
