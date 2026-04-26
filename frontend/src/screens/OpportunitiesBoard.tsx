@@ -226,14 +226,12 @@ export function OpportunitiesBoard() {
     );
   }
 
-  const byStage: Record<OpportunityStage, Opportunity[]> = {
-    applied: [],
-    screening: [],
-    interview: [],
-    offer: [],
-    rejected: [],
-    withdrawn: [],
-  };
+  // Initialize from `STAGES` so a new stage added to `OpportunityStage`
+  // automatically gets a bucket here, instead of crashing the render
+  // when `byStage[<new stage>]` resolves to `undefined`.
+  const byStage = Object.fromEntries(
+    STAGES.map((stage) => [stage, [] as Opportunity[]]),
+  ) as Record<OpportunityStage, Opportunity[]>;
   for (const o of rows) {
     // Guard against a future BE deploy that adds a stage the FE doesn't
     // yet know about: degrade gracefully (log + skip) instead of
