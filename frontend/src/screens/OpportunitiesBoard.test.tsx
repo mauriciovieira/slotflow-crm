@@ -12,20 +12,19 @@ vi.mock("../lib/opportunitiesHooks", async () => {
   const actual = await vi.importActual<typeof import("../lib/opportunitiesHooks")>(
     "../lib/opportunitiesHooks",
   );
-  return {
-    ...actual,
-    useOpportunities: vi.fn(),
-    useUpdateOpportunity: vi.fn(),
-  };
+  return { ...actual, useOpportunities: vi.fn() };
 });
 
-import {
-  useOpportunities,
-  useUpdateOpportunity,
-} from "../lib/opportunitiesHooks";
+vi.mock("../lib/api", async () => {
+  const actual = await vi.importActual<typeof import("../lib/api")>("../lib/api");
+  return { ...actual, apiFetch: vi.fn() };
+});
+
+import { useOpportunities } from "../lib/opportunitiesHooks";
+import { apiFetch } from "../lib/api";
 
 const useOpportunitiesMock = vi.mocked(useOpportunities);
-const useUpdateMock = vi.mocked(useUpdateOpportunity);
+const apiFetchMock = vi.mocked(apiFetch);
 
 function fixture(overrides: Partial<Opportunity> = {}): Opportunity {
   return {
@@ -60,15 +59,18 @@ function setOpps(state: Partial<ReturnType<typeof useOpportunities>>) {
   } as unknown as ReturnType<typeof useOpportunities>);
 }
 
-function setUpdate(mutateAsync: ReturnType<typeof vi.fn>) {
-  useUpdateMock.mockReturnValue({
-    mutateAsync,
-    isPending: false,
-    isError: false,
-    isSuccess: false,
-    isIdle: true,
-    status: "idle",
-  } as unknown as ReturnType<typeof useUpdateOpportunity>);
+function makeDataTransfer() {
+  // jsdom's DataTransfer doesn't carry setData/getData; provide a tiny
+  // round-trip shim so the handlers can read the dragged opportunity id.
+  const data = new Map<string, string>();
+  return {
+    setData: (k: string, v: string) => {
+      data.set(k, v);
+    },
+    getData: (k: string) => data.get(k) ?? "",
+    effectAllowed: "",
+    dropEffect: "",
+  };
 }
 
 function Providers({ children }: { children: ReactNode }) {
@@ -91,7 +93,6 @@ function renderBoard() {
 describe("OpportunitiesBoard", () => {
   it("renders the loading branch", () => {
     setOpps({ isLoading: true, status: "pending" });
-    setUpdate(vi.fn());
     renderBoard();
     expect(screen.getByTestId(TestIds.OPPORTUNITIES_BOARD_LOADING)).toBeVisible();
   });
@@ -99,7 +100,6 @@ describe("OpportunitiesBoard", () => {
   it("renders the error branch with a refetch button", async () => {
     const refetch = vi.fn();
     setOpps({ error: new Error("nope"), isError: true, status: "error", refetch });
-    setUpdate(vi.fn());
     const user = userEvent.setup();
     renderBoard();
     expect(screen.getByTestId(TestIds.OPPORTUNITIES_BOARD_ERROR)).toBeVisible();
@@ -116,7 +116,6 @@ describe("OpportunitiesBoard", () => {
       isSuccess: true,
       status: "success",
     });
-    setUpdate(vi.fn());
     renderBoard();
     const applied = screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_COLUMN}-applied`);
     expect(within(applied).getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-1`)).toBeVisible();
@@ -126,14 +125,13 @@ describe("OpportunitiesBoard", () => {
     expect(within(interview).getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-2`)).toBeVisible();
   });
 
-  it("dropping a card on a different column triggers an update with the new stage", async () => {
+  it("dropping a card on a different column PATCHes the new stage", async () => {
     setOpps({
       data: [fixture()],
       isSuccess: true,
       status: "success",
     });
-    const mutateAsync = vi.fn().mockResolvedValueOnce(fixture({ stage: "interview" }));
-    setUpdate(mutateAsync);
+    apiFetchMock.mockResolvedValueOnce(fixture({ stage: "interview" }));
     renderBoard();
 
     const card = screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-1`);
@@ -141,67 +139,72 @@ describe("OpportunitiesBoard", () => {
       `${TestIds.OPPORTUNITIES_BOARD_COLUMN}-interview`,
     );
 
-    // jsdom DataTransfer doesn't ship with `setData`/`getData`; provide a
-    // tiny shim that round-trips a single key so the handlers can read
-    // the dragged opportunity id.
-    const data = new Map<string, string>();
-    const dataTransfer = {
-      setData: (k: string, v: string) => {
-        data.set(k, v);
-      },
-      getData: (k: string) => data.get(k) ?? "",
-      effectAllowed: "",
-      dropEffect: "",
-    };
-
+    const dataTransfer = makeDataTransfer();
     fireEvent.dragStart(card, { dataTransfer });
     fireEvent.dragOver(target, { dataTransfer });
     fireEvent.drop(target, { dataTransfer });
 
-    await vi.waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
-    expect(mutateAsync).toHaveBeenCalledWith({ stage: "interview" });
+    await vi.waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      "/api/opportunities/opp-1/",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ stage: "interview" }),
+      }),
+    );
   });
 
-  it("dropping a card on its own column does not fire mutateAsync", () => {
+  it("dropping a card on its own column does not PATCH", () => {
     setOpps({ data: [fixture()], isSuccess: true, status: "success" });
-    const mutateAsync = vi.fn();
-    setUpdate(mutateAsync);
+    apiFetchMock.mockClear();
     renderBoard();
 
     const card = screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-1`);
     const sameTarget = screen.getByTestId(
       `${TestIds.OPPORTUNITIES_BOARD_COLUMN}-applied`,
     );
-    const data = new Map<string, string>();
-    const dataTransfer = {
-      setData: (k: string, v: string) => data.set(k, v),
-      getData: (k: string) => data.get(k) ?? "",
-      effectAllowed: "",
-      dropEffect: "",
-    };
+    const dataTransfer = makeDataTransfer();
     fireEvent.dragStart(card, { dataTransfer });
     fireEvent.dragOver(sameTarget, { dataTransfer });
     fireEvent.drop(sameTarget, { dataTransfer });
-    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
   it("dropping with an empty payload is a no-op", () => {
     setOpps({ data: [fixture()], isSuccess: true, status: "success" });
-    const mutateAsync = vi.fn();
-    setUpdate(mutateAsync);
+    apiFetchMock.mockClear();
     renderBoard();
     const target = screen.getByTestId(
       `${TestIds.OPPORTUNITIES_BOARD_COLUMN}-interview`,
     );
-    const data = new Map<string, string>();
-    const dataTransfer = {
-      setData: (k: string, v: string) => data.set(k, v),
-      getData: (k: string) => data.get(k) ?? "",
-      effectAllowed: "",
-      dropEffect: "",
-    };
+    const dataTransfer = makeDataTransfer();
     fireEvent.dragOver(target, { dataTransfer });
     fireEvent.drop(target, { dataTransfer });
-    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(apiFetchMock).not.toHaveBeenCalled();
+  });
+
+  it("opportunities with an unexpected stage are skipped, not crashed", () => {
+    // Future BE deploy could add a stage the FE doesn't know about.
+    // The board should warn and skip rather than throw.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    setOpps({
+      data: [
+        fixture(),
+        // @ts-expect-error — simulating a stage value outside the FE union.
+        fixture({ id: "opp-future", stage: "frozen" }),
+      ],
+      isSuccess: true,
+      status: "success",
+    });
+    renderBoard();
+    expect(screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-1`)).toBeVisible();
+    expect(
+      screen.queryByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-future`),
+    ).toBeNull();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("unexpected stage"),
+      expect.objectContaining({ id: "opp-future", stage: "frozen" }),
+    );
+    warn.mockRestore();
   });
 });

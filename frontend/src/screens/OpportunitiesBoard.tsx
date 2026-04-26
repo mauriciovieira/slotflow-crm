@@ -1,14 +1,16 @@
-import { type DragEvent, useEffect, useRef, useState } from "react";
+import { type DragEvent, useState } from "react";
 import { Link } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { OpportunityStagePill } from "../components/OpportunityStagePill";
+import { apiFetch } from "../lib/api";
 import {
   OPPORTUNITIES_KEY,
   STAGES,
+  opportunityKey,
+  stageHistoryKey,
   type Opportunity,
   type OpportunityStage,
   useOpportunities,
-  useUpdateOpportunity,
 } from "../lib/opportunitiesHooks";
 import { TestIds } from "../testIds";
 
@@ -18,18 +20,6 @@ const TOGGLE_BTN_ACTIVE =
   "rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium pointer-events-none";
 
 const DRAG_MIME = "application/x-opportunity-id";
-
-function useEffectOnce(fn: () => void) {
-  // One-shot effect helper. Keeps DropMutator's mutation from re-firing
-  // if React 18 strict mode double-invokes the effect.
-  const fired = useRef(false);
-  useEffect(() => {
-    if (fired.current) return;
-    fired.current = true;
-    fn();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-}
 
 function Card({ opp, draggable }: { opp: Opportunity; draggable: boolean }) {
   function handleDragStart(e: DragEvent<HTMLDivElement>) {
@@ -110,44 +100,39 @@ function Column({
   );
 }
 
-function DropMutator({
-  id,
-  stage,
-  onError,
-  onDone,
-}: {
-  id: string;
-  stage: OpportunityStage;
-  onError: () => void;
-  onDone: () => void;
-}) {
-  // `useUpdateOpportunity` binds a query-client mutation to a fixed id
-  // at hook-creation time. We mount this child once per drag and let it
-  // unmount after the mutation settles, which is cheaper than threading
-  // an imperative mutation API through the parent.
-  const update = useUpdateOpportunity(id);
-  useEffectOnce(() => {
-    update
-      .mutateAsync({ stage })
-      .catch(() => onError())
-      .finally(() => onDone());
-  });
-  return null;
-}
-
 export function OpportunitiesBoard() {
   const query = useOpportunities();
   const qc = useQueryClient();
-  const [pending, setPending] = useState<{ id: string; stage: OpportunityStage } | null>(null);
   const rows: Opportunity[] = query.data ?? [];
+
+  // Inline mutation that takes both id and stage so we can call it
+  // imperatively from the drop handler. Avoids the previous
+  // `<DropMutator>` mount-once-per-drag pattern that didn't survive
+  // React 18 StrictMode (the effect-once ref was reset on the second
+  // mount and would have fired the PATCH twice in dev).
+  const move = useMutation({
+    mutationFn: ({ id, stage }: { id: string; stage: OpportunityStage }) =>
+      apiFetch<Opportunity>(`/api/opportunities/${id}/`, {
+        method: "PATCH",
+        body: JSON.stringify({ stage }),
+      }),
+    onSuccess: (data, { id }) => {
+      qc.setQueryData(opportunityKey(id), data);
+      qc.invalidateQueries({ queryKey: stageHistoryKey(id) });
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+    },
+    onError: () => {
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+    },
+  });
 
   function handleDropToStage(id: string, target: OpportunityStage) {
     // Race guard: while a previous drop is still in flight, ignore new
-    // drops. Without this a fast second drag could unmount the running
-    // `<DropMutator>` mid-PATCH and leave the FE/server out of sync.
-    // The Column also passes `acceptingDrops={!pending}` so columns
-    // visually reject drops in this window — this is defense in depth.
-    if (pending) return;
+    // drops. Without this a fast second drag could land a second PATCH
+    // mid-flight and produce out-of-order writes. The Column also
+    // passes `acceptingDrops={!move.isPending}` so columns visually
+    // reject drops in this window — defense in depth.
+    if (move.isPending) return;
 
     // No-op short-circuit: dropping back into the same column is a
     // common misclick. The BE already special-cases stage-no-op
@@ -160,21 +145,14 @@ export function OpportunitiesBoard() {
     if (current?.stage === target) return;
 
     // Optimistic: rewrite the cached row so the card hops to the new
-    // column before the PATCH lands. On error we invalidate to pull the
-    // server's truth back. On success the mutation's `onSuccess` already
-    // invalidates the list, so the optimistic write is a smooth bridge.
+    // column before the PATCH lands. The mutation's `onError` reverts
+    // by invalidating; `onSuccess` invalidates anyway so the optimistic
+    // write is a smooth bridge.
     qc.setQueryData<Opportunity[]>(OPPORTUNITIES_KEY, (prev) => {
       if (!prev) return prev;
       return prev.map((row) => (row.id === id ? { ...row, stage: target } : row));
     });
-    setPending({ id, stage: target });
-  }
-
-  function handleSettleError() {
-    qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
-  }
-  function handleSettleDone() {
-    setPending(null);
+    move.mutate({ id, stage: target });
   }
 
   if (query.isLoading) {
@@ -217,7 +195,19 @@ export function OpportunitiesBoard() {
     rejected: [],
     withdrawn: [],
   };
-  for (const o of rows) byStage[o.stage].push(o);
+  for (const o of rows) {
+    // Guard against a future BE deploy that adds a stage the FE doesn't
+    // yet know about: degrade gracefully (log + skip) instead of
+    // crashing the whole board on `byStage[<unknown>].push`.
+    if (Object.prototype.hasOwnProperty.call(byStage, o.stage)) {
+      byStage[o.stage as OpportunityStage].push(o);
+      continue;
+    }
+    console.warn("Skipping opportunity with unexpected stage", {
+      id: o.id,
+      stage: o.stage,
+    });
+  }
 
   return (
     <section
@@ -261,20 +251,10 @@ export function OpportunitiesBoard() {
             stage={stage}
             opps={byStage[stage]}
             onDropToStage={handleDropToStage}
-            acceptingDrops={!pending}
+            acceptingDrops={!move.isPending}
           />
         ))}
       </div>
-
-      {pending && (
-        <DropMutator
-          key={`${pending.id}-${pending.stage}`}
-          id={pending.id}
-          stage={pending.stage}
-          onError={handleSettleError}
-          onDone={handleSettleDone}
-        />
-      )}
     </section>
   );
 }
