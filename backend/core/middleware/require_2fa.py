@@ -30,7 +30,14 @@ class Require2FAMiddleware:
         if not user or not user.is_authenticated:
             return self.get_response(request)
 
-        if user.is_verified() or is_2fa_bypass_active():
+        if is_2fa_bypass_active():
+            return self.get_response(request)
+
+        session = getattr(request, "session", None)
+        if session is not None and session.get("oauth_mfa_satisfied"):
+            return self.get_response(request)
+
+        if user.is_verified():
             return self.get_response(request)
 
         has_confirmed_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
