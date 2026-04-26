@@ -189,3 +189,32 @@ def accept_password_view(request: Request, token: str) -> Response:
         request._request, user, backend="django.contrib.auth.backends.ModelBackend",
     )
     return Response({"next": "/2fa/setup"})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def oauth_start_view(request: Request, token: str) -> Response:
+    try:
+        invite = Invite.objects.get(token_hash=hash_token(token))
+    except Invite.DoesNotExist:
+        return Response({"error": "invalid_token"}, status=404)
+
+    bad = _invite_state_response(invite)
+    if bad is not None:
+        return bad
+
+    provider = (request.data.get("provider") or "").strip().lower()
+    if provider not in ALLOWED_PROVIDERS:
+        return Response({"provider": ["Must be one of: google, github."]}, status=422)
+
+    errors = _validate_oauth_payload(request.data)
+    if errors:
+        return Response(errors, status=422)
+
+    request.session["pending_invite_token_hash"] = invite.token_hash
+    request.session["pending_invite_raw_token"] = token
+    request.session["workspace_name"] = request.data["workspace_name"].strip()
+    request.session["accepted_terms_version_id"] = request.data["terms_version_id"]
+    request.session.modified = True
+
+    return Response({"redirect_url": f"/accounts/{provider}/login/"})
