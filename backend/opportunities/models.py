@@ -117,10 +117,11 @@ class OpportunityResume(TimeStampedModel):
 class OpportunityStageTransition(TimeStampedModel):
     """One row per stage change on an Opportunity.
 
-    Append-only history. Recorded by `services.update_opportunity_stage`
-    whenever the stage actually changes (no-op PATCH does not write a row).
-    `actor_repr` is frozen at write so the row survives user deletion the
-    same way `audit.AuditEvent` does.
+    Append-only history. Recorded by `services.record_stage_transition`,
+    called from `OpportunityViewSet.perform_update` whenever the stage
+    actually changes (no-op PATCH does not write a row). `actor_repr`
+    is frozen at write so the row survives user deletion the same way
+    `audit.AuditEvent` does.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

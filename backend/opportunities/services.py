@@ -210,14 +210,14 @@ def record_stage_transition(
     durable history record. `actor_repr` is frozen at write the same way
     `audit.AuditEvent` does so the row survives user deletion.
     """
-    from audit.services import _format_actor
+    from audit.services import format_actor_repr
 
     transition = OpportunityStageTransition.objects.create(
         opportunity=opportunity,
         from_stage=from_stage,
         to_stage=to_stage,
         actor=actor,
-        actor_repr=_format_actor(actor),
+        actor_repr=format_actor_repr(actor),
     )
     write_audit_event(
         actor=actor,

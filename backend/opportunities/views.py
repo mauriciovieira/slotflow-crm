@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -127,26 +128,28 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         return Response(out.data, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
-        # Snapshot the stage *before* the serializer mutates the instance,
-        # then write a transition row only when the value actually changed.
-        # The serializer.save() runs inside DRF's request transaction so
-        # we don't take an extra lock here.
-        previous_stage = serializer.instance.stage
-        instance = serializer.save()
-        if instance.stage != previous_stage:
-            record_stage_transition(
-                actor=self.request.user,
-                opportunity=instance,
-                from_stage=previous_stage,
-                to_stage=instance.stage,
-            )
+        # Wrap the stage save + history write in one transaction so a
+        # failure in the second step rolls the first back. The project
+        # does not enable `ATOMIC_REQUESTS`, so without this the row
+        # could end up updated with no history recorded if the audit /
+        # transition write blew up.
+        with transaction.atomic():
+            previous_stage = serializer.instance.stage
+            instance = serializer.save()
+            if instance.stage != previous_stage:
+                record_stage_transition(
+                    actor=self.request.user,
+                    opportunity=instance,
+                    from_stage=previous_stage,
+                    to_stage=instance.stage,
+                )
 
     def perform_destroy(self, instance):
         archive_opportunity(actor=self.request.user, opportunity=instance)
 
     @action(detail=True, methods=["get"], url_path="stage-history")
     def stage_history(self, request, pk=None):
-        """Chronological list of stage transitions on this opportunity.
+        """Reverse-chronological (newest first) stage transitions on this opportunity.
 
         Workspace membership is enforced by `IsWorkspaceMember` via the
         viewset; if the user can read the opportunity they can read its

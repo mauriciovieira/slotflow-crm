@@ -33,11 +33,17 @@ test.describe("opportunity stage history", () => {
       page.getByTestId(TestIds.OPPORTUNITY_STAGE_HISTORY_EMPTY),
     ).toBeVisible();
 
-    // Change stage applied → interview, save.
+    // Change stage applied → interview, save. The detail screen navigates
+    // back to the list on save success, so we re-open the detail screen
+    // afterwards to inspect the history that the BE just recorded.
     await page
       .getByTestId(TestIds.OPPORTUNITY_DETAIL_STAGE)
       .selectOption("interview");
     await page.getByTestId(TestIds.OPPORTUNITY_DETAIL_SAVE).click();
+    await expect(page).toHaveURL("/dashboard/opportunities");
+
+    await page.getByRole("link", { name: "Senior Engineer" }).click();
+    await expect(page.getByTestId(TestIds.OPPORTUNITY_DETAIL_FORM)).toBeVisible();
 
     // History list now shows the transition row.
     const list = page.getByTestId(TestIds.OPPORTUNITY_STAGE_HISTORY_LIST);
