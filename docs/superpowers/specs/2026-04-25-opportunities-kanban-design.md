@@ -20,15 +20,19 @@ A user manages an active pipeline by *moving* opportunities between stages, not 
 ### Frontend
 
 - **Route:** `/dashboard/opportunities/board` mounted from `router.tsx`. The list screen at `/dashboard/opportunities` keeps its current behavior; a "Board / Table" toggle in the list header switches between the two routes.
-- **Screen `screens/OpportunitiesBoard.tsx`:** one column per `OpportunityStage` (six total). Each column renders the opportunities at that stage as draggable cards. Reuses `useOpportunities` (existing) and `useUpdateOpportunity(id)` (existing). No new hook.
+- **Screen `screens/OpportunitiesBoard.tsx`:** one column per `OpportunityStage` (six total). Each column renders the opportunities at that stage as draggable cards. Reuses `useOpportunities` (existing) plus a new shared imperative hook (next bullet).
+- **Hook `useMoveOpportunity()`** (added in `lib/opportunitiesHooks.ts`): imperative variant of `useUpdateOpportunity` that takes `{id, payload}` so callers without a fixed id at hook-creation time (the kanban) can fire it from a drop handler. Cache semantics match `useUpdateOpportunity.onSuccess` (per-row cache write + stage-history invalidation + list invalidation); `onError` invalidates the list to roll the optimistic write back. Centralizing the mutation here keeps the kanban and the detail screen consistent — the board would otherwise duplicate the PATCH and the cache writes.
 - **Drag-and-drop:** native HTML5 (`draggable`, `onDragStart`, `onDragOver`, `onDrop`). On drop:
   1. Read the dragged card's id from `dataTransfer.getData("application/x-opportunity-id")`.
-  2. Optimistically update the React Query list cache so the card appears in the new column immediately.
-  3. Fire `update.mutateAsync({ stage: <new> })`.
-  4. On error, the existing query invalidation in `useUpdateOpportunity.onSuccess` won't run (because we errored), so we explicitly `qc.invalidateQueries(OPPORTUNITIES_KEY)` from the `catch` to roll the optimistic write back to the server's truth.
+  2. Race-guard: if `move.isPending`, ignore the drop (and `<Column>` already passes `acceptingDrops={!move.isPending}` to disable dragging during the inflight PATCH).
+  3. Same-column short-circuit: look up the dragged row from the closed-over `useOpportunities` data; if its current `stage` already equals the target, return without writing.
+  4. Optimistically update the React Query list cache so the card appears in the new column immediately.
+  5. Fire `move.mutate({ id, payload: { stage: <new> } })`. The hook's `onSuccess` invalidates queries; on error, `onError` invalidates the list to reconcile back to server truth.
+
+  No `<DropMutator>` child component, no `useEffectOnce` ref guard — both were dropped after Copilot review as React 18 StrictMode would have reset the ref on remount and fired the PATCH twice in dev. The current design is purely imperative.
 - **Toggle wiring:** `OpportunitiesList.tsx` gains a header pair of buttons (Table / Board); `OpportunitiesBoard.tsx` gets the same toggle pointing the other way. Plain `<Link>` to keep the routing transparent.
 - **Test ids:** new `OPPORTUNITIES_VIEW_TOGGLE_BOARD` / `_TABLE`, `OPPORTUNITIES_BOARD`, `OPPORTUNITIES_BOARD_LOADING`, `_ERROR`, `_COLUMN`, `_CARD`. Mirrored to `e2e/support/selectors.ts`.
-- **Vitest** (`screens/OpportunitiesBoard.test.tsx`): renders the loading branch, the error branch, the populated grid (with cards in the right column), and exercises the drop path by firing synthetic `dragstart` / `dragover` / `drop` events and asserting `useUpdateOpportunity.mutateAsync` was called with the new stage. Real DnD across screens isn't in jsdom's coverage; we test the handler wiring, not browser behavior.
+- **Vitest** (`screens/OpportunitiesBoard.test.tsx`): renders the loading branch, the error branch, the populated grid (with cards in the right column), and exercises the drop path by firing synthetic `dragstart` / `dragover` / `drop` events and asserting `apiFetch` was called with `PATCH /api/opportunities/<id>/` and the new stage in the body. Same-column drop and empty-payload drop are asserted as no-ops. Real DnD across screens isn't in jsdom's coverage; we test the handler wiring, not browser behavior. A separate case asserts that a row with an unknown stage value is skipped with a console warning rather than crashing the screen.
 
 ### Backend
 

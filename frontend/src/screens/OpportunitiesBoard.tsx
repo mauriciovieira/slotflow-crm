@@ -1,15 +1,13 @@
 import { type DragEvent, useState } from "react";
 import { Link } from "react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { OpportunityStagePill } from "../components/OpportunityStagePill";
-import { apiFetch } from "../lib/api";
 import {
   OPPORTUNITIES_KEY,
   STAGES,
-  opportunityKey,
-  stageHistoryKey,
   type Opportunity,
   type OpportunityStage,
+  useMoveOpportunity,
   useOpportunities,
 } from "../lib/opportunitiesHooks";
 import { TestIds } from "../testIds";
@@ -105,26 +103,11 @@ export function OpportunitiesBoard() {
   const qc = useQueryClient();
   const rows: Opportunity[] = query.data ?? [];
 
-  // Inline mutation that takes both id and stage so we can call it
-  // imperatively from the drop handler. Avoids the previous
-  // `<DropMutator>` mount-once-per-drag pattern that didn't survive
-  // React 18 StrictMode (the effect-once ref was reset on the second
-  // mount and would have fired the PATCH twice in dev).
-  const move = useMutation({
-    mutationFn: ({ id, stage }: { id: string; stage: OpportunityStage }) =>
-      apiFetch<Opportunity>(`/api/opportunities/${id}/`, {
-        method: "PATCH",
-        body: JSON.stringify({ stage }),
-      }),
-    onSuccess: (data, { id }) => {
-      qc.setQueryData(opportunityKey(id), data);
-      qc.invalidateQueries({ queryKey: stageHistoryKey(id) });
-      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
-    },
-    onError: () => {
-      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
-    },
-  });
+  // Imperative variant of `useUpdateOpportunity` shared with detail-
+  // screen edits. Centralizing the mutation keeps cache semantics
+  // (per-row write + stage-history invalidation + list invalidation +
+  // error-rollback) in one place; the board only needs to fire it.
+  const move = useMoveOpportunity();
 
   function handleDropToStage(id: string, target: OpportunityStage) {
     // Race guard: while a previous drop is still in flight, ignore new
@@ -152,7 +135,7 @@ export function OpportunitiesBoard() {
       if (!prev) return prev;
       return prev.map((row) => (row.id === id ? { ...row, stage: target } : row));
     });
-    move.mutate({ id, stage: target });
+    move.mutate({ id, payload: { stage: target } });
   }
 
   if (query.isLoading) {

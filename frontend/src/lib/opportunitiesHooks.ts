@@ -112,6 +112,41 @@ export function useUpdateOpportunity(id: string) {
   });
 }
 
+/**
+ * Imperative variant of `useUpdateOpportunity` for callers that don't
+ * have a fixed opportunity id at hook-creation time — e.g. the kanban
+ * board, where the dragged row is whatever the user grabs. Same cache
+ * semantics as `useUpdateOpportunity.onSuccess` so kanban moves and
+ * detail-screen edits stay consistent (per-row cache write +
+ * stage-history invalidation + list invalidation). On error we
+ * invalidate the list so any optimistic write the caller did is
+ * reconciled back to the server's truth.
+ */
+export function useMoveOpportunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: OpportunityUpdatePayload;
+    }) =>
+      apiFetch<Opportunity>(`/api/opportunities/${id}/`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (data, { id }) => {
+      qc.setQueryData(opportunityKey(id), data);
+      qc.invalidateQueries({ queryKey: stageHistoryKey(id) });
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+    },
+    onError: () => {
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+    },
+  });
+}
+
 export function useArchiveOpportunity(id: string) {
   const qc = useQueryClient();
   return useMutation({
