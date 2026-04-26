@@ -2,28 +2,32 @@ from __future__ import annotations
 
 import pytest
 
-from invites.services.workspace_slug import unique_slug_from_email
+from invites.services.workspace_slug import create_unique_workspace
 from tenancy.models import Workspace
 
 
 @pytest.mark.django_db
-def test_unique_slug_from_email_uses_local_part():
-    assert unique_slug_from_email("alice@x.com") == "alice"
+def test_create_unique_workspace_uses_local_part():
+    ws = create_unique_workspace(name="Alice WS", email="alice@x.com")
+    assert ws.slug == "alice"
 
 
 @pytest.mark.django_db
-def test_unique_slug_strips_unsafe_chars():
-    assert unique_slug_from_email("Alice.Smith+tag@x.com") == "alice-smith-tag"
+def test_create_unique_workspace_strips_unsafe_chars():
+    ws = create_unique_workspace(name="Alice WS", email="Alice.Smith+tag@x.com")
+    assert ws.slug == "alice-smith-tag"
 
 
 @pytest.mark.django_db
-def test_unique_slug_appends_suffix_on_collision():
+def test_create_unique_workspace_appends_suffix_on_collision():
     Workspace.objects.create(name="x", slug="alice")
     Workspace.objects.create(name="x", slug="alice-2")
 
-    assert unique_slug_from_email("alice@y.com") == "alice-3"
+    ws = create_unique_workspace(name="Alice WS", email="alice@y.com")
+    assert ws.slug == "alice-3"
 
 
 @pytest.mark.django_db
-def test_unique_slug_falls_back_to_user_when_local_part_empty():
-    assert unique_slug_from_email("@x.com").startswith("user")
+def test_create_unique_workspace_falls_back_to_user_when_local_part_empty():
+    ws = create_unique_workspace(name="x", email="@x.com")
+    assert ws.slug.startswith("user")

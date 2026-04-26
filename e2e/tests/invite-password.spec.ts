@@ -19,10 +19,14 @@ test("invitee accepts via password and lands on /2fa/setup", async ({
     "alice@x.com",
   );
 
-  // Scroll the ToS body to the bottom to enable the checkbox.
+  // Scroll the ToS body to the bottom to enable the checkbox. Programmatic
+  // scrollTop changes don't always emit a scroll event in headless Chromium,
+  // so dispatch one explicitly to trigger the React onScroll handler.
   const scrollEl = page.getByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
   await scrollEl.evaluate((el) => {
-    (el as HTMLElement).scrollTop = (el as HTMLElement).scrollHeight;
+    const node = el as HTMLElement;
+    node.scrollTop = node.scrollHeight;
+    node.dispatchEvent(new Event("scroll"));
   });
 
   await page.getByTestId(TestIds.ACCEPT_INVITE_TOS_CHECKBOX).check();

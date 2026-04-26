@@ -7,7 +7,11 @@ Slotflow uses django-allauth (`/accounts/<provider>/login/` + callback). Each en
 1. Go to https://console.cloud.google.com/apis/credentials.
 2. **Create credentials → OAuth client ID** → Application type **Web application**.
 3. Authorized redirect URIs:
-   - Local dev: `http://localhost:8000/accounts/google/login/callback/`
+   - Local dev (browser hits Vite at :5173 which proxies `/accounts/...` to
+     Django; Host header is preserved so allauth builds the callback against
+     :5173): `http://localhost:5173/accounts/google/login/callback/`
+   - Local dev (when hitting Django directly without Vite, e.g. running only
+     `manage.py runserver`): `http://localhost:8000/accounts/google/login/callback/`
    - Staging: `https://staging.slotflow.app/accounts/google/login/callback/`
    - Production: `https://app.slotflow.app/accounts/google/login/callback/`
 4. Copy the Client ID + Client Secret.

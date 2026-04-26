@@ -30,8 +30,12 @@ function ErrorScreen({
 }
 
 function defaultWorkspaceName(email: string): string {
-  const local = (email.split("@")[0] || "").toLowerCase();
-  return local ? `${local}'s workspace` : "my workspace";
+  // Backend WORKSPACE_NAME_RE = /^[A-Za-z0-9 '\-]{2,80}$/. Strip everything
+  // outside that allowlist from the email local-part so the default value
+  // submits cleanly without the user having to re-edit the field.
+  const raw = (email.split("@")[0] || "").toLowerCase();
+  const cleaned = raw.replace(/[^a-z0-9'\- ]+/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return cleaned ? `${cleaned}'s workspace` : "my workspace";
 }
 
 function bannerText(code: string | null): string | null {
@@ -179,8 +183,16 @@ export function AcceptInvite() {
         return;
       }
       window.location.href = url;
-    } catch {
-      // Banner displayed via callback's ?error= redirect.
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 422 && err.body && typeof err.body === "object") {
+        setFieldErrors(err.body as Record<string, string[]>);
+        return;
+      }
+      setFieldErrors({
+        workspace_name: [
+          err instanceof Error ? err.message : "Could not start OAuth sign-in.",
+        ],
+      });
     }
   }
 

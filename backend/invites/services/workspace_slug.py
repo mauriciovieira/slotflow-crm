@@ -20,22 +20,6 @@ def _base(email: str) -> str:
     return cleaned or "user"
 
 
-def unique_slug_from_email(email: str) -> str:
-    """Return a Workspace slug derived from `email`'s local part, unique in DB.
-
-    The pre-check is racy under concurrent signups; callers that go on to
-    create the workspace should use `create_unique_workspace` instead, which
-    handles the IntegrityError fallback.
-    """
-    base = _base(email)
-    candidate = base
-    n = 2
-    while Workspace.objects.filter(slug=candidate).exists():
-        candidate = f"{base}-{n}"
-        n += 1
-    return candidate
-
-
 def create_unique_workspace(*, name: str, email: str) -> Workspace:
     """Create a Workspace with a unique slug derived from `email`.
 
