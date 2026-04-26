@@ -1,3 +1,15 @@
+# [1.17.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.16.0...e2e-v1.17.0) (2026-04-26)
+
+
+### Bug Fixes
+
+* **e2e:** mirror OPPORTUNITIES_BOARD_MOVE_SELECT to support selectors ([1806d01](https://github.com/mauriciovieira/slotflow-crm/commit/1806d01fb8e30d9779906a61f1e5a1758e9be61a))
+
+
+### Features
+
+* opportunities kanban board — slice 9b (FE + e2e) ([762c828](https://github.com/mauriciovieira/slotflow-crm/commit/762c828c8b896ccadfa18a3a4147fd75fa7ee750))
+
 # [1.16.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.15.0...e2e-v1.16.0) (2026-04-26)
 
 
