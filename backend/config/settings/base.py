@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "core.middleware.security_headers.SecurityHeadersMiddleware",
     "core.middleware.correlation_id.CorrelationIdMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -59,6 +60,15 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Defaults that the production settings enforce by overriding to True.
+# Kept here so a misconfigured settings module never silently downgrades.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+X_FRAME_OPTIONS = "DENY"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 ROOT_URLCONF = "config.urls"
 
@@ -121,6 +131,24 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    # Per-scope throttle rates. Applied via `@throttle_classes(...)`
+    # decorators on the auth endpoints (see `core.throttling`). The
+    # underlying cache backend is the project-default cache; in
+    # production that should be Redis so the buckets are shared
+    # across web workers.
+    "DEFAULT_THROTTLE_RATES": {
+        # Login: 10 attempts/min per anonymous IP and per attempted
+        # username. Both buckets are checked; whichever fills first
+        # rate-limits the call.
+        "auth_login": os.environ.get("DJANGO_AUTH_LOGIN_RATE", "10/min"),
+        "auth_login_username": os.environ.get("DJANGO_AUTH_LOGIN_USERNAME_RATE", "10/min"),
+        # 2FA setup/confirm/verify share a single per-user bucket. 30/min
+        # is generous enough that a legitimate user retrying TOTP codes
+        # won't hit it; an attacker brute-forcing the 6-digit space would
+        # need ~33k requests to expect a hit at 30/min — months of
+        # blocked traffic.
+        "auth_2fa": os.environ.get("DJANGO_AUTH_2FA_RATE", "30/min"),
+    },
 }
 
 OTP_TOTP_ISSUER = os.environ.get("OTP_TOTP_ISSUER", "Slotflow CRM")
