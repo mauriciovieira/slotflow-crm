@@ -97,7 +97,22 @@ export function OpportunitiesList() {
 
   return (
     <section className="px-6 py-6">
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span
+            data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_TABLE}
+            className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium"
+          >
+            Table
+          </span>
+          <Link
+            to="/dashboard/opportunities/board"
+            data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_BOARD}
+            className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card"
+          >
+            Board
+          </Link>
+        </div>
         <Link
           to={NEW_OPPORTUNITY_HREF}
           data-testid={TestIds.OPPORTUNITIES_NEW_BUTTON}

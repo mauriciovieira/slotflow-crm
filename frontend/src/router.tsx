@@ -5,6 +5,7 @@ import { StubPanel } from "./components/StubPanel";
 import { DASHBOARD_NAV } from "./dashboardNav";
 import { Landing } from "./screens/Landing";
 import { Login } from "./screens/Login";
+import { OpportunitiesBoard } from "./screens/OpportunitiesBoard";
 import { OpportunitiesList } from "./screens/OpportunitiesList";
 import { OpportunityCreate } from "./screens/OpportunityCreate";
 import { OpportunityDetail } from "./screens/OpportunityDetail";
@@ -51,6 +52,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <Navigate to="opportunities" replace /> },
       { path: "opportunities/new", element: <OpportunityCreate /> },
+      { path: "opportunities/board", element: <OpportunitiesBoard /> },
       { path: "opportunities/:opportunityId", element: <OpportunityDetail /> },
       { path: "resumes/new", element: <ResumeCreate /> },
       { path: "resumes/:resumeId", element: <ResumeDetail /> },

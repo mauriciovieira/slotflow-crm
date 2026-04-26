@@ -219,6 +219,13 @@ export const TestIds = {
   OPPORTUNITY_STAGE_HISTORY_EMPTY: "opportunity-stage-history-empty",
   OPPORTUNITY_STAGE_HISTORY_LIST: "opportunity-stage-history-list",
   OPPORTUNITY_STAGE_HISTORY_ROW: "opportunity-stage-history-row",
+  OPPORTUNITIES_VIEW_TOGGLE_BOARD: "opportunities-view-toggle-board",
+  OPPORTUNITIES_VIEW_TOGGLE_TABLE: "opportunities-view-toggle-table",
+  OPPORTUNITIES_BOARD: "opportunities-board",
+  OPPORTUNITIES_BOARD_LOADING: "opportunities-board-loading",
+  OPPORTUNITIES_BOARD_ERROR: "opportunities-board-error",
+  OPPORTUNITIES_BOARD_COLUMN: "opportunities-board-column",
+  OPPORTUNITIES_BOARD_CARD: "opportunities-board-card",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];
