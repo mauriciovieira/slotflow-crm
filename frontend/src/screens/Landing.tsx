@@ -36,12 +36,11 @@ export function Landing() {
                 Sign in
               </a>
               <a
-                href="/login?signup=1"
-                title="Signup flow not wired yet — lands on /login"
-                data-testid={TestIds.LANDING_CTA_PRIMARY}
+                href="mailto:hello@slotflow.app?subject=Slotflow%20invite%20request"
+                data-testid={TestIds.LANDING_REQUEST_INVITE}
                 className="rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium hover:bg-brand-deep"
               >
-                Get started
+                Request invite
               </a>
             </>
           )}
