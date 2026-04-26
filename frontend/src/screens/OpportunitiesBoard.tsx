@@ -5,6 +5,7 @@ import { OpportunityStagePill } from "../components/OpportunityStagePill";
 import {
   OPPORTUNITIES_KEY,
   STAGES,
+  STAGE_LABEL,
   type Opportunity,
   type OpportunityStage,
   useMoveOpportunity,
@@ -19,7 +20,17 @@ const TOGGLE_BTN_ACTIVE =
 
 const DRAG_MIME = "application/x-opportunity-id";
 
-function Card({ opp, draggable }: { opp: Opportunity; draggable: boolean }) {
+function Card({
+  opp,
+  draggable,
+  onMoveToStage,
+  movingDisabled,
+}: {
+  opp: Opportunity;
+  draggable: boolean;
+  onMoveToStage: (id: string, target: OpportunityStage) => void;
+  movingDisabled: boolean;
+}) {
   function handleDragStart(e: DragEvent<HTMLDivElement>) {
     if (!draggable) {
       e.preventDefault();
@@ -33,7 +44,11 @@ function Card({ opp, draggable }: { opp: Opportunity; draggable: boolean }) {
       draggable={draggable}
       onDragStart={handleDragStart}
       data-testid={`${TestIds.OPPORTUNITIES_BOARD_CARD}-${opp.id}`}
-      className={`rounded-md border border-border-subtle bg-surface p-3 mb-2 ${draggable ? "cursor-move" : "cursor-not-allowed opacity-70"}`}
+      // The inner title <Link> stays clickable even when `draggable` is
+      // false, so don't paint the whole card as `cursor-not-allowed` —
+      // that would lie about the navigation affordance. Just the
+      // dimming hints that drag is temporarily blocked.
+      className={`rounded-md border border-border-subtle bg-surface p-3 mb-2 ${draggable ? "cursor-move" : "cursor-default opacity-70"}`}
     >
       <Link
         to={`/dashboard/opportunities/${opp.id}`}
@@ -42,6 +57,29 @@ function Card({ opp, draggable }: { opp: Opportunity; draggable: boolean }) {
         {opp.title}
       </Link>
       <div className="text-xs text-ink-secondary mt-1">{opp.company}</div>
+      {/* Keyboard-accessible alternative to drag-and-drop: a per-card
+          stage <select> that triggers the same move mutation. Native
+          <select> works with screen readers and keyboard nav out of
+          the box, where HTML5 DnD does not. */}
+      <label className="block mt-2">
+        <span className="sr-only">Move {opp.title} to a different stage</span>
+        <select
+          value={opp.stage}
+          disabled={movingDisabled}
+          onChange={(e) => {
+            const next = e.target.value as OpportunityStage;
+            if (next !== opp.stage) onMoveToStage(opp.id, next);
+          }}
+          data-testid={`${TestIds.OPPORTUNITIES_BOARD_CARD_MOVE}-${opp.id}`}
+          className="w-full text-xs border border-border-subtle rounded px-1 py-0.5 bg-surface focus:outline-none focus:border-brand"
+        >
+          {STAGES.map((s) => (
+            <option key={s} value={s}>
+              {STAGE_LABEL[s]}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }
@@ -50,11 +88,13 @@ function Column({
   stage,
   opps,
   onDropToStage,
+  onMoveToStage,
   acceptingDrops,
 }: {
   stage: OpportunityStage;
   opps: Opportunity[];
   onDropToStage: (id: string, target: OpportunityStage) => void;
+  onMoveToStage: (id: string, target: OpportunityStage) => void;
   acceptingDrops: boolean;
 }) {
   const [over, setOver] = useState(false);
@@ -91,7 +131,13 @@ function Column({
       </header>
       <div className="flex-1">
         {opps.map((o) => (
-          <Card key={o.id} opp={o} draggable={acceptingDrops} />
+          <Card
+            key={o.id}
+            opp={o}
+            draggable={acceptingDrops}
+            onMoveToStage={onMoveToStage}
+            movingDisabled={!acceptingDrops}
+          />
         ))}
       </div>
     </div>
@@ -239,6 +285,7 @@ export function OpportunitiesBoard() {
             stage={stage}
             opps={byStage[stage]}
             onDropToStage={handleDropToStage}
+            onMoveToStage={handleDropToStage}
             acceptingDrops={!move.isPending}
           />
         ))}

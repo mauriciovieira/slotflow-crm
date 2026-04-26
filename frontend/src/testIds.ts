@@ -226,6 +226,7 @@ export const TestIds = {
   OPPORTUNITIES_BOARD_ERROR: "opportunities-board-error",
   OPPORTUNITIES_BOARD_COLUMN: "opportunities-board-column",
   OPPORTUNITIES_BOARD_CARD: "opportunities-board-card",
+  OPPORTUNITIES_BOARD_CARD_MOVE: "opportunities-board-card-move",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

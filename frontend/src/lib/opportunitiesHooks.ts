@@ -100,14 +100,18 @@ export function useUpdateOpportunity(id: string) {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       qc.setQueryData(opportunityKey(id), data);
       // Bust the stage-history cache after every update so a stage
       // change is reflected on the detail screen without a manual reload.
       // No-op stage updates still bust it; cheap, and beats threading the
-      // before/after stage through the mutation.
-      qc.invalidateQueries({ queryKey: stageHistoryKey(id) });
-      return qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
+      // before/after stage through the mutation. Await both so a caller
+      // using `mutateAsync` doesn't observe a resolved promise before
+      // the caches have actually been invalidated.
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: stageHistoryKey(id) }),
+        qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),
+      ]);
     },
   });
 }

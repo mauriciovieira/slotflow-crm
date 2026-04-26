@@ -183,6 +183,27 @@ describe("OpportunitiesBoard", () => {
     expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
+  it("changing a card's stage via the keyboard <select> PATCHes the new stage", async () => {
+    setOpps({ data: [fixture()], isSuccess: true, status: "success" });
+    apiFetchMock.mockResolvedValueOnce(fixture({ stage: "interview" }));
+    const user = userEvent.setup();
+    renderBoard();
+
+    await user.selectOptions(
+      screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD_MOVE}-opp-1`),
+      "interview",
+    );
+
+    await vi.waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      "/api/opportunities/opp-1/",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ stage: "interview" }),
+      }),
+    );
+  });
+
   it("opportunities with an unexpected stage are skipped, not crashed", () => {
     // Future BE deploy could add a stage the FE doesn't know about.
     // The board should warn and skip rather than throw.
