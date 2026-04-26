@@ -142,10 +142,10 @@ export function useMoveOpportunity() {
       }),
     onSuccess: async (data, { id }) => {
       qc.setQueryData(opportunityKey(id), data);
-      // Await both invalidations so a caller using `mutateAsync` (the
-      // kanban does today, follow-on flows might) doesn't observe a
-      // resolved promise before the caches have actually been
-      // invalidated. Matches `useUpdateOpportunity`'s contract.
+      // Await both invalidations so any caller using `mutateAsync`
+      // doesn't observe a resolved promise before the caches have
+      // actually been invalidated. Matches `useUpdateOpportunity`'s
+      // contract.
       await Promise.all([
         qc.invalidateQueries({ queryKey: stageHistoryKey(id) }),
         qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY }),

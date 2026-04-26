@@ -82,7 +82,7 @@ export function OpportunitiesList() {
             the active route so screen readers announce the current
             view, and `pointer-events-none` on the active link
             prevents a redundant self-navigation click. */}
-        <div className="flex items-center gap-2" role="navigation" aria-label="Opportunities view">
+        <nav className="flex items-center gap-2" aria-label="Opportunities view">
           <Link
             to="/dashboard/opportunities"
             aria-current="page"
@@ -98,7 +98,7 @@ export function OpportunitiesList() {
           >
             Board
           </Link>
-        </div>
+        </nav>
         <Link
           to={NEW_OPPORTUNITY_HREF}
           data-testid={TestIds.OPPORTUNITIES_NEW_BUTTON}

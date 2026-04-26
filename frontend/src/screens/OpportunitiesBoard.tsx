@@ -36,7 +36,11 @@ function Card({
       e.preventDefault();
       return;
     }
+    // Always include text/plain alongside the custom MIME so Firefox /
+    // Safari dispatch the drop event reliably (some versions refuse to
+    // start a drag when only a non-standard MIME type is set).
     e.dataTransfer.setData(DRAG_MIME, opp.id);
+    e.dataTransfer.setData("text/plain", opp.id);
     e.dataTransfer.effectAllowed = "move";
   }
   return (
@@ -61,8 +65,10 @@ function Card({
           stage <select> that triggers the same move mutation. Native
           <select> works with screen readers and keyboard nav out of
           the box, where HTML5 DnD does not. */}
-      <label className="block mt-2">
-        <span className="sr-only">Move {opp.title} to a different stage</span>
+      <label className="block mt-2 text-xs text-ink-secondary">
+        <span aria-label={`Move ${opp.title} to a different stage`}>
+          Move to
+        </span>
         <select
           value={opp.stage}
           disabled={movingDisabled}
@@ -71,7 +77,7 @@ function Card({
             if (next !== opp.stage) onMoveToStage(opp.id, next);
           }}
           data-testid={`${TestIds.OPPORTUNITIES_BOARD_MOVE_SELECT}-${opp.id}`}
-          className="w-full text-xs border border-border-subtle rounded px-1 py-0.5 bg-surface focus:outline-none focus:border-brand"
+          className="ml-1 text-xs border border-border-subtle rounded px-1 py-0.5 bg-surface focus:outline-none focus:border-brand"
         >
           {STAGES.map((s) => (
             <option key={s} value={s}>
@@ -259,7 +265,7 @@ export function OpportunitiesBoard() {
             the active route so screen readers announce the current
             view, and `pointer-events-none` on the active link
             prevents a redundant self-navigation click. */}
-        <div className="flex items-center gap-2" role="navigation" aria-label="Opportunities view">
+        <nav className="flex items-center gap-2" aria-label="Opportunities view">
           <Link
             to="/dashboard/opportunities"
             data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_TABLE}
@@ -275,7 +281,7 @@ export function OpportunitiesBoard() {
           >
             Board
           </Link>
-        </div>
+        </nav>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
