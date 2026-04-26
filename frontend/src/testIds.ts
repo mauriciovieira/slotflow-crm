@@ -229,6 +229,16 @@ export const TestIds = {
   // Distinct prefix so the e2e's `^="opportunities-board-card-"`
   // selector for cards doesn't also match the move-stage <select>.
   OPPORTUNITIES_BOARD_MOVE_SELECT: "opportunities-board-move-select",
+  NOTIFICATIONS_BELL: "notifications-bell",
+  NOTIFICATIONS_BADGE: "notifications-badge",
+  NOTIFICATIONS_PANEL: "notifications-panel",
+  NOTIFICATIONS_LOADING: "notifications-loading",
+  NOTIFICATIONS_ERROR: "notifications-error",
+  NOTIFICATIONS_EMPTY: "notifications-empty",
+  NOTIFICATIONS_LIST: "notifications-list",
+  NOTIFICATIONS_ITEM: "notifications-item",
+  NOTIFICATIONS_MARK_READ: "notifications-mark-read",
+  NOTIFICATIONS_MARK_ALL_READ: "notifications-mark-all-read",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];
