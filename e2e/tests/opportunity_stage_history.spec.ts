@@ -20,11 +20,10 @@ test.describe("opportunity stage history", () => {
     await page.getByTestId(TestIds.OPPORTUNITY_CREATE_SUBMIT).click();
     await expect(page.getByTestId(TestIds.OPPORTUNITIES_LIST)).toBeVisible();
 
-    // Open the new row's detail screen.
-    const row = page
-      .locator(`[data-testid^="${TestIds.OPPORTUNITIES_ROW}-"]`)
-      .first();
-    await row.click();
+    // Open the new opportunity's detail screen by clicking the title
+    // link (the row itself isn't a clickable target — only the title
+    // column wraps a `<Link>` to the detail route).
+    await page.getByRole("link", { name: "Senior Engineer" }).click();
     await expect(page.getByTestId(TestIds.OPPORTUNITY_DETAIL_FORM)).toBeVisible();
 
     // Initially the history section is empty (no transitions yet).
