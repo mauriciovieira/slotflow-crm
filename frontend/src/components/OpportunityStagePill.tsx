@@ -9,10 +9,6 @@ const STAGE_PILL_CLASS: Record<OpportunityStage, string> = {
   withdrawn: "bg-gray-200 text-ink-secondary",
 };
 
-export function stagePillClass(stage: OpportunityStage): string {
-  return STAGE_PILL_CLASS[stage];
-}
-
 export function OpportunityStagePill({ stage }: { stage: OpportunityStage }) {
   return (
     <span

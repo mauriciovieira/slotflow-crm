@@ -186,10 +186,15 @@ export function OpportunitiesBoard() {
       byStage[o.stage as OpportunityStage].push(o);
       continue;
     }
-    console.warn("Skipping opportunity with unexpected stage", {
-      id: o.id,
-      stage: o.stage,
-    });
+    // Only warn in dev. Prod users shouldn't see console noise for data
+    // the UI already degrades gracefully on (the row is skipped from
+    // every column anyway).
+    if (import.meta.env.DEV) {
+      console.warn("Skipping opportunity with unexpected stage", {
+        id: o.id,
+        stage: o.stage,
+      });
+    }
   }
 
   return (
