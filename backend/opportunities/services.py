@@ -9,7 +9,12 @@ from audit.services import write_audit_event
 from tenancy.models import MembershipRole
 from tenancy.permissions import get_membership
 
-from .models import Opportunity, OpportunityResume, OpportunityResumeRole
+from .models import (
+    Opportunity,
+    OpportunityResume,
+    OpportunityResumeRole,
+    OpportunityStageTransition,
+)
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser
@@ -188,3 +193,41 @@ def unlink_resume(*, actor: AbstractBaseUser, link: OpportunityResume) -> Opport
     )
     link.delete()
     return link
+
+
+@transaction.atomic
+def record_stage_transition(
+    *,
+    actor: AbstractBaseUser,
+    opportunity: Opportunity,
+    from_stage: str,
+    to_stage: str,
+) -> OpportunityStageTransition:
+    """Append one row to the Opportunity's stage history + an audit event.
+
+    Caller has already persisted the new stage on the Opportunity itself
+    and asserted `from_stage != to_stage`. This helper just writes the
+    durable history record. `actor_repr` is frozen at write the same way
+    `audit.AuditEvent` does so the row survives user deletion.
+    """
+    from audit.services import _format_actor
+
+    transition = OpportunityStageTransition.objects.create(
+        opportunity=opportunity,
+        from_stage=from_stage,
+        to_stage=to_stage,
+        actor=actor,
+        actor_repr=_format_actor(actor),
+    )
+    write_audit_event(
+        actor=actor,
+        action="opportunity.stage_changed",
+        entity=opportunity,
+        workspace=opportunity.workspace,
+        metadata={
+            "from": from_stage,
+            "to": to_stage,
+            "transition_id": str(transition.id),
+        },
+    )
+    return transition

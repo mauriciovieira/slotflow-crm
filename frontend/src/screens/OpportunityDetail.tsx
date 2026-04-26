@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { OpportunityResumesSection } from "../components/OpportunityResumesSection";
+import { OpportunityStageHistorySection } from "../components/OpportunityStageHistorySection";
 import {
   STAGES,
   STAGE_LABEL,
@@ -291,6 +292,7 @@ export function OpportunityDetail() {
       </div>
 
       {opportunityId && <OpportunityResumesSection opportunityId={opportunityId} />}
+      {opportunityId && <OpportunityStageHistorySection opportunityId={opportunityId} />}
     </section>
   );
 }

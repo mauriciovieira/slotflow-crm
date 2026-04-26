@@ -19,6 +19,13 @@ vi.mock("../lib/opportunitiesHooks", async () => {
   };
 });
 
+// The stage-history section has its own dedicated test file. Stub it out
+// here so the detail-screen tests don't need to mock useStageHistory and
+// so a render error in that section can't bleed into unrelated cases.
+vi.mock("../components/OpportunityStageHistorySection", () => ({
+  OpportunityStageHistorySection: () => null,
+}));
+
 import {
   useArchiveOpportunity,
   useOpportunity,

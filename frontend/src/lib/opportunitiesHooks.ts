@@ -102,6 +102,11 @@ export function useUpdateOpportunity(id: string) {
       }),
     onSuccess: (data) => {
       qc.setQueryData(opportunityKey(id), data);
+      // Bust the stage-history cache after every update so a stage
+      // change is reflected on the detail screen without a manual reload.
+      // No-op stage updates still bust it; cheap, and beats threading the
+      // before/after stage through the mutation.
+      qc.invalidateQueries({ queryKey: stageHistoryKey(id) });
       return qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
     },
   });
@@ -118,6 +123,28 @@ export function useArchiveOpportunity(id: string) {
       qc.removeQueries({ queryKey: opportunityKey(id) });
       return qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY });
     },
+  });
+}
+
+export interface OpportunityStageTransition {
+  id: string;
+  opportunity: string;
+  from_stage: string;
+  to_stage: string;
+  actor_repr: string;
+  created_at: string;
+}
+
+export const stageHistoryKey = (id: string) =>
+  ["opportunities", "stage-history", id] as const;
+
+export function useStageHistory(id: string) {
+  return useQuery({
+    queryKey: stageHistoryKey(id),
+    queryFn: () =>
+      apiFetch<OpportunityStageTransition[]>(
+        `/api/opportunities/${id}/stage-history/`,
+      ),
   });
 }
 
