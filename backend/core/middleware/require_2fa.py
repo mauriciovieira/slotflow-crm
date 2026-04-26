@@ -21,6 +21,7 @@ class Require2FAMiddleware:
             or path.startswith("/accounts/")
             or path.startswith("/2fa/")
             or path.startswith("/api/auth/")
+            or path.startswith("/api/invites/")
             or path in ("/api/test/_reset", "/api/test/_reset/")
         ):
             return self.get_response(request)
