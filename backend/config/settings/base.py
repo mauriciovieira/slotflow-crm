@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "fx",
     "mcp",
     "audit",
+    "invites",
 ]
 
 MIDDLEWARE = [
