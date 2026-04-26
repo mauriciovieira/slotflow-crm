@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-26 — Docs 1.25.0
+
+- [Release notes](docs/CHANGELOG.md)
+
 ## 2026-04-26 — E2E 1.18.0
 
 - [Release notes](e2e/CHANGELOG.md)
