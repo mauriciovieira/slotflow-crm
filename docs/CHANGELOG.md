@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.26.0...docs-v1.27.0) (2026-04-26)
+
+
+### Features
+
+* **backend:** hardening — Track 12 ([#46](https://github.com/mauriciovieira/slotflow-crm/issues/46)) ([4fa4784](https://github.com/mauriciovieira/slotflow-crm/commit/4fa478457f3e8742b10e5e17bb8d9b595aedc2c0))
+
 # [1.26.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.25.0...docs-v1.26.0) (2026-04-26)
 
 
