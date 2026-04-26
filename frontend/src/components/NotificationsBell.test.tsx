@@ -279,6 +279,36 @@ describe("NotificationsBell", () => {
     expect(openCall?.[0]).toEqual({ enabled: true });
   });
 
+  it("keeps Mark all read enabled when count query is loading but list shows unread", async () => {
+    // Count query loading (no count yet); list returns one unread row.
+    useCountMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+      isFetching: true,
+      isError: false,
+      isSuccess: false,
+      status: "pending",
+    } as unknown as ReturnType<typeof useUnreadNotificationCount>);
+    setList({
+      data: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [rowFixture()],
+      },
+      isSuccess: true,
+      status: "success",
+    });
+    setMarkRead(vi.fn());
+    setMarkAll(vi.fn());
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(screen.getByTestId(TestIds.NOTIFICATIONS_BELL));
+    expect(screen.getByTestId(TestIds.NOTIFICATIONS_MARK_ALL_READ)).not.toBeDisabled();
+  });
+
   it("Mark all read is disabled when nothing is unread", async () => {
     setCount(0);
     setList({

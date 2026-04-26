@@ -86,6 +86,17 @@ export function NotificationsBell() {
 
   const rows: NotificationRow[] = listQuery.data?.results ?? [];
 
+  // Prefer the loaded list when available — if the count query is
+  // mid-flight or errored but the list shows unread rows, the user
+  // should still be able to clear them. Fall back to the count badge
+  // (and only treat zero-unread as authoritative once the count
+  // query has actually succeeded) when no list data is loaded yet.
+  const listLoaded =
+    !listQuery.isLoading && !listQuery.error && listQuery.data !== undefined;
+  const noUnreadVisible = listLoaded
+    ? rows.every((row) => row.read_at !== null)
+    : countQuery.isSuccess && unread === 0;
+
   return (
     <div ref={popoverRef} className="relative">
       <button
@@ -119,7 +130,7 @@ export function NotificationsBell() {
             <button
               type="button"
               onClick={() => markAll.mutate()}
-              disabled={markAll.isPending || unread === 0}
+              disabled={markAll.isPending || noUnreadVisible}
               data-testid={TestIds.NOTIFICATIONS_MARK_ALL_READ}
               className="text-xs text-ink-secondary hover:text-ink disabled:opacity-60"
             >

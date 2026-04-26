@@ -145,6 +145,30 @@ def test_audit_fanout_accepts_action_at_max_audit_length():
     assert n.kind == long_action
 
 
+def test_notify_workspace_owners_uses_a_single_query_for_fanout(django_assert_num_queries):
+    """Fan-out should be `bulk_create`, not N individual INSERTs.
+
+    Three owners + the actor → one SELECT for memberships + one
+    bulk-INSERT inside one savepoint. We assert the bulk-INSERT path
+    by counting queries: with N inserts the count grows linearly.
+    """
+    actor = _user("actor")
+    a = _user("a")
+    b = _user("b")
+    c = _user("c")
+    ws = _ws()
+    Membership.objects.create(user=actor, workspace=ws, role=MembershipRole.OWNER)
+    Membership.objects.create(user=a, workspace=ws, role=MembershipRole.OWNER)
+    Membership.objects.create(user=b, workspace=ws, role=MembershipRole.OWNER)
+    Membership.objects.create(user=c, workspace=ws, role=MembershipRole.OWNER)
+
+    # 1 SELECT (memberships) + 1 SAVEPOINT + 1 INSERT + 1 RELEASE = 4.
+    with django_assert_num_queries(4):
+        rows = notify_workspace_owners(workspace=ws, actor=actor, kind="x")
+    assert len(rows) == 3
+    assert {r.recipient_id for r in rows} == {a.pk, b.pk, c.pk}
+
+
 def test_mark_read_only_flips_owners_unread_rows():
     a = _user("a")
     b = _user("b")

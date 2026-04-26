@@ -12,7 +12,6 @@ from tenancy.models import Membership, MembershipRole, Workspace
 from .models import Notification
 
 
-@transaction.atomic
 def create_notification(
     *,
     recipient: AbstractBaseUser,
@@ -22,8 +21,10 @@ def create_notification(
 ) -> Notification:
     """Persist one `Notification` row. Caller-side opt-in.
 
-    Higher-level helpers in this module fan out to multiple recipients
-    (e.g. `notify_workspace_owners`).
+    Single-row INSERT — Django commits it atomically without an outer
+    decorator. Batch callers (e.g. `notify_workspace_owners`) drive
+    their own transaction so per-row savepoints don't pile up inside
+    the surrounding `audit.write_audit_event` atomic block.
     """
     return Notification.objects.create(
         recipient=recipient,
@@ -45,23 +46,29 @@ def notify_workspace_owners(
     The actor is excluded so a user doesn't get a notification for their
     own action — the audit log is the durable record for self-actions.
     System actions (`actor=None`) notify all owners.
+
+    Issues a single `bulk_create` inside one `transaction.atomic()` so a
+    workspace with N owners costs one INSERT + one savepoint, not N.
     """
-    qs = Membership.objects.filter(workspace=workspace, role=MembershipRole.OWNER).select_related(
-        "user"
+    qs = Membership.objects.filter(workspace=workspace, role=MembershipRole.OWNER).values_list(
+        "user_id", flat=True
     )
     if actor is not None and getattr(actor, "pk", None) is not None:
         qs = qs.exclude(user_id=actor.pk)
-    rows: list[Notification] = []
-    for membership in qs:
-        rows.append(
-            create_notification(
-                recipient=membership.user,
-                kind=kind,
-                payload=payload,
-                workspace=workspace,
-            )
+    user_ids = list(qs)
+    if not user_ids:
+        return []
+    pending = [
+        Notification(
+            recipient_id=user_id,
+            kind=kind,
+            payload=payload or {},
+            workspace=workspace,
         )
-    return rows
+        for user_id in user_ids
+    ]
+    with transaction.atomic():
+        return Notification.objects.bulk_create(pending)
 
 
 def mark_read(*, recipient: AbstractBaseUser, ids: Iterable[Any]) -> int:
