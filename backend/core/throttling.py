@@ -1,9 +1,26 @@
 from __future__ import annotations
 
+import hashlib
+
 from rest_framework.settings import api_settings
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
 from .auth_bypass import is_2fa_bypass_active
+
+
+def _hash_ident(value: str) -> str:
+    """Bound the throttle cache-key ident to a fixed-size digest.
+
+    The login endpoint takes a fully user-controlled `username`. Using it
+    raw as a cache-key fragment lets an attacker pump arbitrarily long
+    or highly-variable strings and balloon the throttle namespace —
+    Redis memory pressure that defeats the rate limit it was supposed
+    to enforce. Hashing yields a 16-char hex prefix (64 bits — plenty
+    against accidental collisions in a per-bucket counter; an attacker
+    crafting a deliberate collision still pays the same per-account
+    rate). SHA-256 is overkill but fast.
+    """
+    return hashlib.sha256(value.encode("utf-8", errors="replace")).hexdigest()[:16]
 
 
 def _live_rate(scope: str) -> str | None:
@@ -77,7 +94,13 @@ class LoginUsernameRateThrottle(SimpleRateThrottle):
             # `request.data` access can raise if the body isn't parseable
             # yet (e.g., during error paths). Fall through to IP-only.
             username = ""
-        ident = username or self.get_ident(request)
+        # Cap the username at a sensible maximum and hash it so a hostile
+        # caller can't inflate the cache namespace with arbitrarily long
+        # or highly-variable strings.
+        if username:
+            ident = "u:" + _hash_ident(username[:256])
+        else:
+            ident = self.get_ident(request)
         return self.cache_format % {"scope": self.scope, "ident": ident}
 
 
