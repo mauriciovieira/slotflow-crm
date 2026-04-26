@@ -119,7 +119,11 @@ function Column({
     if (!acceptingDrops) return;
     e.preventDefault();
     setOver(false);
-    const id = e.dataTransfer.getData(DRAG_MIME);
+    // Fall back to `text/plain` so the drop reads back the id in
+    // browsers that only preserve the standard MIME (Firefox / Safari
+    // don't always round-trip a custom type).
+    const id =
+      e.dataTransfer.getData(DRAG_MIME) || e.dataTransfer.getData("text/plain");
     if (id) onDropToStage(id, stage);
   }
 
