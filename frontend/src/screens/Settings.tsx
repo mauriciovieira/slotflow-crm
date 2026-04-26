@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { McpTokensSection } from "../components/McpTokensSection";
+import { MembersSection } from "../components/MembersSection";
 import { useActiveWorkspace } from "../lib/activeWorkspaceHooks";
 import {
   type FxRate,
@@ -310,6 +311,12 @@ export function Settings() {
           </>
         )}
       </div>
+
+      {workspaceId && (
+        <div className="mt-6">
+          <MembersSection workspaceId={workspaceId} />
+        </div>
+      )}
 
       <McpTokensSection />
     </section>

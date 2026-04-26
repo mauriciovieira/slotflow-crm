@@ -59,6 +59,17 @@ urlpatterns = [
     path("api/insights/", include("insights.urls")),
     path("api/", include("audit.urls")),
     path("api/notifications/", include("notifications.urls")),
+    path(
+        "api/workspaces/",
+        include(("tenancy.urls", "tenancy"), namespace="tenancy_workspaces"),
+    ),
+    path(
+        "api/invitations/",
+        include(
+            ("tenancy.urls_invitations", "tenancy"),
+            namespace="tenancy_invitations",
+        ),
+    ),
     path("api/mcp/tokens/", include("mcp.tokens.urls")),
     path("api/test/", include(api_test_patterns)),
     path("mcp/ping", McpPingView.as_view(), name="mcp_ping"),
