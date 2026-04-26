@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.19.0...frontend-v1.20.0) (2026-04-26)
+
+
+### Features
+
+* opportunity stage history — slice 9a (BE + FE + e2e) ([#41](https://github.com/mauriciovieira/slotflow-crm/issues/41)) ([9408acf](https://github.com/mauriciovieira/slotflow-crm/commit/9408acf9e933311de7a2515a131370ebed6e7aec))
+
 # [1.19.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.18.0...frontend-v1.19.0) (2026-04-25)
 
 
