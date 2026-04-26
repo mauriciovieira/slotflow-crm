@@ -86,6 +86,19 @@ def test_transfer_ownership_promotes_target_and_demotes_self_by_default():
     assert m_b.role == MembershipRole.OWNER
 
 
+def test_transfer_ownership_rejects_self_target():
+    a = _user("a")
+    ws = _ws()
+    m_a = Membership.objects.create(user=a, workspace=ws, role=MembershipRole.OWNER)
+    from django.core.exceptions import ValidationError
+
+    with pytest.raises(ValidationError):
+        transfer_ownership(actor=a, actor_membership=m_a, target_membership=m_a)
+    m_a.refresh_from_db()
+    # Last owner remained an owner.
+    assert m_a.role == MembershipRole.OWNER
+
+
 def test_transfer_ownership_keeps_actor_owner_when_demote_self_false():
     a = _user("a")
     b = _user("b")

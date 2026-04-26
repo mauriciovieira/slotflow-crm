@@ -184,7 +184,8 @@ describe("MembersSection", () => {
       screen.getByTestId(`${TestIds.SETTINGS_MEMBERS_ROLE_SELECT}-m-2`),
       "viewer",
     );
-    expect(mutate).toHaveBeenCalledWith({ membershipId: "m-2", role: "viewer" });
+    expect(mutate).toHaveBeenCalled();
+    expect(mutate.mock.calls[0]?.[0]).toEqual({ membershipId: "m-2", role: "viewer" });
   });
 
   it("non-owner sees no role select for other members", () => {
@@ -265,6 +266,27 @@ describe("MembersSection", () => {
     );
   });
 
+  it("surfaces a 409 from the last-owner guard on self-leave", async () => {
+    setMe("alice");
+    setMembers([memberRow()]);
+    setInvitations([]);
+    const failingMutate = vi.fn(
+      (_id: string, opts?: { onError?: (e: Error) => void }) => {
+        opts?.onError?.(new Error("Cannot remove the last owner."));
+      },
+    );
+    setMutation(useRemoveMock as never, failingMutate);
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE));
+    await user.click(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE_CONFIRM));
+    expect(screen.getByTestId(TestIds.SETTINGS_MEMBERS_ERROR)).toHaveTextContent(
+      "Cannot remove the last owner.",
+    );
+    // Dialog stays open so the user understands the action didn't apply.
+    expect(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE_CONFIRM)).toBeVisible();
+  });
+
   it("self-leave click + confirm fires remove mutation with own membership id", async () => {
     setMe("alice");
     setMembers([memberRow()]);
@@ -274,6 +296,7 @@ describe("MembersSection", () => {
     renderSection();
     await user.click(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE));
     await user.click(screen.getByTestId(TestIds.SETTINGS_MEMBERS_LEAVE_CONFIRM));
-    expect(mutate).toHaveBeenCalledWith("m-1");
+    expect(mutate).toHaveBeenCalled();
+    expect(mutate.mock.calls[0]?.[0]).toBe("m-1");
   });
 });

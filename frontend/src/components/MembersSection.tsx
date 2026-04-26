@@ -54,6 +54,16 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [lastIssuedToken, setLastIssuedToken] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  // Single banner string covers leave / remove / role-change / transfer
+  // failures so a 409 from the last-owner guard surfaces somewhere
+  // instead of silently dropping. Cleared whenever the user starts a
+  // new mutation; auto-clears once a follow-up succeeds.
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  function describeError(err: unknown, fallback: string): string {
+    if (err instanceof Error && err.message) return err.message;
+    return fallback;
+  }
 
   return (
     <section
@@ -73,6 +83,16 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
           </button>
         )}
       </header>
+
+      {actionError && (
+        <p
+          role="alert"
+          data-testid={TestIds.SETTINGS_MEMBERS_ERROR}
+          className="mb-3 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+        >
+          {actionError}
+        </p>
+      )}
 
       {membersQuery.isLoading ? (
         <p
@@ -115,12 +135,22 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
                     {isOwner && !isSelf ? (
                       <select
                         value={row.role}
-                        onChange={(e) =>
-                          changeRole.mutate({
-                            membershipId: row.id,
-                            role: e.target.value as MemberRow["role"],
-                          })
-                        }
+                        onChange={(e) => {
+                          setActionError(null);
+                          changeRole.mutate(
+                            {
+                              membershipId: row.id,
+                              role: e.target.value as MemberRow["role"],
+                            },
+                            {
+                              onSuccess: () => setActionError(null),
+                              onError: (err) =>
+                                setActionError(
+                                  describeError(err, "Could not change role."),
+                                ),
+                            },
+                          );
+                        }}
                         disabled={changeRole.isPending}
                         data-testid={`${TestIds.SETTINGS_MEMBERS_ROLE_SELECT}-${row.id}`}
                         className="text-xs rounded-md border border-border-subtle bg-surface px-1.5 py-1 text-ink"
@@ -149,7 +179,16 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
                       isOwner && (
                         <button
                           type="button"
-                          onClick={() => removeMember.mutate(row.id)}
+                          onClick={() => {
+                            setActionError(null);
+                            removeMember.mutate(row.id, {
+                              onSuccess: () => setActionError(null),
+                              onError: (err) =>
+                                setActionError(
+                                  describeError(err, "Could not remove member."),
+                                ),
+                            });
+                          }}
                           disabled={removeMember.isPending}
                           data-testid={`${TestIds.SETTINGS_MEMBERS_REMOVE}-${row.id}`}
                           className="text-xs text-danger hover:underline disabled:opacity-60"
@@ -173,8 +212,20 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
             <button
               type="button"
               onClick={() => {
-                removeMember.mutate(myMembership.id);
-                setLeaveOpen(false);
+                setActionError(null);
+                removeMember.mutate(myMembership.id, {
+                  onSuccess: () => {
+                    setActionError(null);
+                    setLeaveOpen(false);
+                  },
+                  onError: (err) =>
+                    setActionError(
+                      describeError(
+                        err,
+                        "Could not leave this workspace.",
+                      ),
+                    ),
+                });
               }}
               data-testid={TestIds.SETTINGS_MEMBERS_LEAVE_CONFIRM}
               className="rounded-md bg-danger px-2 py-1 text-xs font-medium text-white"
@@ -199,8 +250,16 @@ export function MembersSection({ workspaceId }: MembersSectionProps) {
           myMembershipId={myMembership.id}
           onClose={() => setTransferOpen(false)}
           onSubmit={(payload) => {
+            setActionError(null);
             transferOwnership.mutate(payload, {
-              onSuccess: () => setTransferOpen(false),
+              onSuccess: () => {
+                setActionError(null);
+                setTransferOpen(false);
+              },
+              onError: (err) =>
+                setActionError(
+                  describeError(err, "Could not transfer ownership."),
+                ),
             });
           }}
           isPending={transferOwnership.isPending}

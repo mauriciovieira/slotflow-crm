@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ACTIVE_WORKSPACE_KEY } from "./activeWorkspaceHooks";
 import { apiFetch } from "./api";
 
 export interface MemberRow {
@@ -141,6 +142,7 @@ export function useRevokeInvitation(workspaceId: string) {
 }
 
 export function useAcceptInvitation() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (token: string) =>
       apiFetch<{
@@ -148,5 +150,16 @@ export function useAcceptInvitation() {
         workspace_id: string;
         role: MemberRow["role"];
       }>(`/api/invitations/${token}/accept/`, { method: "POST" }),
+    onSuccess: (data) =>
+      // Accepting an invitation grows the user's set of available
+      // workspaces. Invalidate the active-workspace query so the
+      // header switcher reflects the new workspace immediately
+      // instead of waiting for the next natural refetch. Also
+      // invalidate the new workspace's members cache so a follow-up
+      // navigation into Settings sees the just-joined membership.
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ACTIVE_WORKSPACE_KEY }),
+        qc.invalidateQueries({ queryKey: membersKey(data.workspace_id) }),
+      ]),
   });
 }

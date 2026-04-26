@@ -157,6 +157,28 @@ def test_transfer_ownership_promotes_target_and_demotes_self():
     assert a_membership.role == MembershipRole.MEMBER
 
 
+def test_transfer_ownership_demote_self_false_string_keeps_actor_owner():
+    """`demote_self=False` must round-trip through JSON-as-string ("false").
+
+    A naive `bool(value)` would treat the string "false" as truthy and
+    incorrectly demote the actor. The view's `_parse_bool` handles this.
+    """
+    a = _user("a")
+    b = _user("b")
+    ws = _ws()
+    Membership.objects.create(user=a, workspace=ws, role=MembershipRole.OWNER)
+    m_b = Membership.objects.create(user=b, workspace=ws, role=MembershipRole.MEMBER)
+    response = _client(a).post(
+        f"/api/workspaces/{ws.id}/transfer-ownership/",
+        {"to_membership_id": str(m_b.id), "demote_self": "false"},
+        format="json",
+    )
+    assert response.status_code == 200
+    Membership.objects.get(user=a, workspace=ws).refresh_from_db()
+    a_membership = Membership.objects.get(user=a, workspace=ws)
+    assert a_membership.role == MembershipRole.OWNER
+
+
 def test_non_owner_cannot_transfer_ownership():
     a = _user("a")
     b = _user("b")

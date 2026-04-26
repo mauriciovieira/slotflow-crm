@@ -129,8 +129,14 @@ test.describe("workspace members", () => {
       await route.fallback();
     });
 
-    // Stub `/api/auth/me/` so the FE thinks the e2e user is named "e2e"
-    // matching our `members` fixture.
+    // Log in BEFORE installing the `/api/auth/me/` stub. If the stub is
+    // installed first, the Login screen sees an already-authenticated
+    // session on mount and redirects away mid-fill, which detaches the
+    // username input and trips a Playwright timeout.
+    await loginAsE2EUser(page);
+
+    // Now stub `/api/auth/me/` so the FE thinks the e2e user is named
+    // "e2e" matching our `members` fixture (the seed has username "e2e").
     await page.route(/\/api\/auth\/me\/$/, async (route) => {
       if (route.request().method() !== "GET") return route.fallback();
       await route.fulfill({
@@ -145,7 +151,6 @@ test.describe("workspace members", () => {
       });
     });
 
-    await loginAsE2EUser(page);
     await page.goto("/dashboard/settings");
 
     // Members table renders.

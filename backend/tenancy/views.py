@@ -38,6 +38,30 @@ def _err(detail: str, code: int = status.HTTP_400_BAD_REQUEST) -> Response:
     return Response({"detail": detail}, status=code)
 
 
+_TRUTHY = {"1", "true", "yes", "on"}
+_FALSY = {"0", "false", "no", "off", ""}
+
+
+def _parse_bool(value, *, default: bool = False) -> bool:
+    """Parse a JSON value as a bool. Strings like ``"false"`` and ``"0"``
+    coerce to ``False`` instead of being treated as truthy non-empty
+    strings, which is what `bool(value)` would do otherwise.
+    """
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in _TRUTHY:
+            return True
+        if normalized in _FALSY:
+            return False
+    return default
+
+
 def _validation_message(exc: ValidationError) -> str:
     """Pull a single human string out of a Django `ValidationError`."""
     if hasattr(exc, "message") and isinstance(exc.message, str):
@@ -107,7 +131,7 @@ def transfer_ownership_view(request: Request, workspace_id):
     if not target_id:
         return _err("`to_membership_id` is required.")
     target = get_object_or_404(Membership, pk=target_id, workspace=workspace)
-    demote_self = bool(request.data.get("demote_self", True))
+    demote_self = _parse_bool(request.data.get("demote_self"), default=True)
     try:
         transfer_ownership(
             actor=request.user,

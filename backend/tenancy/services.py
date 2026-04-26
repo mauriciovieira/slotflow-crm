@@ -110,6 +110,12 @@ def transfer_ownership(
         raise ValidationError("Cross-workspace transfer is not allowed.")
     if actor_membership.role != MembershipRole.OWNER:
         raise ValidationError("Only an owner can transfer ownership.")
+    if actor_membership.pk == target_membership.pk:
+        # Transferring to yourself is a no-op for promotion and, if
+        # `demote_self=True`, would attempt to demote the only owner
+        # back to MEMBER. Reject explicitly so the last-owner invariant
+        # can never be violated through this path.
+        raise ValidationError("Cannot transfer ownership to yourself.")
     target_membership.role = MembershipRole.OWNER
     target_membership.save(update_fields=["role", "updated_at"])
     if demote_self:
