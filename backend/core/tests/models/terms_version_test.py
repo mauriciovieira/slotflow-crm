@@ -26,6 +26,10 @@ def test_current_returns_latest_active_version():
 
 @pytest.mark.django_db
 def test_current_returns_none_when_nothing_effective():
+    # Purge any seeded rows (the data migration `0002_seed_terms_v1` inserts
+    # the placeholder ToS) so the assertion sees a baseline of zero
+    # effective rows.
+    TermsVersion.objects.all().delete()
     TermsVersion.objects.create(
         version="0.2.0-future",
         body="future",
