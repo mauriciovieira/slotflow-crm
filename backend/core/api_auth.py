@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from mcp.auth import mark_otp_session_fresh
 
 from .auth_bypass import is_2fa_bypass_active
+from .oauth_mfa import is_oauth_mfa_satisfied
 from .totp_qr import build_totp_qr_svg
 
 
@@ -40,8 +41,7 @@ def _me_payload(user, request=None) -> dict:
             "mfa_via_oauth": False,
         }
     has_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
-    session = getattr(request, "session", None) if request is not None else None
-    mfa_via_oauth = bool(session.get("oauth_mfa_satisfied")) if session else False
+    mfa_via_oauth = is_oauth_mfa_satisfied(request, user) if request is not None else False
     return {
         "authenticated": True,
         "username": user.username,

@@ -237,8 +237,8 @@ def test_save_user_sets_oauth_mfa_when_amr_includes_mfa(invite_in_session):
         connect=lambda req, u: None,
     )
 
-    SlotflowSocialAccountAdapter().save_user(request, sociallogin, form=None)
-    assert request.session["oauth_mfa_satisfied"] is True
+    user = SlotflowSocialAccountAdapter().save_user(request, sociallogin, form=None)
+    assert request.session["oauth_mfa_user_id"] == user.pk
     assert AuditEvent.objects.filter(action="oauth.mfa_satisfied").count() == 1
 
 
@@ -262,7 +262,7 @@ def test_save_user_skips_mfa_session_flag_when_amr_missing(invite_in_session):
     )
 
     SlotflowSocialAccountAdapter().save_user(request, sociallogin, form=None)
-    assert "oauth_mfa_satisfied" not in request.session
+    assert "oauth_mfa_user_id" not in request.session
     assert AuditEvent.objects.filter(action="oauth.mfa_satisfied").count() == 0
 
 

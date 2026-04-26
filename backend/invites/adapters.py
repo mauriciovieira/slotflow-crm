@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from audit.services import write_audit_event
 from core.models import TermsVersion
+from core.oauth_mfa import mark_oauth_mfa_satisfied
 from invites.models import Invite
 from invites.services.oauth_mfa import check_oauth_mfa
 from invites.services.tokens import sha256_email
@@ -126,7 +127,7 @@ class SlotflowSocialAccountAdapter(DefaultSocialAccountAdapter):
 
             mfa_ok = check_oauth_mfa(sociallogin)
             if mfa_ok:
-                request.session["oauth_mfa_satisfied"] = True
+                mark_oauth_mfa_satisfied(request, user)
                 mark_otp_session_fresh(request)
                 write_audit_event(
                     actor=user,

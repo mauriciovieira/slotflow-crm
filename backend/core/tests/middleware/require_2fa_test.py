@@ -27,7 +27,25 @@ def test_authenticated_user_without_oauth_mfa_redirected_to_2fa_setup(user, clie
 def test_session_oauth_mfa_satisfied_skips_redirect(user, client: Client):
     client.force_login(user)
     session = client.session
-    session["oauth_mfa_satisfied"] = True
+    session["oauth_mfa_user_id"] = user.pk
     session.save()
     resp = client.get("/dashboard/", follow=False)
     assert "/2fa/" not in resp.get("Location", "")
+
+
+@pytest.mark.django_db
+def test_session_oauth_mfa_for_other_user_still_redirects(user, client: Client):
+    """Defence in depth: a session whose oauth-mfa pk doesn't match the
+    request user must still be sent through the TOTP gate."""
+    other = get_user_model().objects.create_user(
+        username="bob",
+        email="bob@x.com",
+        password="Sup3r-Secret-Pw!",
+    )
+    client.force_login(user)
+    session = client.session
+    session["oauth_mfa_user_id"] = other.pk
+    session.save()
+    resp = client.get("/dashboard/", follow=False)
+    assert resp.status_code in (301, 302)
+    assert "/2fa/setup/" in resp["Location"]

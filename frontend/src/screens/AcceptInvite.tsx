@@ -100,8 +100,14 @@ export function AcceptInvite() {
       );
     }
     if (error.status === 410) {
-      const reason = (error.message || "").toLowerCase();
-      if (reason.includes("revoke")) {
+      // Backend returns `{error: "revoked" | "already_used" | "expired"}`.
+      // Branch on the structured field rather than the flattened message so
+      // the UI doesn't break if message phrasing changes.
+      const reason =
+        error.body && typeof error.body === "object" && "error" in error.body
+          ? String((error.body as { error: unknown }).error)
+          : "";
+      if (reason === "revoked") {
         return (
           <ErrorScreen
             testId={TestIds.ACCEPT_INVITE_REVOKED}
@@ -110,7 +116,7 @@ export function AcceptInvite() {
           />
         );
       }
-      if (reason.includes("already") || reason.includes("used")) {
+      if (reason === "already_used") {
         return (
           <ErrorScreen
             testId={TestIds.ACCEPT_INVITE_ALREADY_USED}

@@ -28,11 +28,30 @@ def test_me_marks_oauth_mfa_session_as_verified(user):
     client = APIClient()
     client.force_login(user)
     session = client.session
-    session["oauth_mfa_satisfied"] = True
+    session["oauth_mfa_user_id"] = user.pk
     session.save()
     body = client.get("/api/auth/me/").json()
     assert body["mfa_via_oauth"] is True
     assert body["is_verified"] is True
+
+
+@pytest.mark.django_db
+def test_me_ignores_oauth_mfa_flag_for_other_user(user):
+    """A session whose oauth-mfa pk doesn't match the logged-in user must
+    not get a free pass — defends against session reuse / fixation."""
+    other = get_user_model().objects.create_user(
+        username="bob",
+        email="bob@x.com",
+        password="Sup3r-Secret-Pw!",
+    )
+    client = APIClient()
+    client.force_login(user)
+    session = client.session
+    session["oauth_mfa_user_id"] = other.pk
+    session.save()
+    body = client.get("/api/auth/me/").json()
+    assert body["mfa_via_oauth"] is False
+    assert body["is_verified"] is False
 
 
 @pytest.mark.django_db

@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from core.auth_bypass import is_2fa_bypass_active
+from core.oauth_mfa import is_oauth_mfa_satisfied
 
 
 class Require2FAMiddleware:
@@ -39,8 +40,7 @@ class Require2FAMiddleware:
         if is_2fa_bypass_active():
             return self.get_response(request)
 
-        session = getattr(request, "session", None)
-        if session is not None and session.get("oauth_mfa_satisfied"):
+        if is_oauth_mfa_satisfied(request, user):
             return self.get_response(request)
 
         if user.is_verified():
