@@ -3,6 +3,8 @@ from __future__ import annotations
 from rest_framework.settings import api_settings
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
+from .auth_bypass import is_2fa_bypass_active
+
 
 def _live_rate(scope: str) -> str | None:
     """Read the rate for `scope` from the *live* DRF settings.
@@ -19,6 +21,14 @@ def _live_rate(scope: str) -> str | None:
     return api_settings.DEFAULT_THROTTLE_RATES.get(scope)
 
 
+def _bypass_throttling() -> bool:
+    """E2E + dev bypass — when 2FA bypass is active (DEBUG + env flag),
+    disable auth throttling so Playwright suites that hammer
+    `/api/auth/login/` don't trip the per-IP cap. The DEBUG gate on
+    `is_2fa_bypass_active` makes this inert in staging/production."""
+    return is_2fa_bypass_active()
+
+
 class LoginRateThrottle(AnonRateThrottle):
     """Per-IP throttle on the unauthenticated login endpoint.
 
@@ -32,6 +42,11 @@ class LoginRateThrottle(AnonRateThrottle):
 
     def get_rate(self):
         return _live_rate(self.scope)
+
+    def allow_request(self, request, view):
+        if _bypass_throttling():
+            return True
+        return super().allow_request(request, view)
 
 
 class LoginUsernameRateThrottle(SimpleRateThrottle):
@@ -48,6 +63,11 @@ class LoginUsernameRateThrottle(SimpleRateThrottle):
 
     def get_rate(self):
         return _live_rate(self.scope)
+
+    def allow_request(self, request, view):
+        if _bypass_throttling():
+            return True
+        return super().allow_request(request, view)
 
     def get_cache_key(self, request, view):
         username = ""
@@ -74,6 +94,11 @@ class TwoFactorRateThrottle(SimpleRateThrottle):
 
     def get_rate(self):
         return _live_rate(self.scope)
+
+    def allow_request(self, request, view):
+        if _bypass_throttling():
+            return True
+        return super().allow_request(request, view)
 
     def get_cache_key(self, request, view):
         if request.user and request.user.is_authenticated:

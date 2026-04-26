@@ -132,6 +132,24 @@ def test_login_throttle_isolates_distinct_usernames():
     assert response.status_code in (400, 401)
 
 
+@override_settings(REST_FRAMEWORK=_LOGIN_THROTTLE_SETTINGS)
+def test_login_throttle_bypassed_when_2fa_bypass_is_active(monkeypatch):
+    """E2E + dev convenience: when `SLOTFLOW_BYPASS_2FA` is on (DEBUG only),
+    login throttling is suppressed so Playwright suites that hammer
+    `/api/auth/login/` don't trip the per-IP cap."""
+    monkeypatch.setattr("core.throttling.is_2fa_bypass_active", lambda: True)
+    client = APIClient()
+    # Far above the configured 3/min — must keep returning 400, never 429.
+    for _ in range(10):
+        response = client.post(
+            "/api/auth/login/",
+            {"username": "alice", "password": "wrong"},
+            format="json",
+        )
+        assert response.status_code != 429
+        assert response.status_code in (400, 401)
+
+
 @override_settings(REST_FRAMEWORK=_2FA_THROTTLE_SETTINGS)
 def test_2fa_verify_returns_429_after_user_rate_exhausted(monkeypatch):
     monkeypatch.setattr("core.middleware.require_2fa.is_2fa_bypass_active", lambda: True)
