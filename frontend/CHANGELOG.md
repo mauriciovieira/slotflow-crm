@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.21.0...frontend-v1.22.0) (2026-04-26)
+
+
+### Features
+
+* notifications bell — Track 10 (BE + FE + e2e) ([#43](https://github.com/mauriciovieira/slotflow-crm/issues/43)) ([8d8b617](https://github.com/mauriciovieira/slotflow-crm/commit/8d8b6178ea56460c80487958427171137a7f6c19))
+
 # [1.21.0](https://github.com/mauriciovieira/slotflow-crm/compare/frontend-v1.20.0...frontend-v1.21.0) (2026-04-26)
 
 
