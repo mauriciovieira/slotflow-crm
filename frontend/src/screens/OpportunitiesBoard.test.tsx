@@ -162,6 +162,29 @@ describe("OpportunitiesBoard", () => {
     expect(mutateAsync).toHaveBeenCalledWith({ stage: "interview" });
   });
 
+  it("dropping a card on its own column does not fire mutateAsync", () => {
+    setOpps({ data: [fixture()], isSuccess: true, status: "success" });
+    const mutateAsync = vi.fn();
+    setUpdate(mutateAsync);
+    renderBoard();
+
+    const card = screen.getByTestId(`${TestIds.OPPORTUNITIES_BOARD_CARD}-opp-1`);
+    const sameTarget = screen.getByTestId(
+      `${TestIds.OPPORTUNITIES_BOARD_COLUMN}-applied`,
+    );
+    const data = new Map<string, string>();
+    const dataTransfer = {
+      setData: (k: string, v: string) => data.set(k, v),
+      getData: (k: string) => data.get(k) ?? "",
+      effectAllowed: "",
+      dropEffect: "",
+    };
+    fireEvent.dragStart(card, { dataTransfer });
+    fireEvent.dragOver(sameTarget, { dataTransfer });
+    fireEvent.drop(sameTarget, { dataTransfer });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
   it("dropping with an empty payload is a no-op", () => {
     setOpps({ data: [fixture()], isSuccess: true, status: "success" });
     const mutateAsync = vi.fn();

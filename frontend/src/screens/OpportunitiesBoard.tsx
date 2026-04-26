@@ -1,10 +1,10 @@
 import { type DragEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { OpportunityStagePill } from "../components/OpportunityStagePill";
 import {
   OPPORTUNITIES_KEY,
   STAGES,
-  STAGE_LABEL,
   type Opportunity,
   type OpportunityStage,
   useOpportunities,
@@ -15,18 +15,9 @@ import { TestIds } from "../testIds";
 const TOGGLE_BTN =
   "rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-card";
 const TOGGLE_BTN_ACTIVE =
-  "rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium";
+  "rounded-md bg-brand text-white px-3 py-1.5 text-sm font-medium pointer-events-none";
 
 const DRAG_MIME = "application/x-opportunity-id";
-
-const STAGE_PILL: Record<OpportunityStage, string> = {
-  applied: "bg-brand-light text-ink-secondary",
-  screening: "bg-blue-100 text-blue-800",
-  interview: "bg-brand text-white",
-  offer: "bg-brand-deep text-white",
-  rejected: "bg-red-100 text-red-700",
-  withdrawn: "bg-gray-200 text-ink-secondary",
-};
 
 function useEffectOnce(fn: () => void) {
   // One-shot effect helper. Keeps DropMutator's mutation from re-firing
@@ -40,17 +31,21 @@ function useEffectOnce(fn: () => void) {
   }, []);
 }
 
-function Card({ opp }: { opp: Opportunity }) {
+function Card({ opp, draggable }: { opp: Opportunity; draggable: boolean }) {
   function handleDragStart(e: DragEvent<HTMLDivElement>) {
+    if (!draggable) {
+      e.preventDefault();
+      return;
+    }
     e.dataTransfer.setData(DRAG_MIME, opp.id);
     e.dataTransfer.effectAllowed = "move";
   }
   return (
     <div
-      draggable
+      draggable={draggable}
       onDragStart={handleDragStart}
       data-testid={`${TestIds.OPPORTUNITIES_BOARD_CARD}-${opp.id}`}
-      className="rounded-md border border-border-subtle bg-surface p-3 mb-2 cursor-move"
+      className={`rounded-md border border-border-subtle bg-surface p-3 mb-2 ${draggable ? "cursor-move" : "cursor-not-allowed opacity-70"}`}
     >
       <Link
         to={`/dashboard/opportunities/${opp.id}`}
@@ -67,14 +62,17 @@ function Column({
   stage,
   opps,
   onDropToStage,
+  acceptingDrops,
 }: {
   stage: OpportunityStage;
   opps: Opportunity[];
   onDropToStage: (id: string, target: OpportunityStage) => void;
+  acceptingDrops: boolean;
 }) {
   const [over, setOver] = useState(false);
 
   function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    if (!acceptingDrops) return;
     // Required for the drop event to fire on this target.
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -84,6 +82,7 @@ function Column({
     setOver(false);
   }
   function handleDrop(e: DragEvent<HTMLDivElement>) {
+    if (!acceptingDrops) return;
     e.preventDefault();
     setOver(false);
     const id = e.dataTransfer.getData(DRAG_MIME);
@@ -99,16 +98,12 @@ function Column({
       className={`flex flex-col rounded-lg border border-border-subtle bg-surface-card p-3 min-h-[12rem] ${over ? "ring-2 ring-brand" : ""}`}
     >
       <header className="flex items-center justify-between mb-2">
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STAGE_PILL[stage]}`}
-        >
-          {STAGE_LABEL[stage]}
-        </span>
+        <OpportunityStagePill stage={stage} />
         <span className="text-xs text-ink-muted">{opps.length}</span>
       </header>
       <div className="flex-1">
         {opps.map((o) => (
-          <Card key={o.id} opp={o} />
+          <Card key={o.id} opp={o} draggable={acceptingDrops} />
         ))}
       </div>
     </div>
@@ -144,8 +139,26 @@ export function OpportunitiesBoard() {
   const query = useOpportunities();
   const qc = useQueryClient();
   const [pending, setPending] = useState<{ id: string; stage: OpportunityStage } | null>(null);
+  const rows: Opportunity[] = query.data ?? [];
 
   function handleDropToStage(id: string, target: OpportunityStage) {
+    // Race guard: while a previous drop is still in flight, ignore new
+    // drops. Without this a fast second drag could unmount the running
+    // `<DropMutator>` mid-PATCH and leave the FE/server out of sync.
+    // The Column also passes `acceptingDrops={!pending}` so columns
+    // visually reject drops in this window — this is defense in depth.
+    if (pending) return;
+
+    // No-op short-circuit: dropping back into the same column is a
+    // common misclick. The BE already special-cases stage-no-op
+    // (no transition), but skipping the PATCH avoids a round-trip
+    // and a transient cache rewrite that the server would just echo.
+    // Look up the row from the closed-over query result rather than
+    // `qc.getQueryData`, which is empty until React Query has actually
+    // populated the cache (notably under tests that mock the hook).
+    const current = rows.find((row) => row.id === id);
+    if (current?.stage === target) return;
+
     // Optimistic: rewrite the cached row so the card hops to the new
     // column before the PATCH lands. On error we invalidate to pull the
     // server's truth back. On success the mutation's `onSuccess` already
@@ -196,7 +209,6 @@ export function OpportunitiesBoard() {
     );
   }
 
-  const rows: Opportunity[] = query.data ?? [];
   const byStage: Record<OpportunityStage, Opportunity[]> = {
     applied: [],
     screening: [],
@@ -219,7 +231,11 @@ export function OpportunitiesBoard() {
             Drag cards between stages to update their status.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Both states render as <Link> with `aria-current="page"` on
+            the active route so screen readers announce the current
+            view, and `pointer-events-none` on the active link
+            prevents a redundant self-navigation click. */}
+        <div className="flex items-center gap-2" role="navigation" aria-label="Opportunities view">
           <Link
             to="/dashboard/opportunities"
             data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_TABLE}
@@ -227,12 +243,14 @@ export function OpportunitiesBoard() {
           >
             Table
           </Link>
-          <span
+          <Link
+            to="/dashboard/opportunities/board"
+            aria-current="page"
             data-testid={TestIds.OPPORTUNITIES_VIEW_TOGGLE_BOARD}
             className={TOGGLE_BTN_ACTIVE}
           >
             Board
-          </span>
+          </Link>
         </div>
       </header>
 
@@ -243,6 +261,7 @@ export function OpportunitiesBoard() {
             stage={stage}
             opps={byStage[stage]}
             onDropToStage={handleDropToStage}
+            acceptingDrops={!pending}
           />
         ))}
       </div>
