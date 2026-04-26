@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.15.0...e2e-v1.16.0) (2026-04-26)
+
+
+### Features
+
+* opportunity stage history — slice 9a (BE + FE + e2e) ([#41](https://github.com/mauriciovieira/slotflow-crm/issues/41)) ([9408acf](https://github.com/mauriciovieira/slotflow-crm/commit/9408acf9e933311de7a2515a131370ebed6e7aec))
+
 # [1.15.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.14.0...e2e-v1.15.0) (2026-04-25)
 
 
