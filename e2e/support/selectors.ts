@@ -224,4 +224,5 @@ export const TestIds = {
   OPPORTUNITIES_BOARD_ERROR: "opportunities-board-error",
   OPPORTUNITIES_BOARD_COLUMN: "opportunities-board-column",
   OPPORTUNITIES_BOARD_CARD: "opportunities-board-card",
+  OPPORTUNITIES_BOARD_MOVE_SELECT: "opportunities-board-move-select",
 } as const;
