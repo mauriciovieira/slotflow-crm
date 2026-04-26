@@ -67,6 +67,13 @@ def seed_invite_view(request: Request) -> Response:
     status_value = request.data.get("status") or "pending"
     expired = bool(request.data.get("expired"))
 
+    allowed_statuses = {choice.value for choice in Invite.Status}
+    if status_value not in allowed_statuses:
+        return Response(
+            {"status": [f"Must be one of: {sorted(allowed_statuses)}."]},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+
     User = get_user_model()
     admin, _ = User.objects.get_or_create(
         username="e2e-admin",

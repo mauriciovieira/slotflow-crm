@@ -118,11 +118,15 @@ def preflight_view(request: Request, token: str) -> Response:
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def accept_password_view(request: Request, token: str) -> Response:
+    token_hash = hash_token(token)
     try:
-        invite = Invite.objects.get(token_hash=hash_token(token))
+        invite = Invite.objects.get(token_hash=token_hash)
     except Invite.DoesNotExist:
         return Response({"error": "invalid_token"}, status=404)
 
+    # Fast pre-checks (no lock) so we don't open a transaction on the obvious
+    # rejection paths. The authoritative re-check happens inside the atomic
+    # block below with select_for_update.
     bad = _invite_state_response(invite)
     if bad is not None:
         if bad.data.get("error") == "expired":
@@ -150,6 +154,16 @@ def accept_password_view(request: Request, token: str) -> Response:
     terms = TermsVersion.objects.get(pk=request.data["terms_version_id"])
 
     with transaction.atomic():
+        # Re-fetch with a row lock so two concurrent accepts can't both pass
+        # the pre-check and double-create user/workspace. Loser sees the
+        # winner's mark_accepted and returns 410.
+        invite = Invite.objects.select_for_update().get(token_hash=token_hash)
+        bad = _invite_state_response(invite)
+        if bad is not None:
+            return bad
+        if User.objects.filter(email__iexact=invite.email).exists():
+            return Response({"error": "user_exists"}, status=409)
+
         user = User.objects.create_user(
             username=invite.email,
             email=invite.email,

@@ -92,18 +92,21 @@ class SlotflowSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def save_user(self, request, sociallogin, form=None):
         token_hash = request.session["pending_invite_token_hash"]
-        invite = Invite.objects.select_for_update().get(token_hash=token_hash)
-        if not invite.is_consumable:
-            raw = request.session.get("pending_invite_raw_token", "")
-            _clear_invite_session(request)
-            raise ImmediateHttpResponse(
-                redirect(f"/accept-invite/{raw}/?error=oauth_failed"),
-            )
-
         terms = TermsVersion.objects.get(pk=request.session["accepted_terms_version_id"])
         workspace_name = request.session["workspace_name"]
 
         with transaction.atomic():
+            # select_for_update requires an active transaction; locking inside
+            # the atomic block prevents two concurrent OAuth callbacks from
+            # both consuming the same invite.
+            invite = Invite.objects.select_for_update().get(token_hash=token_hash)
+            if not invite.is_consumable:
+                raw = request.session.get("pending_invite_raw_token", "")
+                _clear_invite_session(request)
+                raise ImmediateHttpResponse(
+                    redirect(f"/accept-invite/{raw}/?error=oauth_failed"),
+                )
+
             user = sociallogin.user
             user.username = user.email
             user.set_unusable_password()

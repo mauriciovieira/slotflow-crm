@@ -180,4 +180,108 @@ describe("AcceptInvite OAuth + banners", () => {
     const banner = await screen.findByTestId(TestIds.ACCEPT_INVITE_ERROR_BANNER);
     expect(banner).toHaveTextContent(/sign-in cancelled or failed/i);
   });
+
+  it("clicking Continue with Google calls oauth-start and assigns the same-origin redirect_url", async () => {
+    preflightOnce();
+    mockResponse(200, { redirect_url: "/accounts/google/login/" });
+
+    // Stub window.location.href so the navigation is observable in jsdom.
+    const original = window.location;
+    let assigned: string | null = null;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        ...original,
+        get href() {
+          return assigned ?? original.href;
+        },
+        set href(v: string) {
+          assigned = v;
+        },
+      },
+    });
+
+    renderAt("/accept-invite/tok");
+
+    const scroll = await screen.findByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
+    Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 50 });
+    Object.defineProperty(scroll, "clientHeight", { configurable: true, value: 100 });
+    fireEvent.scroll(scroll);
+
+    const checkbox = screen.getByTestId<HTMLInputElement>(
+      TestIds.ACCEPT_INVITE_TOS_CHECKBOX,
+    );
+    await waitFor(() => expect(checkbox).not.toBeDisabled());
+
+    const user = userEvent.setup();
+    await user.click(checkbox);
+
+    const google = screen.getByTestId<HTMLButtonElement>(TestIds.ACCEPT_INVITE_GOOGLE);
+    await waitFor(() => expect(google).not.toBeDisabled());
+    await user.click(google);
+
+    await waitFor(() => {
+      const calls = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls;
+      const post = calls.find((c) => String(c[0]).endsWith("/oauth-start/"));
+      expect(post).toBeDefined();
+      const body = JSON.parse((post![1] as RequestInit).body as string);
+      expect(body).toEqual({
+        provider: "google",
+        workspace_name: "alice's workspace",
+        terms_version_id: 7,
+      });
+    });
+    await waitFor(() => expect(assigned).toBe("/accounts/google/login/"));
+
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: original,
+    });
+  });
+
+  it("rejects a non-same-origin redirect_url from oauth-start", async () => {
+    preflightOnce();
+    mockResponse(200, { redirect_url: "//evil.com/steal" });
+
+    const original = window.location;
+    let assigned: string | null = null;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        ...original,
+        get href() {
+          return assigned ?? original.href;
+        },
+        set href(v: string) {
+          assigned = v;
+        },
+      },
+    });
+
+    renderAt("/accept-invite/tok");
+
+    const scroll = await screen.findByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
+    Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 50 });
+    Object.defineProperty(scroll, "clientHeight", { configurable: true, value: 100 });
+    fireEvent.scroll(scroll);
+
+    const checkbox = screen.getByTestId<HTMLInputElement>(
+      TestIds.ACCEPT_INVITE_TOS_CHECKBOX,
+    );
+    await waitFor(() => expect(checkbox).not.toBeDisabled());
+
+    const user = userEvent.setup();
+    await user.click(checkbox);
+    await user.click(screen.getByTestId(TestIds.ACCEPT_INVITE_GITHUB));
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId(TestIds.ACCEPT_INVITE_FIELD_ERROR).length).toBeGreaterThan(0);
+    });
+    expect(assigned).toBeNull();
+
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: original,
+    });
+  });
 });

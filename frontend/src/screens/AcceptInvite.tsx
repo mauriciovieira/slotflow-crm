@@ -125,7 +125,15 @@ export function AcceptInvite() {
     }
   }
 
-  if (!data || !data.terms_version) return null;
+  if (!data || !data.terms_version) {
+    return (
+      <ErrorScreen
+        testId={TestIds.ACCEPT_INVITE_INVALID}
+        title="Invite unavailable"
+        body="The current Terms of Service could not be loaded. Try again later or contact your administrator."
+      />
+    );
+  }
   const terms = data.terms_version;
 
   function onScroll() {
@@ -169,7 +177,14 @@ export function AcceptInvite() {
         workspace_name: workspaceName,
         terms_version_id: terms.id,
       });
-      window.location.href = result.redirect_url;
+      // Refuse anything that isn't a same-origin root-relative path. Belt-and-
+      // suspenders against an open-redirect if the backend ever changes.
+      const url = result.redirect_url;
+      if (typeof url !== "string" || !url.startsWith("/") || url.startsWith("//")) {
+        setFieldErrors({ workspace_name: ["OAuth start returned an invalid redirect."] });
+        return;
+      }
+      window.location.href = url;
     } catch {
       // Banner displayed via callback's ?error= redirect.
     }
