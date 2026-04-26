@@ -17,11 +17,25 @@ if TYPE_CHECKING:
 SYSTEM_ACTOR_REPR = "<system>"
 
 
-def _format_actor(actor: AbstractBaseUser | None) -> str:
+def format_actor_repr(actor: AbstractBaseUser | None) -> str:
+    """Public helper that returns the human label we freeze on audit-style rows.
+
+    Other apps (e.g. `opportunities.OpportunityStageTransition`) need the
+    same `username (id=N)` shape on their own append-only tables so the
+    label survives user deletion. Exposing it here keeps the formatting
+    in one place; downstream callers should NOT reach into the leading-
+    underscore alias for backward compatibility.
+    """
     if actor is None:
         return SYSTEM_ACTOR_REPR
     username = getattr(actor, "username", None) or "<unknown>"
     return f"{username} (id={actor.pk})"
+
+
+# Backward-compatible alias for in-app callers; new callers should import
+# `format_actor_repr` directly. Kept private-prefixed so an accidental
+# export from another module still resolves.
+_format_actor = format_actor_repr
 
 
 def _entity_descriptor(entity: models.Model | None) -> tuple[str, str]:

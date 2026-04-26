@@ -112,3 +112,38 @@ class OpportunityResume(TimeStampedModel):
             f"{self.opportunity.title} ↔ resume {self.resume_version_id} "
             f"({self.get_role_display()})"
         )
+
+
+class OpportunityStageTransition(TimeStampedModel):
+    """One row per stage change on an Opportunity.
+
+    Append-only history. Recorded by `services.record_stage_transition`,
+    called from `OpportunityViewSet.perform_update` whenever the stage
+    actually changes (no-op PATCH does not write a row). `actor_repr`
+    is frozen at write so the row survives user deletion the same way
+    `audit.AuditEvent` does.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    opportunity = models.ForeignKey(
+        Opportunity,
+        on_delete=models.CASCADE,
+        related_name="stage_transitions",
+    )
+    from_stage = models.CharField(max_length=16, choices=OpportunityStage.choices)
+    to_stage = models.CharField(max_length=16, choices=OpportunityStage.choices)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="opportunity_stage_transitions",
+    )
+    actor_repr = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [models.Index(fields=("opportunity", "-created_at"))]
+
+    def __str__(self) -> str:
+        return f"{self.opportunity_id}: {self.from_stage} → {self.to_stage} by {self.actor_repr}"

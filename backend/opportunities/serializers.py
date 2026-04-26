@@ -5,7 +5,7 @@ from rest_framework import serializers
 from tenancy.models import Workspace
 from tenancy.permissions import get_membership
 
-from .models import Opportunity
+from .models import Opportunity, OpportunityStageTransition
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
@@ -61,3 +61,17 @@ class OpportunitySerializer(serializers.ModelSerializer):
         if get_membership(actor, workspace) is None:
             raise serializers.ValidationError("You do not have a membership in that workspace.")
         return workspace
+
+
+class OpportunityStageTransitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpportunityStageTransition
+        fields = (
+            "id",
+            "opportunity",
+            "from_stage",
+            "to_stage",
+            "actor_repr",
+            "created_at",
+        )
+        read_only_fields = fields

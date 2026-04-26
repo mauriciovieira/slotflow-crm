@@ -213,6 +213,12 @@ export const TestIds = {
   AUDIT_LOAD_MORE: "audit-load-more",
   AUDIT_METADATA_EXPAND: "audit-metadata-expand",
   AUDIT_METADATA_BODY: "audit-metadata-body",
+  OPPORTUNITY_STAGE_HISTORY_SECTION: "opportunity-stage-history-section",
+  OPPORTUNITY_STAGE_HISTORY_LOADING: "opportunity-stage-history-loading",
+  OPPORTUNITY_STAGE_HISTORY_ERROR: "opportunity-stage-history-error",
+  OPPORTUNITY_STAGE_HISTORY_EMPTY: "opportunity-stage-history-empty",
+  OPPORTUNITY_STAGE_HISTORY_LIST: "opportunity-stage-history-list",
+  OPPORTUNITY_STAGE_HISTORY_ROW: "opportunity-stage-history-row",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

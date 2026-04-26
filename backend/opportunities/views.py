@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import uuid
 
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
@@ -11,11 +13,12 @@ from tenancy.models import Membership
 
 from .models import Opportunity, OpportunityStage
 from .permissions import IsWorkspaceMember
-from .serializers import OpportunitySerializer
+from .serializers import OpportunitySerializer, OpportunityStageTransitionSerializer
 from .services import (
     WorkspaceWriteForbidden,
     archive_opportunity,
     create_opportunity,
+    record_stage_transition,
 )
 
 
@@ -124,5 +127,34 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         out = self.get_serializer(opp)
         return Response(out.data, status=status.HTTP_201_CREATED)
 
+    def perform_update(self, serializer):
+        # Wrap the stage save + history write in one transaction so a
+        # failure in the second step rolls the first back. The project
+        # does not enable `ATOMIC_REQUESTS`, so without this the row
+        # could end up updated with no history recorded if the audit /
+        # transition write blew up.
+        with transaction.atomic():
+            previous_stage = serializer.instance.stage
+            instance = serializer.save()
+            if instance.stage != previous_stage:
+                record_stage_transition(
+                    actor=self.request.user,
+                    opportunity=instance,
+                    from_stage=previous_stage,
+                    to_stage=instance.stage,
+                )
+
     def perform_destroy(self, instance):
         archive_opportunity(actor=self.request.user, opportunity=instance)
+
+    @action(detail=True, methods=["get"], url_path="stage-history")
+    def stage_history(self, request, pk=None):
+        """Reverse-chronological (newest first) stage transitions on this opportunity.
+
+        Workspace membership is enforced by `IsWorkspaceMember` via the
+        viewset; if the user can read the opportunity they can read its
+        stage history.
+        """
+        opportunity = self.get_object()
+        rows = opportunity.stage_transitions.order_by("-created_at")
+        return Response(OpportunityStageTransitionSerializer(rows, many=True).data)
