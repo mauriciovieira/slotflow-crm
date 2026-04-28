@@ -5,6 +5,12 @@ import { DashboardHeader } from "./DashboardHeader";
 import type { Me } from "../lib/authHooks";
 import { TestIds } from "../testIds";
 
+vi.mock("./NotificationsBell", () => ({
+  // The bell has its own dedicated test file. Stub it out so the
+  // header-focused tests don't need to mock the notifications hooks.
+  NotificationsBell: () => null,
+}));
+
 vi.mock("../lib/authHooks", async () => {
   const actual = await vi.importActual<typeof import("../lib/authHooks")>("../lib/authHooks");
   return { ...actual, useMe: vi.fn(), useLogout: vi.fn() };

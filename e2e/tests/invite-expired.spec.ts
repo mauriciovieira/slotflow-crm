@@ -13,5 +13,5 @@ test("expired invite renders Expired error variant", async ({ page, request }) =
     expired: true,
   });
   await page.goto(invite.accept_url);
-  await expect(page.getByTestId(TestIds.ACCEPT_INVITE_EXPIRED)).toBeVisible();
+  await expect(page.getByTestId(TestIds.SIGNUP_INVITATION_EXPIRED)).toBeVisible();
 });

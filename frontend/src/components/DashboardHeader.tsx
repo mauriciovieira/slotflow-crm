@@ -1,5 +1,6 @@
 import { useLogout, useMe } from "../lib/authHooks";
 import { TestIds } from "../testIds";
+import { NotificationsBell } from "./NotificationsBell";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 export interface DashboardHeaderProps {
@@ -21,6 +22,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
         <WorkspaceSwitcher />
       </div>
       <div className="flex items-center gap-4">
+        <NotificationsBell />
         <span
           data-testid={TestIds.SIGNED_IN_HEADER}
           className="text-sm text-ink-secondary"

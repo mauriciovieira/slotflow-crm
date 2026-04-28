@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TestIds } from "../testIds";
-import { AcceptInvite } from "./AcceptInvite";
+import { AcceptSignupInvitation } from "./AcceptSignupInvitation";
 
 function renderAt(path: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -12,7 +12,7 @@ function renderAt(path: string) {
     <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/accept-invite/:token" element={<AcceptInvite />} />
+          <Route path="/accept-invite/:token" element={<AcceptSignupInvitation />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -42,45 +42,45 @@ function preflightOnce() {
   });
 }
 
-describe("AcceptInvite preflight states", () => {
+describe("AcceptSignupInvitation preflight states", () => {
   it("renders the form when preflight returns 200", async () => {
     preflightOnce();
     renderAt("/accept-invite/tok123");
-    expect(await screen.findByTestId(TestIds.ACCEPT_INVITE_PAGE)).toBeInTheDocument();
-    expect(screen.getByTestId(TestIds.ACCEPT_INVITE_EMAIL)).toHaveTextContent("alice@x.com");
+    expect(await screen.findByTestId(TestIds.SIGNUP_INVITATION_PAGE)).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.SIGNUP_INVITATION_EMAIL)).toHaveTextContent("alice@x.com");
   });
 
   it("renders invalid screen on 404", async () => {
     mockResponse(404, { error: "invalid_token" });
     renderAt("/accept-invite/bogus");
-    expect(await screen.findByTestId(TestIds.ACCEPT_INVITE_INVALID)).toBeInTheDocument();
+    expect(await screen.findByTestId(TestIds.SIGNUP_INVITATION_INVALID)).toBeInTheDocument();
   });
 
   it("renders expired screen on 410 expired", async () => {
     mockResponse(410, { error: "expired", expires_at: "2020-01-01T00:00:00Z" });
     renderAt("/accept-invite/expired");
-    expect(await screen.findByTestId(TestIds.ACCEPT_INVITE_EXPIRED)).toBeInTheDocument();
+    expect(await screen.findByTestId(TestIds.SIGNUP_INVITATION_EXPIRED)).toBeInTheDocument();
   });
 
   it("renders revoked screen on 410 revoked", async () => {
     mockResponse(410, { error: "revoked" });
     renderAt("/accept-invite/rev");
-    expect(await screen.findByTestId(TestIds.ACCEPT_INVITE_REVOKED)).toBeInTheDocument();
+    expect(await screen.findByTestId(TestIds.SIGNUP_INVITATION_REVOKED)).toBeInTheDocument();
   });
 
   it("renders already-used screen on 410 already_used", async () => {
     mockResponse(410, { error: "already_used" });
     renderAt("/accept-invite/used");
-    expect(await screen.findByTestId(TestIds.ACCEPT_INVITE_ALREADY_USED)).toBeInTheDocument();
+    expect(await screen.findByTestId(TestIds.SIGNUP_INVITATION_ALREADY_USED)).toBeInTheDocument();
   });
 });
 
-describe("AcceptInvite form", () => {
+describe("AcceptSignupInvitation form", () => {
   it("defaults workspace name to '<local>'s workspace'", async () => {
     preflightOnce();
     renderAt("/accept-invite/tok");
     const ws = (await screen.findByTestId(
-      TestIds.ACCEPT_INVITE_WORKSPACE,
+      TestIds.SIGNUP_INVITATION_WORKSPACE,
     )) as HTMLInputElement;
     expect(ws.value).toBe("alice's workspace");
   });
@@ -91,11 +91,11 @@ describe("AcceptInvite form", () => {
 
     renderAt("/accept-invite/tok");
     const submit = await screen.findByTestId<HTMLButtonElement>(
-      TestIds.ACCEPT_INVITE_SUBMIT,
+      TestIds.SIGNUP_INVITATION_SUBMIT,
     );
     expect(submit).toBeDisabled();
 
-    const scroll = screen.getByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
+    const scroll = screen.getByTestId(TestIds.SIGNUP_INVITATION_TOS_SCROLL);
     Object.defineProperty(scroll, "scrollHeight", {
       configurable: true,
       value: 200,
@@ -112,14 +112,14 @@ describe("AcceptInvite form", () => {
     fireEvent.scroll(scroll, { target: { scrollTop: 100 } });
 
     const checkbox = screen.getByTestId<HTMLInputElement>(
-      TestIds.ACCEPT_INVITE_TOS_CHECKBOX,
+      TestIds.SIGNUP_INVITATION_TOS_CHECKBOX,
     );
     await waitFor(() => expect(checkbox).not.toBeDisabled());
 
     const user = userEvent.setup();
     await user.click(checkbox);
     await user.type(
-      screen.getByTestId(TestIds.ACCEPT_INVITE_PASSWORD),
+      screen.getByTestId(TestIds.SIGNUP_INVITATION_PASSWORD),
       "Sup3r-Secret-Pw!",
     );
 
@@ -142,7 +142,7 @@ describe("AcceptInvite form", () => {
   it("auto-enables ToS checkbox if body shorter than container", async () => {
     preflightOnce();
     renderAt("/accept-invite/tok");
-    const scroll = await screen.findByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
+    const scroll = await screen.findByTestId(TestIds.SIGNUP_INVITATION_TOS_SCROLL);
     Object.defineProperty(scroll, "scrollHeight", {
       configurable: true,
       value: 50,
@@ -153,31 +153,31 @@ describe("AcceptInvite form", () => {
     });
     fireEvent.scroll(scroll);
     const checkbox = screen.getByTestId<HTMLInputElement>(
-      TestIds.ACCEPT_INVITE_TOS_CHECKBOX,
+      TestIds.SIGNUP_INVITATION_TOS_CHECKBOX,
     );
     await waitFor(() => expect(checkbox).not.toBeDisabled());
   });
 });
 
-describe("AcceptInvite OAuth + banners", () => {
+describe("AcceptSignupInvitation OAuth + banners", () => {
   it("renders email_mismatch banner from query string", async () => {
     preflightOnce();
     renderAt("/accept-invite/tok?error=email_mismatch");
-    const banner = await screen.findByTestId(TestIds.ACCEPT_INVITE_ERROR_BANNER);
+    const banner = await screen.findByTestId(TestIds.SIGNUP_INVITATION_ERROR_BANNER);
     expect(banner).toHaveTextContent(/oauth email did not match/i);
   });
 
   it("renders user_exists banner from query string", async () => {
     preflightOnce();
     renderAt("/accept-invite/tok?error=user_exists");
-    const banner = await screen.findByTestId(TestIds.ACCEPT_INVITE_ERROR_BANNER);
+    const banner = await screen.findByTestId(TestIds.SIGNUP_INVITATION_ERROR_BANNER);
     expect(banner).toHaveTextContent(/account already exists/i);
   });
 
   it("renders oauth_failed banner from query string", async () => {
     preflightOnce();
     renderAt("/accept-invite/tok?error=oauth_failed");
-    const banner = await screen.findByTestId(TestIds.ACCEPT_INVITE_ERROR_BANNER);
+    const banner = await screen.findByTestId(TestIds.SIGNUP_INVITATION_ERROR_BANNER);
     expect(banner).toHaveTextContent(/sign-in cancelled or failed/i);
   });
 
@@ -203,20 +203,20 @@ describe("AcceptInvite OAuth + banners", () => {
 
     renderAt("/accept-invite/tok");
 
-    const scroll = await screen.findByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
+    const scroll = await screen.findByTestId(TestIds.SIGNUP_INVITATION_TOS_SCROLL);
     Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 50 });
     Object.defineProperty(scroll, "clientHeight", { configurable: true, value: 100 });
     fireEvent.scroll(scroll);
 
     const checkbox = screen.getByTestId<HTMLInputElement>(
-      TestIds.ACCEPT_INVITE_TOS_CHECKBOX,
+      TestIds.SIGNUP_INVITATION_TOS_CHECKBOX,
     );
     await waitFor(() => expect(checkbox).not.toBeDisabled());
 
     const user = userEvent.setup();
     await user.click(checkbox);
 
-    const google = screen.getByTestId<HTMLButtonElement>(TestIds.ACCEPT_INVITE_GOOGLE);
+    const google = screen.getByTestId<HTMLButtonElement>(TestIds.SIGNUP_INVITATION_GOOGLE);
     await waitFor(() => expect(google).not.toBeDisabled());
     await user.click(google);
 
@@ -260,22 +260,22 @@ describe("AcceptInvite OAuth + banners", () => {
 
     renderAt("/accept-invite/tok");
 
-    const scroll = await screen.findByTestId(TestIds.ACCEPT_INVITE_TOS_SCROLL);
+    const scroll = await screen.findByTestId(TestIds.SIGNUP_INVITATION_TOS_SCROLL);
     Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 50 });
     Object.defineProperty(scroll, "clientHeight", { configurable: true, value: 100 });
     fireEvent.scroll(scroll);
 
     const checkbox = screen.getByTestId<HTMLInputElement>(
-      TestIds.ACCEPT_INVITE_TOS_CHECKBOX,
+      TestIds.SIGNUP_INVITATION_TOS_CHECKBOX,
     );
     await waitFor(() => expect(checkbox).not.toBeDisabled());
 
     const user = userEvent.setup();
     await user.click(checkbox);
-    await user.click(screen.getByTestId(TestIds.ACCEPT_INVITE_GITHUB));
+    await user.click(screen.getByTestId(TestIds.SIGNUP_INVITATION_GITHUB));
 
     await waitFor(() => {
-      expect(screen.getAllByTestId(TestIds.ACCEPT_INVITE_FIELD_ERROR).length).toBeGreaterThan(0);
+      expect(screen.getAllByTestId(TestIds.SIGNUP_INVITATION_FIELD_ERROR).length).toBeGreaterThan(0);
     });
     expect(assigned).toBeNull();
 

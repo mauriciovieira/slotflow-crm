@@ -13,5 +13,5 @@ test("revoked invite renders Revoked error variant", async ({ page, request }) =
     status: "revoked",
   });
   await page.goto(invite.accept_url);
-  await expect(page.getByTestId(TestIds.ACCEPT_INVITE_REVOKED)).toBeVisible();
+  await expect(page.getByTestId(TestIds.SIGNUP_INVITATION_REVOKED)).toBeVisible();
 });

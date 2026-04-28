@@ -51,7 +51,7 @@ function bannerText(code: string | null): string | null {
   }
 }
 
-export function AcceptInvite() {
+export function AcceptSignupInvitation() {
   const { token = "" } = useParams<{ token: string }>();
   const { data, error, isLoading } = useInvitePreflight(token);
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ export function AcceptInvite() {
     if (error.status === 404) {
       return (
         <ErrorScreen
-          testId={TestIds.ACCEPT_INVITE_INVALID}
+          testId={TestIds.SIGNUP_INVITATION_INVALID}
           title="Invalid invite link"
           body="The link you followed isn't recognised. Double-check the URL or contact your administrator."
         />
@@ -110,7 +110,7 @@ export function AcceptInvite() {
       if (reason === "revoked") {
         return (
           <ErrorScreen
-            testId={TestIds.ACCEPT_INVITE_REVOKED}
+            testId={TestIds.SIGNUP_INVITATION_REVOKED}
             title="Invite revoked"
             body="This invite has been revoked. Contact your administrator to request a new one."
           />
@@ -119,7 +119,7 @@ export function AcceptInvite() {
       if (reason === "already_used") {
         return (
           <ErrorScreen
-            testId={TestIds.ACCEPT_INVITE_ALREADY_USED}
+            testId={TestIds.SIGNUP_INVITATION_ALREADY_USED}
             title="Invite already used"
             body="This invite has already been accepted. Sign in to your account instead."
           />
@@ -127,7 +127,7 @@ export function AcceptInvite() {
       }
       return (
         <ErrorScreen
-          testId={TestIds.ACCEPT_INVITE_EXPIRED}
+          testId={TestIds.SIGNUP_INVITATION_EXPIRED}
           title="Invite expired"
           body="This invite has expired. Contact your administrator to request a new one."
         />
@@ -138,7 +138,7 @@ export function AcceptInvite() {
   if (!data || !data.terms_version) {
     return (
       <ErrorScreen
-        testId={TestIds.ACCEPT_INVITE_INVALID}
+        testId={TestIds.SIGNUP_INVITATION_INVALID}
         title="Invite unavailable"
         body="The current Terms of Service could not be loaded. Try again later or contact your administrator."
       />
@@ -209,7 +209,7 @@ export function AcceptInvite() {
 
   return (
     <main
-      data-testid={TestIds.ACCEPT_INVITE_PAGE}
+      data-testid={TestIds.SIGNUP_INVITATION_PAGE}
       className="min-h-full grid grid-cols-1 md:grid-cols-2"
     >
       <section className="flex flex-col justify-center px-8 md:px-16 py-12">
@@ -220,7 +220,7 @@ export function AcceptInvite() {
         {banner && (
           <p
             role="alert"
-            data-testid={TestIds.ACCEPT_INVITE_ERROR_BANNER}
+            data-testid={TestIds.SIGNUP_INVITATION_ERROR_BANNER}
             className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
           >
             {banner}
@@ -228,7 +228,7 @@ export function AcceptInvite() {
         )}
         <p className="text-ink-secondary mb-2">Email:</p>
         <p
-          data-testid={TestIds.ACCEPT_INVITE_EMAIL}
+          data-testid={TestIds.SIGNUP_INVITATION_EMAIL}
           className="text-ink mb-6"
         >
           {data.email}
@@ -244,13 +244,13 @@ export function AcceptInvite() {
               required
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
-              data-testid={TestIds.ACCEPT_INVITE_WORKSPACE}
+              data-testid={TestIds.SIGNUP_INVITATION_WORKSPACE}
               className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
             />
             {fieldErrors.workspace_name?.map((msg) => (
               <span
                 key={msg}
-                data-testid={TestIds.ACCEPT_INVITE_FIELD_ERROR}
+                data-testid={TestIds.SIGNUP_INVITATION_FIELD_ERROR}
                 className="text-sm text-danger"
               >
                 {msg}
@@ -262,7 +262,7 @@ export function AcceptInvite() {
             <button
               type="button"
               onClick={() => startOauth("google")}
-              data-testid={TestIds.ACCEPT_INVITE_GOOGLE}
+              data-testid={TestIds.SIGNUP_INVITATION_GOOGLE}
               disabled={oauthDisabled}
               className="w-full border border-border-subtle rounded-md py-2 text-ink hover:bg-surface-card disabled:opacity-60 disabled:cursor-not-allowed"
             >
@@ -271,7 +271,7 @@ export function AcceptInvite() {
             <button
               type="button"
               onClick={() => startOauth("github")}
-              data-testid={TestIds.ACCEPT_INVITE_GITHUB}
+              data-testid={TestIds.SIGNUP_INVITATION_GITHUB}
               disabled={oauthDisabled}
               className="w-full border border-border-subtle rounded-md py-2 text-ink hover:bg-surface-card disabled:opacity-60 disabled:cursor-not-allowed"
             >
@@ -294,13 +294,13 @@ export function AcceptInvite() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              data-testid={TestIds.ACCEPT_INVITE_PASSWORD}
+              data-testid={TestIds.SIGNUP_INVITATION_PASSWORD}
               className="w-full border border-border-subtle rounded-md px-3 py-2 bg-surface focus:outline-none focus:border-brand"
             />
             {fieldErrors.password?.map((msg) => (
               <span
                 key={msg}
-                data-testid={TestIds.ACCEPT_INVITE_FIELD_ERROR}
+                data-testid={TestIds.SIGNUP_INVITATION_FIELD_ERROR}
                 className="text-sm text-danger"
               >
                 {msg}
@@ -315,7 +315,7 @@ export function AcceptInvite() {
             <div
               ref={scrollRef}
               onScroll={onScroll}
-              data-testid={TestIds.ACCEPT_INVITE_TOS_SCROLL}
+              data-testid={TestIds.SIGNUP_INVITATION_TOS_SCROLL}
               className="max-h-[40vh] overflow-y-auto border border-border-subtle rounded-md p-4 bg-surface text-sm prose"
               dangerouslySetInnerHTML={{ __html: tosHtml }}
             />
@@ -325,15 +325,15 @@ export function AcceptInvite() {
                 disabled={!hasReadToS}
                 checked={tosAgreed}
                 onChange={(e) => setTosAgreed(e.target.checked)}
-                data-testid={TestIds.ACCEPT_INVITE_TOS_CHECKBOX}
-                aria-describedby={TestIds.ACCEPT_INVITE_TOS_CAPTION}
+                data-testid={TestIds.SIGNUP_INVITATION_TOS_CHECKBOX}
+                aria-describedby={TestIds.SIGNUP_INVITATION_TOS_CAPTION}
               />
               I agree to the Terms of Service.
             </label>
             {!hasReadToS && (
               <span
-                id={TestIds.ACCEPT_INVITE_TOS_CAPTION}
-                data-testid={TestIds.ACCEPT_INVITE_TOS_CAPTION}
+                id={TestIds.SIGNUP_INVITATION_TOS_CAPTION}
+                data-testid={TestIds.SIGNUP_INVITATION_TOS_CAPTION}
                 aria-live="polite"
                 className="text-xs text-ink-muted"
               >
@@ -345,7 +345,7 @@ export function AcceptInvite() {
           <button
             type="submit"
             disabled={submitDisabled}
-            data-testid={TestIds.ACCEPT_INVITE_SUBMIT}
+            data-testid={TestIds.SIGNUP_INVITATION_SUBMIT}
             className="w-full rounded-md bg-brand text-white py-2 font-medium hover:bg-brand-deep disabled:opacity-60"
           >
             {accept.isPending ? "Creating account…" : "Accept invite"}

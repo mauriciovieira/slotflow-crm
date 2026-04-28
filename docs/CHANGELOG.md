@@ -1,3 +1,24 @@
+# [1.27.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.26.0...docs-v1.27.0) (2026-04-26)
+
+
+### Features
+
+* **backend:** hardening — Track 12 ([#46](https://github.com/mauriciovieira/slotflow-crm/issues/46)) ([4fa4784](https://github.com/mauriciovieira/slotflow-crm/commit/4fa478457f3e8742b10e5e17bb8d9b595aedc2c0))
+
+# [1.26.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.25.0...docs-v1.26.0) (2026-04-26)
+
+
+### Features
+
+* workspace member management — Track 11 (BE + FE + e2e) ([#44](https://github.com/mauriciovieira/slotflow-crm/issues/44)) ([df9996c](https://github.com/mauriciovieira/slotflow-crm/commit/df9996c777f04cc1f677002959af15781b0b4a46))
+
+# [1.25.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.24.0...docs-v1.25.0) (2026-04-26)
+
+
+### Features
+
+* notifications bell — Track 10 (BE + FE + e2e) ([#43](https://github.com/mauriciovieira/slotflow-crm/issues/43)) ([8d8b617](https://github.com/mauriciovieira/slotflow-crm/commit/8d8b6178ea56460c80487958427171137a7f6c19))
+
 # [1.24.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.23.0...docs-v1.24.0) (2026-04-26)
 
 

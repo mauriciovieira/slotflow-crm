@@ -10,6 +10,46 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-26 — Docs 1.27.0
+
+- [Release notes](docs/CHANGELOG.md)
+
+## 2026-04-26 — Backend 0.29.0
+
+- [Release notes](backend/CHANGELOG.md)
+
+## 2026-04-26 — Docs 1.26.0
+
+- [Release notes](docs/CHANGELOG.md)
+
+## 2026-04-26 — E2E 1.19.0
+
+- [Release notes](e2e/CHANGELOG.md)
+
+## 2026-04-26 — Frontend 1.23.0
+
+- [Release notes](frontend/CHANGELOG.md)
+
+## 2026-04-26 — Backend 0.28.0
+
+- [Release notes](backend/CHANGELOG.md)
+
+## 2026-04-26 — Docs 1.25.0
+
+- [Release notes](docs/CHANGELOG.md)
+
+## 2026-04-26 — E2E 1.18.0
+
+- [Release notes](e2e/CHANGELOG.md)
+
+## 2026-04-26 — Frontend 1.22.0
+
+- [Release notes](frontend/CHANGELOG.md)
+
+## 2026-04-26 — Backend 0.27.0
+
+- [Release notes](backend/CHANGELOG.md)
+
 ## 2026-04-26 — Docs 1.24.0
 
 - [Release notes](docs/CHANGELOG.md)

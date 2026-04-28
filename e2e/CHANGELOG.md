@@ -1,3 +1,17 @@
+# [1.19.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.18.0...e2e-v1.19.0) (2026-04-26)
+
+
+### Features
+
+* workspace member management — Track 11 (BE + FE + e2e) ([#44](https://github.com/mauriciovieira/slotflow-crm/issues/44)) ([df9996c](https://github.com/mauriciovieira/slotflow-crm/commit/df9996c777f04cc1f677002959af15781b0b4a46))
+
+# [1.18.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.17.0...e2e-v1.18.0) (2026-04-26)
+
+
+### Features
+
+* notifications bell — Track 10 (BE + FE + e2e) ([#43](https://github.com/mauriciovieira/slotflow-crm/issues/43)) ([8d8b617](https://github.com/mauriciovieira/slotflow-crm/commit/8d8b6178ea56460c80487958427171137a7f6c19))
+
 # [1.17.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.16.0...e2e-v1.17.0) (2026-04-26)
 
 

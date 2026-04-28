@@ -19,3 +19,20 @@ def _disable_debug_toolbar(settings):
     """
 
     settings.DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: False}
+
+
+@pytest.fixture(autouse=True)
+def _clear_throttle_cache_between_tests():
+    """Clear the default cache before/after every test.
+
+    DRF's `SimpleRateThrottle` stores buckets in the `default` cache.
+    Without this, two consecutive auth tests share a bucket and the
+    second one starts already-throttled — even if the first test wasn't
+    about throttling at all. Cheap (LocMemCache `.clear()` is O(1)) and
+    keeps tests independent.
+    """
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()
