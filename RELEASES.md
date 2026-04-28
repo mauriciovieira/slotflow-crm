@@ -10,6 +10,10 @@ Chronological index of package releases (newest first). Detailed notes live in:
 
 <!-- release-index -->
 
+## 2026-04-28 — Frontend 1.24.0
+
+- [Release notes](frontend/CHANGELOG.md)
+
 ## 2026-04-28 — Backend 0.30.0
 
 - [Release notes](backend/CHANGELOG.md)
