@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.19.0...e2e-v1.20.0) (2026-04-28)
+
+
+### Features
+
+* invite + OAuth signup (admin-issued, scrolled-ToS, MFA-aware 2FA gate) ([#45](https://github.com/mauriciovieira/slotflow-crm/issues/45)) ([da023d9](https://github.com/mauriciovieira/slotflow-crm/commit/da023d98149219d0e932d69ecba823a88165101b))
+
 # [1.19.0](https://github.com/mauriciovieira/slotflow-crm/compare/e2e-v1.18.0...e2e-v1.19.0) (2026-04-26)
 
 
