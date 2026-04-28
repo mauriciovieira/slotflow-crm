@@ -28,8 +28,8 @@ describe("Login", () => {
   it("renders the lockup, SSO placeholders, and credentials form", () => {
     renderWithProviders(<Login />);
     expect(screen.getByRole("img", { name: /slotflow/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continue with google/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /continue with github/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /continue with google/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /continue with github/i })).not.toBeDisabled();
     expect(screen.getByTestId(TestIds.LOGIN_USERNAME)).toBeInTheDocument();
     expect(screen.getByTestId(TestIds.LOGIN_PASSWORD)).toBeInTheDocument();
     expect(screen.getByTestId(TestIds.LOGIN_SUBMIT)).toBeInTheDocument();

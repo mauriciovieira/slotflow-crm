@@ -9,7 +9,7 @@
     <main>
       <h1>Slotflow CRM</h1>
       <p>Signed in as {{ request.user.username }}.</p>
-      <form method="post" action="{% url 'logout' %}">
+      <form method="post" action="{% url 'account_logout' %}">
         {% csrf_token %}
         <button type="submit">Sign out</button>
       </form>

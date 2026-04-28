@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from mcp.auth import mark_otp_session_fresh
 
 from .auth_bypass import is_2fa_bypass_active
+from .oauth_mfa import is_oauth_mfa_satisfied
 from .throttling import (
     LoginRateThrottle,
     LoginUsernameRateThrottle,
@@ -35,20 +36,23 @@ def _user_is_verified(user) -> bool:
     return False
 
 
-def _me_payload(user) -> dict:
+def _me_payload(user, request=None) -> dict:
     if not user.is_authenticated:
         return {
             "authenticated": False,
             "username": None,
             "has_totp_device": False,
             "is_verified": False,
+            "mfa_via_oauth": False,
         }
     has_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
+    mfa_via_oauth = is_oauth_mfa_satisfied(request, user) if request is not None else False
     return {
         "authenticated": True,
         "username": user.username,
         "has_totp_device": has_device,
-        "is_verified": _user_is_verified(user) or is_2fa_bypass_active(),
+        "is_verified": (_user_is_verified(user) or is_2fa_bypass_active() or mfa_via_oauth),
+        "mfa_via_oauth": mfa_via_oauth,
     }
 
 
@@ -57,7 +61,7 @@ def _me_payload(user) -> dict:
 @permission_classes([AllowAny])
 def me_view(request: Request) -> Response:
     """Returns auth state. Also sets the csrftoken cookie so subsequent POSTs work."""
-    return Response(_me_payload(request.user))
+    return Response(_me_payload(request.user, request._request))
 
 
 @api_view(["POST"])
@@ -83,8 +87,12 @@ def login_view(request: Request) -> Response:
     if user is None:
         return Response({"detail": "Invalid credentials."}, status=400)
 
-    django_login(request._request, user)
-    return Response(_me_payload(user))
+    django_login(
+        request._request,
+        user,
+        backend="django.contrib.auth.backends.ModelBackend",
+    )
+    return Response(_me_payload(user, request._request))
 
 
 @api_view(["POST"])
@@ -138,7 +146,7 @@ def totp_confirm_view(request: Request) -> Response:
     if device is None:
         return Response({"detail": "No TOTP device found; start setup first."}, status=400)
     if device.confirmed:
-        return Response(_me_payload(request.user))
+        return Response(_me_payload(request.user, request._request))
     if not device.verify_token(token):
         return Response({"detail": "Invalid token."}, status=400)
 
@@ -146,7 +154,7 @@ def totp_confirm_view(request: Request) -> Response:
     device.save(update_fields=["confirmed"])
     otp_login(request._request, device)
     mark_otp_session_fresh(request._request)
-    return Response(_me_payload(request.user))
+    return Response(_me_payload(request.user, request._request))
 
 
 @api_view(["POST"])
@@ -162,5 +170,5 @@ def totp_verify_view(request: Request) -> Response:
         if device.verify_token(token):
             otp_login(request._request, device)
             mark_otp_session_fresh(request._request)
-            return Response(_me_payload(request.user))
+            return Response(_me_payload(request.user, request._request))
     return Response({"detail": "Invalid token."}, status=400)

@@ -6,3 +6,4 @@ honcho==2.0.0
 ruff==0.14.13
 pytest==9.0.3
 pytest-django==4.11.1
+responses==0.25.8

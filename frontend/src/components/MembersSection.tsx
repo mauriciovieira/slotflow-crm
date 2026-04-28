@@ -27,8 +27,8 @@ function formatDate(iso: string | null): string {
 }
 
 function buildAcceptUrl(token: string): string {
-  if (typeof window === "undefined") return `/invitations/${token}/accept`;
-  return `${window.location.origin}/invitations/${token}/accept`;
+  if (typeof window === "undefined") return `/join-workspace/${token}`;
+  return `${window.location.origin}/join-workspace/${token}`;
 }
 
 interface MembersSectionProps {

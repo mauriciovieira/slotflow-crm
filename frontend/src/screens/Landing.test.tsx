@@ -47,10 +47,12 @@ describe("Landing (anonymous)", () => {
     ).toBeInTheDocument();
   });
 
-  it("has a 'Get started' call to action", () => {
+  it("has a 'Request invite' mailto CTA", () => {
     setMe(undefined);
     renderWithProviders(<Landing />);
-    expect(screen.getByTestId(TestIds.LANDING_CTA_PRIMARY)).toBeInTheDocument();
+    const link = screen.getByTestId(TestIds.LANDING_REQUEST_INVITE);
+    expect(link).toHaveAttribute("href", expect.stringMatching(/^mailto:/));
+    expect(link).toHaveTextContent(/request invite/i);
     expect(screen.getByRole("link", { name: /sign in/i })).toBeInTheDocument();
   });
 });
@@ -67,7 +69,7 @@ describe("Landing (signed in)", () => {
     expect(screen.getByTestId(TestIds.SIGNED_IN_HEADER)).toBeInTheDocument();
     expect(screen.getByText("admin")).toBeInTheDocument();
     expect(screen.getByTestId(TestIds.SIGN_OUT_BUTTON)).toBeInTheDocument();
-    expect(screen.queryByTestId(TestIds.LANDING_CTA_PRIMARY)).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TestIds.LANDING_REQUEST_INVITE)).not.toBeInTheDocument();
   });
 
   it("calls useLogout when Sign out is clicked", async () => {
@@ -91,7 +93,7 @@ describe("Landing (signed in)", () => {
       is_verified: false,
     });
     renderWithProviders(<Landing />);
-    expect(screen.getByTestId(TestIds.LANDING_CTA_PRIMARY)).toBeInTheDocument();
+    expect(screen.getByTestId(TestIds.LANDING_REQUEST_INVITE)).toBeInTheDocument();
     expect(screen.queryByTestId(TestIds.SIGN_OUT_BUTTON)).not.toBeInTheDocument();
   });
 });

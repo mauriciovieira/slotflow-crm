@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 import identity.admin  # noqa: F401  # OTP admin site/User admin side effects
@@ -38,8 +37,7 @@ api_auth_patterns = [
 urlpatterns = [
     path("healthz", HealthzView.as_view(), name="healthz"),
     path("admin/", admin.site.urls),
-    path("accounts/login/", auth_views.LoginView.as_view(), name="login"),
-    path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("accounts/", include("allauth.urls")),
     path("2fa/setup/", TwoFactorSetupView.as_view(), name="two_factor_setup"),
     path("2fa/confirm/", TwoFactorConfirmView.as_view(), name="two_factor_confirm"),
     path("2fa/verify/", TwoFactorVerifyView.as_view(), name="two_factor_verify"),
@@ -58,6 +56,7 @@ urlpatterns = [
     path("api/fx-rates/", include("fx.urls")),
     path("api/insights/", include("insights.urls")),
     path("api/", include("audit.urls")),
+    path("api/invites/", include("invites.urls")),
     path("api/notifications/", include("notifications.urls")),
     path(
         "api/workspaces/",

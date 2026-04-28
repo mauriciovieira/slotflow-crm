@@ -229,6 +229,27 @@ export const TestIds = {
   // Distinct prefix so the e2e's `^="opportunities-board-card-"`
   // selector for cards doesn't also match the move-stage <select>.
   OPPORTUNITIES_BOARD_MOVE_SELECT: "opportunities-board-move-select",
+  // Signup-via-admin-invite (anonymous user, OAuth/password). See AcceptSignupInvitation.tsx.
+  SIGNUP_INVITATION_PAGE: "signup-invitation-page",
+  SIGNUP_INVITATION_EMAIL: "signup-invitation-email",
+  SIGNUP_INVITATION_WORKSPACE: "signup-invitation-workspace",
+  SIGNUP_INVITATION_PASSWORD: "signup-invitation-password",
+  SIGNUP_INVITATION_TOS_SCROLL: "signup-invitation-tos-scroll",
+  SIGNUP_INVITATION_TOS_CHECKBOX: "signup-invitation-tos-checkbox",
+  SIGNUP_INVITATION_TOS_CAPTION: "signup-invitation-tos-caption",
+  SIGNUP_INVITATION_SUBMIT: "signup-invitation-submit",
+  SIGNUP_INVITATION_GOOGLE: "signup-invitation-google",
+  SIGNUP_INVITATION_GITHUB: "signup-invitation-github",
+  SIGNUP_INVITATION_ERROR_BANNER: "signup-invitation-error-banner",
+  SIGNUP_INVITATION_FIELD_ERROR: "signup-invitation-field-error",
+  SIGNUP_INVITATION_INVALID: "signup-invitation-invalid",
+  SIGNUP_INVITATION_EXPIRED: "signup-invitation-expired",
+  SIGNUP_INVITATION_REVOKED: "signup-invitation-revoked",
+  SIGNUP_INVITATION_ALREADY_USED: "signup-invitation-already-used",
+  LOGIN_GOOGLE: "login-google",
+  LOGIN_GITHUB: "login-github",
+  LOGIN_NO_ACCOUNT_BANNER: "login-no-account-banner",
+  LANDING_REQUEST_INVITE: "landing-request-invite",
   NOTIFICATIONS_BELL: "notifications-bell",
   NOTIFICATIONS_BADGE: "notifications-badge",
   NOTIFICATIONS_PANEL: "notifications-panel",
@@ -265,10 +286,11 @@ export const TestIds = {
   SETTINGS_MEMBERS_PENDING_ROW: "settings-members-pending-row",
   SETTINGS_MEMBERS_PENDING_REVOKE: "settings-members-pending-revoke",
   SETTINGS_MEMBERS_PENDING_LINK: "settings-members-pending-link",
-  ACCEPT_INVITE_SCREEN: "accept-invite-screen",
-  ACCEPT_INVITE_LOADING: "accept-invite-loading",
-  ACCEPT_INVITE_ERROR: "accept-invite-error",
-  ACCEPT_INVITE_RETRY: "accept-invite-retry",
+  // Workspace-membership invitation (existing user). See JoinWorkspaceInvitation.tsx.
+  JOIN_WORKSPACE_SCREEN: "join-workspace-screen",
+  JOIN_WORKSPACE_LOADING: "join-workspace-loading",
+  JOIN_WORKSPACE_ERROR: "join-workspace-error",
+  JOIN_WORKSPACE_RETRY: "join-workspace-retry",
 } as const;
 
 export type TestId = typeof TestIds[keyof typeof TestIds];

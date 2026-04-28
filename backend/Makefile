@@ -17,4 +17,4 @@ format:
 	$(PY) -m ruff format .
 
 test:
-	$(PY) -m pytest -q
+	SLOTFLOW_USE_SQLITE=1 $(PY) -m pytest -q

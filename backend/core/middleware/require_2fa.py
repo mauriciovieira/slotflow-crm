@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from core.auth_bypass import is_2fa_bypass_active
+from core.oauth_mfa import is_oauth_mfa_satisfied
 
 
 class Require2FAMiddleware:
@@ -21,7 +22,14 @@ class Require2FAMiddleware:
             or path.startswith("/accounts/")
             or path.startswith("/2fa/")
             or path.startswith("/api/auth/")
-            or path in ("/api/test/_reset", "/api/test/_reset/")
+            or path.startswith("/api/invites/")
+            or path
+            in (
+                "/api/test/_reset",
+                "/api/test/_reset/",
+                "/api/test/_seed_invite",
+                "/api/test/_seed_invite/",
+            )
         ):
             return self.get_response(request)
 
@@ -29,7 +37,13 @@ class Require2FAMiddleware:
         if not user or not user.is_authenticated:
             return self.get_response(request)
 
-        if user.is_verified() or is_2fa_bypass_active():
+        if is_2fa_bypass_active():
+            return self.get_response(request)
+
+        if is_oauth_mfa_satisfied(request, user):
+            return self.get_response(request)
+
+        if user.is_verified():
             return self.get_response(request)
 
         has_confirmed_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()

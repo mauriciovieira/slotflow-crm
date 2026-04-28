@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import lockup from "../assets/brand/lockup.svg";
 import { useLogin, useMe } from "../lib/authHooks";
 import { TestIds } from "../testIds";
@@ -10,6 +10,8 @@ export function Login() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const login = useLogin();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const errorCode = searchParams.get("error");
 
   const me = useMe();
   useEffect(() => {
@@ -44,22 +46,43 @@ export function Login() {
           Welcome back
         </h1>
         <p className="text-ink-secondary mb-8">Sign in to your Slotflow workspace.</p>
+        {errorCode === "no_account" && (
+          <p
+            role="alert"
+            data-testid={TestIds.LOGIN_NO_ACCOUNT_BANNER}
+            className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+          >
+            Account not found. You need an invite to sign up.
+          </p>
+        )}
+        {errorCode === "oauth_failed" && (
+          <p
+            role="alert"
+            className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+          >
+            Sign-in cancelled or failed. Try again.
+          </p>
+        )}
         <div className="space-y-3 mb-6">
           <button
             type="button"
-            disabled
-            title="Not wired yet"
+            onClick={() => {
+              window.location.href = "/accounts/google/login/";
+            }}
+            data-testid={TestIds.LOGIN_GOOGLE}
             aria-label="Continue with Google"
-            className="w-full border border-border-subtle rounded-md py-2 text-ink opacity-60 cursor-not-allowed"
+            className="w-full border border-border-subtle rounded-md py-2 text-ink hover:bg-surface-card"
           >
             Continue with Google
           </button>
           <button
             type="button"
-            disabled
-            title="Not wired yet"
+            onClick={() => {
+              window.location.href = "/accounts/github/login/";
+            }}
+            data-testid={TestIds.LOGIN_GITHUB}
             aria-label="Continue with GitHub"
-            className="w-full border border-border-subtle rounded-md py-2 text-ink opacity-60 cursor-not-allowed"
+            className="w-full border border-border-subtle rounded-md py-2 text-ink hover:bg-surface-card"
           >
             Continue with GitHub
           </button>
