@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.27.0...docs-v1.28.0) (2026-04-28)
+
+
+### Features
+
+* invite + OAuth signup (admin-issued, scrolled-ToS, MFA-aware 2FA gate) ([#45](https://github.com/mauriciovieira/slotflow-crm/issues/45)) ([da023d9](https://github.com/mauriciovieira/slotflow-crm/commit/da023d98149219d0e932d69ecba823a88165101b))
+
 # [1.27.0](https://github.com/mauriciovieira/slotflow-crm/compare/docs-v1.26.0...docs-v1.27.0) (2026-04-26)
 
 
