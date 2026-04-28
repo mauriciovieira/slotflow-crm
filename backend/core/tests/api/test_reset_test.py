@@ -4,7 +4,13 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.test import Client
 
-pytestmark = pytest.mark.django_db
+# `transaction=True` is mandatory: the view under test calls
+# ``call_command("flush", "--noinput")`` which TRUNCATEs every table. On
+# Postgres that fails inside the SAVEPOINT-based default ``django_db`` wrapper
+# with "cannot TRUNCATE ... because it has pending trigger events" once the
+# schema includes deferred FK constraints (e.g. identity.User ->
+# core.TermsVersion). A real per-test transaction lets flush TRUNCATE cleanly.
+pytestmark = pytest.mark.django_db(transaction=True)
 
 # Matches the default value used by reset_view when SLOTFLOW_E2E_PASSWORD is unset.
 _VALID_TOKEN = "e2e-local-only"
