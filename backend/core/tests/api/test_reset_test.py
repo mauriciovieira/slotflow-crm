@@ -9,7 +9,9 @@ from django.test import Client
 # Postgres that fails inside the SAVEPOINT-based default ``django_db`` wrapper
 # with "cannot TRUNCATE ... because it has pending trigger events" once the
 # schema includes deferred FK constraints (e.g. identity.User ->
-# core.TermsVersion). A real per-test transaction lets flush TRUNCATE cleanly.
+# core.TermsVersion). `transaction=True` switches to TransactionTestCase
+# semantics, which disables the atomic/SAVEPOINT wrapper so ``flush`` can
+# TRUNCATE cleanly.
 pytestmark = pytest.mark.django_db(transaction=True)
 
 # Matches the default value used by reset_view when SLOTFLOW_E2E_PASSWORD is unset.
